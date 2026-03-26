@@ -1,0 +1,58 @@
+/* Block: active filter chips below H1 */
+.cat2-active-filters {
+  margin: 0 0 20px;
+  max-width: 626px;
+}
+
+.cat2-active-filters__group {
+  margin-bottom: 18px;
+}
+
+.cat2-active-filters__group:last-child {
+  margin-bottom: 0;
+}
+
+.cat2-active-filters__label {
+  display: block;
+  margin: 0 0 8px;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--cat2-text-heading);
+}
+
+.cat2-active-filters__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.cat2-active-filters__chip {
+  margin: 0;
+}
+
+.cat2-active-filters__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 25px;
+  padding: 4px 10px;
+  border-radius: var(--cat2-radius-chip);
+  background: var(--cat2-bg-muted);
+  font-size: 13px;
+  line-height: 18.57px;
+  color: var(--cat2-text-chip);
+  text-decoration: none;
+  max-width: 100%;
+}
+
+.cat2-active-filters__link:hover {
+  background: #ecebea;
+}
+
+.cat2-active-filters__link:focus-visible {
+  outline: 2px solid var(--cat2-accent-orange);
+  outline-offset: 2px;
+}

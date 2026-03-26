@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>API Tester</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0f1115;
+      --panel: #161a22;
+      --text: #e8ecf1;
+      --muted: #9aa4b2;
+      --accent: #3b82f6;
+      --danger: #ef4444;
+      --ok: #22c55e;
+      --border: #2a3140;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .container {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      min-height: 100vh;
+    }
+    .panel {
+      border-right: 1px solid var(--border);
+      background: var(--panel);
+      padding: 14px;
+      overflow: auto;
+    }
+    .main {
+      padding: 16px;
+      overflow: auto;
+    }
+    h1, h2, h3 {
+      margin: 0 0 10px;
+      font-weight: 600;
+    }
+    h1 { font-size: 18px; }
+    h2 { font-size: 15px; margin-top: 16px; }
+    h3 { font-size: 13px; margin-top: 14px; color: var(--muted); }
+    .row {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .row.two { grid-template-columns: 1fr 1fr; }
+    .row.three { grid-template-columns: 1fr 1fr 1fr; }
+    label {
+      font-size: 12px;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 4px;
+    }
+    input, textarea, select, button {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: #0f1420;
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: inherit;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 86px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    button {
+      background: #172033;
+      cursor: pointer;
+      transition: background .15s ease;
+    }
+    button:hover { background: #1c2942; }
+    .btn-primary {
+      background: var(--accent);
+      border-color: #2e6ad3;
+      color: white;
+    }
+    .btn-primary:hover { background: #2f73e8; }
+    .btn-danger {
+      background: #3a1921;
+      border-color: #5f2230;
+      color: #ffc6d1;
+    }
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .ops {
+      margin-top: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .op {
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      font-size: 12px;
+      display: grid;
+      grid-template-columns: 58px 1fr;
+      gap: 8px;
+      align-items: center;
+    }
+    .op:last-child { border-bottom: none; }
+    .op:hover { background: #131b2b; }
+    .op.active { background: #1a2947; }
+    .method {
+      font-weight: 700;
+      text-transform: uppercase;
+      text-align: center;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 2px 6px;
+      font-size: 10px;
+      letter-spacing: .3px;
+    }
+    .method.get { color: #7cc8ff; }
+    .method.post { color: #7dffad; }
+    .method.put { color: #f9cb74; }
+    .method.patch { color: #f6a2ff; }
+    .method.delete { color: #ff9a9a; }
+    .meta {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin: 10px 0;
+      flex-wrap: wrap;
+    }
+    .chip {
+      font-size: 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 2px 8px;
+      color: var(--muted);
+    }
+    .status {
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin: 10px 0;
+      background: #121a28;
+      font-size: 12px;
+    }
+    .status.ok { border-color: #2e5f40; color: #abf0c8; }
+    .status.err { border-color: #6a2d37; color: #ffc6d1; }
+    pre {
+      margin: 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      overflow: auto;
+      max-height: 48vh;
+      background: #0f1420;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <aside class="panel">
+      <h1>API Tester</h1>
+      <div class="hint">Быстрый UI для тестирования endpoint'ов по OpenAPI</div>
+      <div class="hint">Нужен сценарий "как магазин": <a href="/demo-shop.html" style="color:#7fb0ff;">открыть Demo Shop</a></div>
+
+      <h2>Подключение</h2>
+      <div class="row">
+        <div>
+          <label for="baseUrl">Base URL</label>
+          <input id="baseUrl" />
+        </div>
+        <div>
+          <label for="openapiUrl">OpenAPI URL</label>
+          <input id="openapiUrl" />
+        </div>
+      </div>
+      <div class="row two">
+        <button id="loadSpecBtn" class="btn-primary">Загрузить endpoint'ы</button>
+        <button id="clearAuthBtn" class="btn-danger">Сбросить токен</button>
+      </div>
+
+      <h2>JWT Авторизация</h2>
+      <div class="row two">
+        <div>
+          <label for="authLogin">Логин</label>
+          <input id="authLogin" value="admin" />
+        </div>
+        <div>
+          <label for="authPassword">Пароль</label>
+          <input id="authPassword" type="password" value="admin123" />
+        </div>
+      </div>
+      <div class="row two">
+        <button id="loginBtn">Получить токен</button>
+        <button id="saveTokenBtn">Сохранить токен вручную</button>
+      </div>
+      <div class="row">
+        <div>
+          <label for="bearerToken">Bearer Token</label>
+          <textarea id="bearerToken" placeholder="jwt token"></textarea>
+        </div>
+      </div>
+
+      <h2>Endpoint'ы</h2>
+      <div class="row">
+        <input id="searchInput" placeholder="Поиск: /api/orders, products, cart..." />
+      </div>
+      <div id="opsList" class="ops"></div>
+    </aside>
+
+    <main class="main">
+      <h2>Запрос</h2>
+      <div class="row two">
+        <div>
+          <label for="method">Method</label>
+          <input id="method" readonly />
+        </div>
+        <div>
+          <label for="path">Path</label>
+          <input id="path" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="summary">Summary</label>
+          <input id="summary" readonly />
+        </div>
+      </div>
+
+      <div id="pathParamsBlock"></div>
+      <div id="queryParamsBlock"></div>
+
+      <div class="row">
+        <div>
+          <label for="headers">Headers (JSON)</label>
+          <textarea id="headers">{}</textarea>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="body">Body (JSON)</label>
+          <textarea id="body">{}</textarea>
+        </div>
+      </div>
+      <div class="row two">
+        <button id="sendBtn" class="btn-primary">Отправить</button>
+        <button id="copyCurlBtn">Скопировать cURL</button>
+      </div>
+
+      <div id="requestMeta" class="meta"></div>
+      <div id="resultStatus" class="status">Ожидание запроса...</div>
+
+      <h3>Response Headers</h3>
+      <pre id="responseHeaders">{}</pre>
+      <h3>Response Body</h3>
+      <pre id="responseBody"></pre>
+    </main>
+  </div>
+
+  <script>
+    const state = {
+      spec: null,
+      operations: [],
+      selected: null
+    };
+
+    const el = (id) => document.getElementById(id);
+    const dom = {
+      baseUrl: el("baseUrl"),
+      openapiUrl: el("openapiUrl"),
+      loadSpecBtn: el("loadSpecBtn"),
+      clearAuthBtn: el("clearAuthBtn"),
+      authLogin: el("authLogin"),
+      authPassword: el("authPassword"),
+      loginBtn: el("loginBtn"),
+      saveTokenBtn: el("saveTokenBtn"),
+      bearerToken: el("bearerToken"),
+      searchInput: el("searchInput"),
+      opsList: el("opsList"),
+      method: el("method"),
+      path: el("path"),
+      summary: el("summary"),
+      pathParamsBlock: el("pathParamsBlock"),
+      queryParamsBlock: el("queryParamsBlock"),
+      headers: el("headers"),
+      body: el("body"),
+      sendBtn: el("sendBtn"),
+      copyCurlBtn: el("copyCurlBtn"),
+      requestMeta: el("requestMeta"),
+      resultStatus: el("resultStatus"),
+      responseHeaders: el("responseHeaders"),
+      responseBody: el("responseBody")
+    };
+
+    function restoreInputs() {
+      const base = localStorage.getItem("api_tester_base") || window.location.origin;
+      const openapi = localStorage.getItem("api_tester_openapi") || base + "/api/docs.jsonopenapi";
+      const token = localStorage.getItem("api_tester_token") || "";
+      dom.baseUrl.value = base;
+      dom.openapiUrl.value = openapi;
+      dom.bearerToken.value = token;
+      dom.headers.value = localStorage.getItem("api_tester_headers") || "{}";
+    }
+
+    function persistInputs() {
+      localStorage.setItem("api_tester_base", dom.baseUrl.value.trim());
+      localStorage.setItem("api_tester_openapi", dom.openapiUrl.value.trim());
+      localStorage.setItem("api_tester_token", dom.bearerToken.value.trim());
+      localStorage.setItem("api_tester_headers", dom.headers.value.trim());
+    }
+
+    function status(text, ok) {
+      dom.resultStatus.textContent = text;
+      dom.resultStatus.className = "status " + (ok ? "ok" : "err");
+    }
+
+    function makeOpsFromSpec(spec) {
+      const out = [];
+      const paths = spec && spec.paths ? spec.paths : {};
+      for (const [path, pathItem] of Object.entries(paths)) {
+        for (const method of ["get", "post", "put", "patch", "delete", "options", "head"]) {
+          if (!pathItem[method]) continue;
+          const op = pathItem[method];
+          out.push({
+            id: (op.operationId || "") + "|" + method + "|" + path,
+            method,
+            path,
+            summary: op.summary || op.description || "",
+            operationId: op.operationId || "",
+            parameters: [
+              ...(pathItem.parameters || []),
+              ...(op.parameters || [])
+            ],
+            requestBody: op.requestBody || null
+          });
+        }
+      }
+      return out.sort((a, b) => (a.path + a.method).localeCompare(b.path + b.method));
+    }
+
+    function renderOps() {
+      const q = dom.searchInput.value.trim().toLowerCase();
+      const filtered = state.operations.filter((op) => {
+        const hay = [op.method, op.path, op.summary, op.operationId].join(" ").toLowerCase();
+        return hay.includes(q);
+      });
+
+      dom.opsList.innerHTML = "";
+      if (!filtered.length) {
+        const empty = document.createElement("div");
+        empty.className = "op";
+        empty.innerHTML = "<div class='method'>-</div><div>Ничего не найдено</div>";
+        dom.opsList.appendChild(empty);
+        return;
+      }
+
+      for (const op of filtered) {
+        const row = document.createElement("div");
+        row.className = "op" + (state.selected && state.selected.id === op.id ? " active" : "");
+        row.innerHTML = "<div class='method " + op.method + "'>" + op.method + "</div>" +
+          "<div><div>" + escapeHtml(op.path) + "</div><div class='hint'>" + escapeHtml(op.summary || op.operationId || "") + "</div></div>";
+        row.addEventListener("click", () => selectOperation(op.id));
+        dom.opsList.appendChild(row);
+      }
+    }
+
+    function paramInput(name, place, required) {
+      return (
+        "<div class='row'>" +
+          "<label>" + escapeHtml(name) + " (" + place + ")" + (required ? " *" : "") + "</label>" +
+          "<input data-param-name='" + escapeHtmlAttr(name) + "' data-param-in='" + place + "' placeholder='" + escapeHtmlAttr(name) + "' />" +
+        "</div>"
+      );
+    }
+
+    function selectOperation(opId) {
+      const op = state.operations.find((x) => x.id === opId);
+      if (!op) return;
+      state.selected = op;
+      dom.method.value = op.method.toUpperCase();
+      dom.path.value = op.path;
+      dom.summary.value = op.summary || op.operationId || "";
+      dom.requestMeta.innerHTML = "";
+
+      const pathParams = op.parameters.filter((p) => (p.in || "").toLowerCase() === "path");
+      const queryParams = op.parameters.filter((p) => (p.in || "").toLowerCase() === "query");
+
+      dom.pathParamsBlock.innerHTML = "<h3>Path Params</h3>" + (pathParams.length
+        ? pathParams.map((p) => paramInput(p.name, "path", !!p.required)).join("")
+        : "<div class='hint'>Нет path-параметров</div>");
+      dom.queryParamsBlock.innerHTML = "<h3>Query Params</h3>" + (queryParams.length
+        ? queryParams.map((p) => paramInput(p.name, "query", !!p.required)).join("")
+        : "<div class='hint'>Нет query-параметров</div>");
+
+      const hasJsonBody = !!(op.requestBody &&
+        op.requestBody.content &&
+        (op.requestBody.content["application/json"] || op.requestBody.content["application/ld+json"]));
+      if (hasJsonBody) {
+        dom.body.value = "{}";
+      } else {
+        dom.body.value = "";
+      }
+      renderOps();
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .split("&").join("&amp;")
+        .split("<").join("&lt;")
+        .split(">").join("&gt;");
+    }
+
+    function escapeHtmlAttr(s) {
+      return escapeHtml(s).split('"').join("&quot;");
+    }
+
+    function collectParamValues(place) {
+      const data = {};
+      const inputs = document.querySelectorAll("input[data-param-in='" + place + "']");
+      for (const input of inputs) {
+        const key = input.getAttribute("data-param-name");
+        const val = input.value.trim();
+        if (val.length) data[key] = val;
+      }
+      return data;
+    }
+
+    function joinBasePath(base, path) {
+      const b = base.replace(/\/$/, "");
+      const p = (path || "").trim();
+      const withSlash = p.startsWith("/") ? p : "/" + p;
+      return b + withSlash;
+    }
+
+    function buildRequestUrl() {
+      const base = dom.baseUrl.value.trim().replace(/\/$/, "");
+      let path = dom.path.value.trim();
+      const pathVals = collectParamValues("path");
+      const queryVals = collectParamValues("query");
+
+      for (const [k, v] of Object.entries(pathVals)) {
+        path = path.split("{" + k + "}").join(encodeURIComponent(v));
+      }
+
+      let u;
+      try {
+        u = new URL(joinBasePath(base, path));
+      } catch (e) {
+        throw new Error("Некорректный Base URL или path: " + (e && e.message ? e.message : e));
+      }
+      for (const [k, v] of Object.entries(queryVals)) {
+        u.searchParams.set(k, v);
+      }
+      return u.toString();
+    }
+
+    function parseJsonOrEmpty(text, fallback) {
+      const t = text.trim();
+      if (!t) return fallback;
+      return JSON.parse(t);
+    }
+
+    function requestHeaders() {
+      const headers = parseJsonOrEmpty(dom.headers.value, {});
+      const token = dom.bearerToken.value.trim();
+      if (token) headers.Authorization = "Bearer " + token;
+      return headers;
+    }
+
+    function setResponse(resp, bodyText) {
+      const hdrs = {};
+      resp.headers.forEach((v, k) => { hdrs[k] = v; });
+      dom.responseHeaders.textContent = JSON.stringify(hdrs, null, 2);
+
+      let bodyOut = bodyText;
+      try {
+        const parsed = JSON.parse(bodyText);
+        bodyOut = JSON.stringify(parsed, null, 2);
+      } catch (_) {}
+      dom.responseBody.textContent = bodyOut;
+    }
+
+    async function loadSpec() {
+      persistInputs();
+      try {
+        status("Загрузка OpenAPI...", true);
+        const primary = dom.openapiUrl.value.trim();
+        const base = dom.baseUrl.value.trim().replace(/\/$/, "");
+        const fallbacks = [];
+        [primary, base + "/api/docs.jsonopenapi", base + "/api/docs.json"].forEach(function (u) {
+          if (u && fallbacks.indexOf(u) === -1) fallbacks.push(u);
+        });
+        let res = null;
+        let text = "";
+        let usedUrl = "";
+        for (const url of fallbacks) {
+          if (!url) continue;
+          res = await fetch(url);
+          text = await res.text();
+          usedUrl = url;
+          if (res.ok) break;
+        }
+        if (res && res.ok && !text.trim()) {
+          status("OpenAPI вернул пустое тело: " + usedUrl, false);
+          return;
+        }
+        if (!res || !res.ok) {
+          status(
+            "OpenAPI недоступен (HTTP " + (res ? res.status : "?") + "). " +
+            "Запусти API: php -S 127.0.0.1:8000 -t public (из папки api). URL: " + usedUrl,
+            false
+          );
+          return;
+        }
+        const spec = JSON.parse(text);
+        if (!spec || typeof spec !== "object" || !spec.paths) {
+          status("Ответ не похож на OpenAPI (нет paths). URL: " + usedUrl, false);
+          return;
+        }
+        state.spec = spec;
+        state.operations = makeOpsFromSpec(spec);
+        renderOps();
+        if (state.operations.length) {
+          selectOperation(state.operations[0].id);
+        }
+        status("OpenAPI загружен: " + state.operations.length + " endpoint'ов (" + usedUrl + ")", true);
+      } catch (e) {
+        status("Ошибка загрузки OpenAPI: " + e.message, false);
+      }
+    }
+
+    async function login() {
+      persistInputs();
+      const base = dom.baseUrl.value.trim().replace(/\/$/, "");
+      const url = base + "/api/auth/login";
+      try {
+        status("Получение JWT токена...", true);
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: dom.authLogin.value.trim(),
+            password: dom.authPassword.value
+          })
+        });
+        const text = await res.text();
+        let payload = {};
+        try { payload = JSON.parse(text); } catch (_) {}
+        if (!res.ok) {
+          throw new Error("HTTP " + res.status + ": " + text);
+        }
+        const token = payload.token || payload.jwt || payload.access_token || "";
+        if (!token) {
+          throw new Error("Токен не найден в ответе");
+        }
+        dom.bearerToken.value = token;
+        persistInputs();
+        status("Токен получен и сохранен", true);
+      } catch (e) {
+        status("Ошибка авторизации: " + e.message, false);
+      }
+    }
+
+    async function sendRequest() {
+      persistInputs();
+      const method = dom.method.value.trim().toUpperCase();
+      const url = buildRequestUrl();
+      let headers = {};
+      let body = null;
+      try {
+        headers = requestHeaders();
+      } catch (e) {
+        status("Headers JSON невалиден: " + e.message, false);
+        return;
+      }
+
+      if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+        const raw = dom.body.value.trim();
+        if (raw) {
+          try {
+            body = JSON.stringify(parseJsonOrEmpty(raw, {}));
+            if (!headers["Content-Type"]) headers["Content-Type"] = "application/json";
+          } catch (e) {
+            status("Body JSON невалиден: " + e.message, false);
+            return;
+          }
+        }
+      }
+
+      dom.requestMeta.innerHTML = [
+        "<span class='chip'>" + method + "</span>",
+        "<span class='chip'>" + escapeHtml(url) + "</span>"
+      ].join("");
+
+      try {
+        status("Отправка запроса...", true);
+        const started = performance.now();
+        const res = await fetch(url, { method, headers, body });
+        const ended = performance.now();
+        const txt = await res.text();
+        setResponse(res, txt);
+        status("HTTP " + res.status + " за " + Math.round(ended - started) + " ms", res.ok);
+      } catch (e) {
+        status("Сетевая ошибка: " + e.message, false);
+      }
+    }
+
+    async function copyCurl() {
+      const method = dom.method.value.trim().toUpperCase();
+      const url = buildRequestUrl();
+      let headers = {};
+      try {
+        headers = requestHeaders();
+      } catch (e) {
+        status("Headers JSON невалиден: " + e.message, false);
+        return;
+      }
+      const parts = ["curl -X " + method + " '" + url + "'"];
+      for (const [k, v] of Object.entries(headers)) {
+        parts.push("-H '" + k + ": " + String(v).split("'").join("'\\''") + "'");
+      }
+      const raw = dom.body.value.trim();
+      if (raw) {
+        parts.push("--data-raw '" + raw.split("'").join("'\\''") + "'");
+      }
+      const cmd = parts.join(" \\\n  ");
+      try {
+        await navigator.clipboard.writeText(cmd);
+        status("cURL скопирован в буфер обмена", true);
+      } catch (_) {
+        status("Не удалось скопировать cURL (ограничение браузера)", false);
+      }
+    }
+
+    dom.searchInput.addEventListener("input", renderOps);
+    dom.loadSpecBtn.addEventListener("click", loadSpec);
+    dom.loginBtn.addEventListener("click", login);
+    dom.sendBtn.addEventListener("click", sendRequest);
+    dom.copyCurlBtn.addEventListener("click", copyCurl);
+
+    dom.clearAuthBtn.addEventListener("click", () => {
+      dom.bearerToken.value = "";
+      persistInputs();
+      status("Токен очищен", true);
+    });
+
+    dom.saveTokenBtn.addEventListener("click", () => {
+      persistInputs();
+      status("Токен сохранен", true);
+    });
+
+    restoreInputs();
+    loadSpec();
+  </script>
+</body>
+</html>

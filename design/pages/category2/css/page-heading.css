@@ -1,0 +1,17 @@
+/* Block: category H1 */
+.cat2-page-title {
+  margin: 0 0 16px;
+  max-width: 28ch;
+  font-weight: 700;
+  font-size: 25.2px;
+  line-height: 27.72px;
+  letter-spacing: -0.01em;
+  color: var(--cat2-text);
+}
+
+@media (max-width: 640px) {
+  .cat2-page-title {
+    font-size: 22px;
+    line-height: 1.25;
+  }
+}

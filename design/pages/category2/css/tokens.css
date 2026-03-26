@@ -1,0 +1,33 @@
+/* Category2 page — design tokens (Figma node 180:181) */
+:root {
+  --cat2-bg-page: #ffffff;
+  --cat2-bg-muted: #f7f6f5;
+  --cat2-border-light: #f7f6f5;
+  --cat2-border-input: rgba(0, 0, 0, 0.12);
+  --cat2-text: #000000;
+  --cat2-text-heading: #333333;
+  --cat2-text-group: #444444;
+  --cat2-text-body: #353535;
+  --cat2-text-muted: #555555;
+  --cat2-text-chip: #3a3c40;
+  --cat2-text-link: #337ab7;
+  --cat2-text-reset: #777777;
+  --cat2-accent-red: #df140e;
+  --cat2-accent-orange: #f76d0d;
+  --cat2-btn-gradient-start: #dc6613;
+  --cat2-btn-gradient-end: #cc4c0a;
+  --cat2-radius-section: 20px;
+  --cat2-radius-chip: 7px;
+  --cat2-radius-card: 20px;
+  --cat2-radius-media: 12px;
+  --cat2-radius-control: 12px;
+  --cat2-radius-btn: 8px;
+  --cat2-sidebar-width: 304px;
+  --cat2-main-max: 878px;
+  --cat2-shell-max: 1440px;
+  --cat2-gap-cards: 34px;
+  --cat2-card-w: 270px;
+  --cat2-card-h: 435px;
+  --font-cat2: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-cat2-ui: "Ubuntu", system-ui, -apple-system, "Segoe UI", sans-serif;
+}

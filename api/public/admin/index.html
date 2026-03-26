@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Админ — KonturM API</title>
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+  <div id="app">
+    <aside class="sidebar">
+      <div class="brand">KonturM <span>admin</span></div>
+      <nav id="nav"></nav>
+      <div class="sidebar-foot">
+        <span id="user-label" class="muted"></span>
+        <button type="button" id="btn-logout" class="btn btn-ghost hidden">Выйти</button>
+      </div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <h1 id="page-title">Вход</h1>
+      </header>
+      <section id="view-login" class="view">
+        <form id="form-login" class="card form-narrow">
+          <label>Логин <input name="username" type="text" autocomplete="username" required /></label>
+          <label>Пароль <input name="password" type="password" autocomplete="current-password" required /></label>
+          <p class="hint muted">Учётные данные см. <code>api/API_TESTING.md</code> (по умолчанию <code>admin</code> / <code>admin123</code>).</p>
+          <button type="submit" class="btn btn-primary">Войти</button>
+          <p id="login-error" class="error hidden"></p>
+        </form>
+      </section>
+      <section id="view-crud" class="view hidden">
+        <div class="toolbar">
+          <button type="button" id="btn-refresh" class="btn">Обновить</button>
+          <button type="button" id="btn-new" class="btn btn-primary">Создать</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="crud-table">
+            <thead id="crud-thead"></thead>
+            <tbody id="crud-tbody"></tbody>
+          </table>
+        </div>
+        <p id="crud-empty" class="muted hidden">Нет записей</p>
+        <nav class="pager hidden" id="crud-pager"></nav>
+      </section>
+      <section id="view-order-detail" class="view hidden">
+        <button type="button" class="btn" id="btn-order-back">← К списку заказов</button>
+        <div id="order-detail" class="card detail-block"></div>
+      </section>
+      <section id="view-api" class="view hidden">
+        <div class="card api-builder">
+          <label>Эндпоинт
+            <select id="api-preset"></select>
+          </label>
+          <div class="grid-2" id="api-params"></div>
+          <label>Тело запроса (JSON, опционально)
+            <textarea id="api-body" rows="8" spellcheck="false"></textarea>
+          </label>
+          <div class="toolbar">
+            <button type="button" id="api-run" class="btn btn-primary">Выполнить</button>
+            <label class="inline"><input type="checkbox" id="api-with-auth" /> с JWT (если есть)</label>
+          </div>
+          <pre id="api-result" class="result-pre"></pre>
+        </div>
+      </section>
+    </main>
+  </div>
+  <div id="modal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-close="1"></div>
+    <div class="modal-panel card">
+      <header class="modal-head">
+        <h2 id="modal-title">Редактирование</h2>
+        <button type="button" class="btn-icon" data-close="1" aria-label="Закрыть">×</button>
+      </header>
+      <form id="modal-form" class="modal-body"></form>
+      <footer class="modal-foot">
+        <button type="button" class="btn" data-close="1">Отмена</button>
+        <button type="submit" form="modal-form" class="btn btn-primary" id="modal-save">Сохранить</button>
+      </footer>
+    </div>
+  </div>
+  <script src="admin.js" type="module"></script>
+</body>
+</html>

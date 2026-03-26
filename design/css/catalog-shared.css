@@ -1,0 +1,23 @@
+/* Catalog — shared tokens (Figma: main 1:367) */
+:root {
+  --catalog-border: rgba(94, 98, 102, 0.12);
+  --catalog-card-bg: #f7f6f5;
+  --catalog-frame-outer-bg: #fdfdfd;
+  --catalog-frame-border: #eaeaeb;
+  --catalog-text-muted: #5e6266;
+  --catalog-card-title: rgba(0, 0, 0, 0.75);
+  --catalog-orange-start: #de6814;
+  --catalog-orange-end: #cc4a0a;
+  --catalog-card-gradient: linear-gradient(
+    106.23898737185428deg,
+    var(--catalog-orange-start) 6.5454%,
+    var(--catalog-orange-end) 93.455%
+  );
+  --catalog-radius-card: 20px;
+  --catalog-sidebar-width: 256px;
+  --catalog-card-height: 213px;
+  --catalog-grid-gap: 20px;
+  --catalog-shell-max: 1440px;
+  --catalog-inner-pad-x: clamp(16px, 5.69vw, 82px);
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}

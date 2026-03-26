@@ -1,0 +1,977 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kontur-M Demo Shop</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0d1117;
+      --panel: #161b22;
+      --muted: #8b949e;
+      --text: #e6edf3;
+      --line: #30363d;
+      --accent: #2f81f7;
+      --ok: #238636;
+      --danger: #da3633;
+      --chip: #1f2937;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .app {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr) 360px;
+      min-height: 100vh;
+    }
+    .left, .right {
+      border-right: 1px solid var(--line);
+      background: var(--panel);
+      overflow: auto;
+      padding: 14px;
+    }
+    .right {
+      border-right: none;
+      border-left: 1px solid var(--line);
+    }
+    .main {
+      overflow: auto;
+      padding: 14px;
+    }
+    h1, h2, h3 {
+      margin: 0 0 10px;
+      font-weight: 600;
+    }
+    h1 { font-size: 18px; }
+    h2 { font-size: 15px; margin-top: 12px; }
+    h3 { font-size: 13px; margin-top: 12px; color: var(--muted); }
+    .muted { color: var(--muted); font-size: 12px; }
+    .row { margin-bottom: 8px; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    input, select, textarea, button {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #0f141b;
+      color: var(--text);
+      padding: 8px 10px;
+      font-size: 13px;
+      font-family: inherit;
+    }
+    textarea {
+      min-height: 88px;
+      resize: vertical;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    button {
+      cursor: pointer;
+      background: #1b2330;
+    }
+    button:hover { background: #222d3f; }
+    .primary {
+      background: var(--accent);
+      border-color: #1b66c9;
+      color: #fff;
+    }
+    .primary:hover { background: #2675e5; }
+    .danger {
+      background: #3a1b1b;
+      border-color: #5b2626;
+    }
+    .chip {
+      background: var(--chip);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .toolbar {
+      display: grid;
+      grid-template-columns: 170px 1fr 120px 120px;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(235px, 1fr));
+      gap: 10px;
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .title {
+      font-size: 14px;
+      line-height: 1.3;
+      min-height: 36px;
+    }
+    .price {
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .list {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .item {
+      border-bottom: 1px solid var(--line);
+      padding: 8px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .item:last-child { border-bottom: none; }
+    .item:hover { background: #131a24; }
+    .item.active { background: #16243b; }
+    .status {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 12px;
+      background: #101720;
+    }
+    .status.ok { border-color: #2d6942; color: #9ce5b6; }
+    .status.err { border-color: #7f2f2f; color: #ffb8b8; }
+    .cart-list {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      max-height: 270px;
+      overflow: auto;
+    }
+    .cart-item {
+      padding: 8px;
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      gap: 6px;
+    }
+    .cart-item:last-child { border-bottom: none; }
+    .kv {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12px;
+    }
+    pre {
+      margin: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px;
+      overflow: auto;
+      max-height: 210px;
+      background: #0f141b;
+      font-size: 12px;
+    }
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.56);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal.show { display: flex; }
+    .modal-box {
+      width: min(920px, 100%);
+      max-height: 88vh;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+      padding: 14px;
+    }
+    @media (max-width: 1280px) {
+      .app { grid-template-columns: 240px 1fr; }
+      .right { grid-column: 1 / -1; border-left: none; border-top: 1px solid var(--line); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="left">
+      <h1>Demo Shop</h1>
+      <div class="muted">UI как магазин + проверка API в живом сценарии</div>
+
+      <h2>Подключение</h2>
+      <div class="row">
+        <input id="baseUrl" placeholder="http://127.0.0.1:8000">
+      </div>
+      <div class="row grid2">
+        <button id="initBtn" class="primary">Инициализировать</button>
+        <button id="refreshCategoriesBtn">Обновить категории</button>
+      </div>
+
+      <h2>Категории</h2>
+      <div class="list" id="categoryList"></div>
+    </aside>
+
+    <main class="main">
+      <div class="toolbar">
+        <select id="categorySelect"></select>
+        <input id="searchInput" placeholder="Поиск (products/services/categories)">
+        <button id="searchBtn">Искать</button>
+        <button id="resetBtn">Сброс</button>
+      </div>
+      <div class="toolbar" style="grid-template-columns:120px 120px 120px 1fr;">
+        <select id="sortSelect">
+          <option value="created_at">Сортировка: новые</option>
+          <option value="price">Сортировка: цена</option>
+          <option value="name">Сортировка: название</option>
+        </select>
+        <select id="orderSelect">
+          <option value="desc">По убыванию</option>
+          <option value="asc">По возрастанию</option>
+        </select>
+        <select id="limitSelect">
+          <option value="12">12</option>
+          <option value="20" selected>20</option>
+          <option value="40">40</option>
+        </select>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span class="chip" id="pageChip">page 1</span>
+          <button id="prevPageBtn">Назад</button>
+          <button id="nextPageBtn">Вперед</button>
+          <button id="popularBtn">Популярные</button>
+          <button id="newBtn">Новинки</button>
+          <button id="servicesBtn">Услуги</button>
+        </div>
+      </div>
+
+      <div id="listStatus" class="status">Готов к загрузке каталога</div>
+      <h3 id="listTitle">Каталог</h3>
+      <div id="cards" class="cards"></div>
+    </main>
+
+    <aside class="right">
+      <h2>Корзина</h2>
+      <div class="cart-list" id="cartList"></div>
+      <div class="kv"><span>Товаров:</span><strong id="cartQty">0</strong></div>
+      <div class="kv"><span>Сумма:</span><strong id="cartAmount">0</strong></div>
+      <div class="row grid2">
+        <button id="refreshCartBtn">Обновить</button>
+        <button id="clearCartBtn" class="danger">Очистить</button>
+      </div>
+
+      <h2>Оформление заказа</h2>
+      <div class="row"><input id="customerName" placeholder="Имя *"></div>
+      <div class="row"><input id="customerPhone" placeholder="+79990000000 *"></div>
+      <div class="row"><input id="customerEmail" placeholder="mail@example.com *"></div>
+      <div class="row"><input id="customerCompany" placeholder="Компания"></div>
+      <div class="row"><textarea id="customerComment" placeholder="Комментарий"></textarea></div>
+      <div class="row grid2">
+        <button id="checkoutBtn" class="primary">Оформить из корзины</button>
+        <button id="createOrderBtn">Прямой POST /orders</button>
+      </div>
+      <div class="row"><input id="orderStatusInput" placeholder="ORDER-XXXXXXX"></div>
+      <div class="row grid2">
+        <button id="orderStatusBtn">Проверить статус</button>
+        <button id="seoBtn">SEO check</button>
+      </div>
+
+      <h2>Лог API</h2>
+      <pre id="apiLog">{}</pre>
+    </aside>
+  </div>
+
+  <div class="modal" id="productModal">
+    <div class="modal-box">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
+        <h2>Карточка товара</h2>
+        <button id="closeModalBtn">Закрыть</button>
+      </div>
+      <pre id="productDetails"></pre>
+      <div class="grid2" style="margin-top:8px;">
+        <button id="addFromModalBtn" class="primary">Добавить в корзину</button>
+        <button id="copySlugBtn">Скопировать slug</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const st = {
+      categories: [],
+      currentCategorySlug: "",
+      page: 1,
+      mode: "category",
+      listItems: [],
+      selectedProduct: null,
+      cart: { items: [], total_quantity: 0, total_amount: 0 }
+    };
+
+    const q = (id) => document.getElementById(id);
+    const ui = {
+      baseUrl: q("baseUrl"),
+      initBtn: q("initBtn"),
+      refreshCategoriesBtn: q("refreshCategoriesBtn"),
+      categoryList: q("categoryList"),
+      categorySelect: q("categorySelect"),
+      searchInput: q("searchInput"),
+      searchBtn: q("searchBtn"),
+      resetBtn: q("resetBtn"),
+      sortSelect: q("sortSelect"),
+      orderSelect: q("orderSelect"),
+      limitSelect: q("limitSelect"),
+      pageChip: q("pageChip"),
+      prevPageBtn: q("prevPageBtn"),
+      nextPageBtn: q("nextPageBtn"),
+      popularBtn: q("popularBtn"),
+      newBtn: q("newBtn"),
+      servicesBtn: q("servicesBtn"),
+      listStatus: q("listStatus"),
+      listTitle: q("listTitle"),
+      cards: q("cards"),
+      cartList: q("cartList"),
+      cartQty: q("cartQty"),
+      cartAmount: q("cartAmount"),
+      refreshCartBtn: q("refreshCartBtn"),
+      clearCartBtn: q("clearCartBtn"),
+      customerName: q("customerName"),
+      customerPhone: q("customerPhone"),
+      customerEmail: q("customerEmail"),
+      customerCompany: q("customerCompany"),
+      customerComment: q("customerComment"),
+      checkoutBtn: q("checkoutBtn"),
+      createOrderBtn: q("createOrderBtn"),
+      orderStatusInput: q("orderStatusInput"),
+      orderStatusBtn: q("orderStatusBtn"),
+      seoBtn: q("seoBtn"),
+      apiLog: q("apiLog"),
+      productModal: q("productModal"),
+      productDetails: q("productDetails"),
+      closeModalBtn: q("closeModalBtn"),
+      addFromModalBtn: q("addFromModalBtn"),
+      copySlugBtn: q("copySlugBtn")
+    };
+
+    function saveConfig() {
+      localStorage.setItem("demo_shop_base_url", ui.baseUrl.value.trim());
+    }
+
+    function loadConfig() {
+      ui.baseUrl.value = localStorage.getItem("demo_shop_base_url") || window.location.origin;
+      ui.customerName.value = "Тестовый клиент";
+      ui.customerPhone.value = "+79990000000";
+      ui.customerEmail.value = "test@example.com";
+    }
+
+    function setStatus(text, ok = true) {
+      ui.listStatus.textContent = text;
+      ui.listStatus.className = "status " + (ok ? "ok" : "err");
+    }
+
+    function fmtPrice(v) {
+      const n = Number(v || 0);
+      return Number.isFinite(n) ? n.toLocaleString("ru-RU") + " ₽" : String(v || "");
+    }
+
+    function flattenTree(nodes, out = []) {
+      for (const n of nodes || []) {
+        out.push({ id: n.id, name: n.name, slug: n.slug });
+        if (Array.isArray(n.children) && n.children.length) flattenTree(n.children, out);
+      }
+      return out;
+    }
+
+    function normalizeTree(data) {
+      if (Array.isArray(data)) return data;
+      if (!data || typeof data !== "object") return [];
+      if (Array.isArray(data["hydra:member"])) return data["hydra:member"];
+      if (Array.isArray(data.items)) return data.items;
+      if (Array.isArray(data.data)) return data.data;
+      // Fallback: API could return a single tree node object.
+      if (data.id && data.name) return [data];
+      return [];
+    }
+
+    function unwrapHydra(data) {
+      if (Array.isArray(data)) return data;
+      if (data && Array.isArray(data["hydra:member"])) return data["hydra:member"];
+      if (data && Array.isArray(data.items)) return data.items;
+      return [];
+    }
+
+    function normalizeCategoryProductsPayload(data) {
+      if (!data || typeof data !== "object") {
+        return { items: [], pagination: null, filters: null };
+      }
+
+      // Native custom controller format: { items, pagination, filters }
+      if (Array.isArray(data.items)) {
+        return {
+          items: data.items,
+          pagination: data.pagination || null,
+          filters: data.filters || null
+        };
+      }
+
+      // Hydra-wrapped custom array response can look like:
+      // "hydra:member": [ [items...], {pagination...}, {filters...} ]
+      const member = Array.isArray(data["hydra:member"]) ? data["hydra:member"] : null;
+      if (member) {
+        const nestedItems = Array.isArray(member[0]) ? member[0] : [];
+        const pagination = member[1] && typeof member[1] === "object" && !Array.isArray(member[1]) ? member[1] : null;
+        const filters = member[2] && typeof member[2] === "object" && !Array.isArray(member[2]) ? member[2] : null;
+        if (nestedItems.length || pagination || filters) {
+          return { items: nestedItems, pagination, filters };
+        }
+        // Fallback for standard hydra member array of entities.
+        return { items: member, pagination: null, filters: null };
+      }
+
+      return { items: [], pagination: null, filters: null };
+    }
+
+    /**
+     * Cart API может вернуть либо { items, total_quantity, total_amount },
+     * либо Hydra: "hydra:member": [ [items...], total_quantity, total_amount ]
+     */
+    function normalizeCartPayload(data) {
+      if (!data || typeof data !== "object") {
+        return { items: [], total_quantity: 0, total_amount: 0 };
+      }
+      if (Array.isArray(data.items)) {
+        return {
+          items: data.items,
+          total_quantity: Number(data.total_quantity) || 0,
+          total_amount: Number(data.total_amount) || 0
+        };
+      }
+      const member = Array.isArray(data["hydra:member"]) ? data["hydra:member"] : null;
+      if (member && member.length >= 1 && Array.isArray(member[0])) {
+        const items = member[0];
+        const q = member[1];
+        const a = member[2];
+        return {
+          items,
+          total_quantity: typeof q === "number" ? q : Number(q) || 0,
+          total_amount: typeof a === "number" ? a : Number(a) || 0
+        };
+      }
+      return { items: [], total_quantity: 0, total_amount: 0 };
+    }
+
+    function safeRequestBodyForLog(options) {
+      const b = options && options.body;
+      if (b == null || b === "") return null;
+      if (typeof b !== "string") return b;
+      try {
+        return JSON.parse(b);
+      } catch (_) {
+        return b;
+      }
+    }
+
+    async function api(path, options = {}) {
+      saveConfig();
+      const base = ui.baseUrl.value.trim().replace(/\/$/, "");
+      const url = base + path;
+      const started = performance.now();
+      try {
+        const res = await fetch(url, options);
+        const text = await res.text();
+        const spent = Math.round(performance.now() - started);
+        let json = null;
+        try { json = JSON.parse(text); } catch (_) {}
+        const responsePayload = json != null ? json : text;
+        ui.apiLog.textContent = JSON.stringify({
+          request: {
+            method: (options && options.method) || "GET",
+            url,
+            body: safeRequestBodyForLog(options)
+          },
+          response: { status: res.status, ms: spent, json: responsePayload }
+        }, null, 2);
+        if (!res.ok) throw new Error("HTTP " + res.status + ": " + text);
+        return responsePayload;
+      } catch (e) {
+        ui.apiLog.textContent = JSON.stringify({ error: e.message, path }, null, 2);
+        throw e;
+      }
+    }
+
+    function renderCategories() {
+      ui.categoryList.innerHTML = "";
+      ui.categorySelect.innerHTML = "";
+      for (const c of st.categories) {
+        const row = document.createElement("div");
+        row.className = "item" + (st.currentCategorySlug === c.slug ? " active" : "");
+        row.textContent = c.name + " (" + c.slug + ")";
+        row.onclick = () => {
+          st.mode = "category";
+          st.page = 1;
+          st.currentCategorySlug = c.slug;
+          ui.categorySelect.value = c.slug;
+          loadCategoryProducts();
+          renderCategories();
+        };
+        ui.categoryList.appendChild(row);
+
+        const op = document.createElement("option");
+        op.value = c.slug;
+        op.textContent = c.name;
+        ui.categorySelect.appendChild(op);
+      }
+      if (st.currentCategorySlug) ui.categorySelect.value = st.currentCategorySlug;
+    }
+
+    function makeCard(item, type = "product") {
+      const id = item.id || item.slug || Math.random().toString();
+      const card = document.createElement("div");
+      card.className = "card";
+      const article = item.article ? "<div class='muted'>Артикул: " + escapeHtml(item.article) + "</div>" : "";
+      card.innerHTML =
+        "<div class='title'>" + escapeHtml(item.name || "(без названия)") + "</div>" +
+        article +
+        "<div class='price'>" + fmtPrice(item.price) + "</div>" +
+        "<div class='muted'>slug: " + escapeHtml(item.slug || "") + "</div>" +
+        "<div class='actions'>" +
+          "<button data-act='view' data-id='" + escapeAttr(id) + "'>Подробнее</button>" +
+          "<button class='primary' data-act='add' data-id='" + escapeAttr(id) + "'>В корзину</button>" +
+        "</div>";
+      card.querySelector("[data-act='view']").onclick = () => openDetails(item, type);
+      card.querySelector("[data-act='add']").onclick = () => addToCart(item, type);
+      return card;
+    }
+
+    function renderCards(items, type = "product") {
+      ui.cards.innerHTML = "";
+      if (!items.length) {
+        const div = document.createElement("div");
+        div.className = "muted";
+        div.textContent = "Нет данных";
+        ui.cards.appendChild(div);
+        return;
+      }
+      for (const it of items) ui.cards.appendChild(makeCard(it, type));
+    }
+
+    function renderCart() {
+      const c = st.cart || { items: [], total_quantity: 0, total_amount: 0 };
+      ui.cartList.innerHTML = "";
+      if (!c.items || !c.items.length) {
+        const row = document.createElement("div");
+        row.className = "cart-item";
+        row.innerHTML = "<span class='muted'>Корзина пуста</span>";
+        ui.cartList.appendChild(row);
+      } else {
+        for (const it of c.items) {
+          const row = document.createElement("div");
+          row.className = "cart-item";
+          row.innerHTML =
+            "<div><strong>" + escapeHtml(it.name) + "</strong></div>" +
+            "<div class='muted'>" + escapeHtml(it.id) + "</div>" +
+            "<div class='kv'><span>" + fmtPrice(it.price) + " x " + it.quantity + "</span><strong>" + fmtPrice(it.total) + "</strong></div>" +
+            "<div class='grid2'>" +
+              "<button data-inc>+1</button>" +
+              "<button data-del class='danger'>Удалить</button>" +
+            "</div>";
+          row.querySelector("[data-inc]").onclick = () => updateCartItem(it.id, it.quantity + 1);
+          row.querySelector("[data-del]").onclick = () => removeCartItem(it.id);
+          ui.cartList.appendChild(row);
+        }
+      }
+      ui.cartQty.textContent = String(c.total_quantity || 0);
+      ui.cartAmount.textContent = fmtPrice(c.total_amount || 0);
+    }
+
+    async function loadCategories() {
+      setStatus("Загрузка категорий...");
+      const tree = await api("/api/categories/tree");
+      const normalizedTree = normalizeTree(tree);
+      const flat = flattenTree(normalizedTree);
+      st.categories = flat;
+      if (!st.currentCategorySlug && flat.length) st.currentCategorySlug = flat[0].slug;
+      renderCategories();
+      if (!flat.length) {
+        setStatus("Категории загружены: 0 (проверь ответ в блоке 'Лог API')", false);
+        return;
+      }
+      setStatus("Категории загружены: " + flat.length);
+    }
+
+    async function loadCategoryProducts() {
+      if (!st.currentCategorySlug) return;
+      setStatus("Загрузка каталога...");
+      const limit = Number(ui.limitSelect.value);
+      const params = new URLSearchParams({
+        page: String(st.page),
+        limit: String(limit),
+        sort: ui.sortSelect.value,
+        order: ui.orderSelect.value
+      });
+      const data = await api("/api/categories/" + encodeURIComponent(st.currentCategorySlug) + "/products?" + params.toString());
+      const normalized = normalizeCategoryProductsPayload(data);
+      st.listItems = normalized.items;
+      ui.listTitle.textContent = "Категория: " + st.currentCategorySlug;
+      const currentPage = normalized.pagination && normalized.pagination.page ? normalized.pagination.page : st.page;
+      const totalPages = normalized.pagination && normalized.pagination.total_pages ? normalized.pagination.total_pages : "?";
+      ui.pageChip.textContent = "page " + currentPage + "/" + totalPages;
+      renderCards(st.listItems, "product");
+      setStatus("Загружено товаров: " + st.listItems.length);
+    }
+
+    async function openDetails(item, type) {
+      try {
+        if (type === "product") {
+          const full = await api("/api/products/by-slug/" + encodeURIComponent(item.slug));
+          st.selectedProduct = { type: "product", data: full };
+        } else if (type === "service") {
+          const full = await api("/api/services/by-slug/" + encodeURIComponent(item.slug));
+          st.selectedProduct = { type: "service", data: full };
+        } else {
+          st.selectedProduct = { type, data: item };
+        }
+        ui.productDetails.textContent = JSON.stringify(st.selectedProduct.data, null, 2);
+        ui.productModal.classList.add("show");
+      } catch (e) {
+        setStatus("Не удалось открыть карточку: " + e.message, false);
+      }
+    }
+
+    async function addToCart(item, type) {
+      const entityId = resolveEntityId(item);
+      if (!entityId) {
+        setStatus("Ошибка добавления: не найден UUID товара/услуги в ответе API", false);
+        ui.apiLog.textContent = JSON.stringify({ add_to_cart_item: item, reason: "missing_entity_uuid" }, null, 2);
+        return;
+      }
+      const payload = {
+        type: type === "service" ? "service" : "product",
+        id: entityId,
+        quantity: 1
+      };
+      try {
+        const raw = await api("/api/cart/items", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        st.cart = normalizeCartPayload(raw);
+        renderCart();
+        setStatus("Добавлено в корзину");
+      } catch (e) {
+        setStatus("Ошибка добавления в корзину: " + e.message, false);
+      }
+    }
+
+    async function refreshCart() {
+      try {
+        const raw = await api("/api/cart");
+        st.cart = normalizeCartPayload(raw);
+        renderCart();
+      } catch (e) {
+        setStatus("Ошибка загрузки корзины: " + e.message, false);
+      }
+    }
+
+    async function updateCartItem(itemId, quantity) {
+      try {
+        const raw = await api("/api/cart/items/" + encodeURIComponent(itemId), {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ quantity })
+        });
+        st.cart = normalizeCartPayload(raw);
+        renderCart();
+      } catch (e) {
+        setStatus("Ошибка обновления корзины: " + e.message, false);
+      }
+    }
+
+    async function removeCartItem(itemId) {
+      try {
+        const raw = await api("/api/cart/items/" + encodeURIComponent(itemId), { method: "DELETE" });
+        st.cart = normalizeCartPayload(raw);
+        renderCart();
+      } catch (e) {
+        setStatus("Ошибка удаления из корзины: " + e.message, false);
+      }
+    }
+
+    async function clearCart() {
+      try {
+        const raw = await api("/api/cart", { method: "DELETE" });
+        st.cart = normalizeCartPayload(raw);
+        renderCart();
+      } catch (e) {
+        setStatus("Ошибка очистки корзины: " + e.message, false);
+      }
+    }
+
+    function orderPayloadFromCart() {
+      return {
+        customer_name: ui.customerName.value.trim(),
+        customer_company: ui.customerCompany.value.trim() || null,
+        customer_phone: ui.customerPhone.value.trim(),
+        customer_email: ui.customerEmail.value.trim(),
+        comment: ui.customerComment.value.trim() || null,
+        items: (st.cart.items || []).map((i) => ({
+          type: i.product_id ? "product" : "service",
+          id: i.product_id || i.service_id,
+          name: i.name,
+          article: i.article || null,
+          quantity: i.quantity,
+          price: Number(i.price || 0)
+        }))
+      };
+    }
+
+    async function checkout() {
+      try {
+        const payload = {
+          customer_name: ui.customerName.value.trim(),
+          customer_company: ui.customerCompany.value.trim() || null,
+          customer_phone: ui.customerPhone.value.trim(),
+          customer_email: ui.customerEmail.value.trim(),
+          comment: ui.customerComment.value.trim() || null
+        };
+        const res = await api("/api/cart/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (res.order_number) ui.orderStatusInput.value = res.order_number;
+        await refreshCart();
+        setStatus("Заказ создан через checkout: " + (res.order_number || "OK"));
+      } catch (e) {
+        setStatus("Ошибка checkout: " + e.message, false);
+      }
+    }
+
+    async function createOrderDirect() {
+      try {
+        const payload = orderPayloadFromCart();
+        const res = await api("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (res.order_number) ui.orderStatusInput.value = res.order_number;
+        setStatus("Прямой заказ создан: " + (res.order_number || "OK"));
+      } catch (e) {
+        setStatus("Ошибка создания order: " + e.message, false);
+      }
+    }
+
+    async function checkOrderStatus() {
+      const no = ui.orderStatusInput.value.trim();
+      if (!no) {
+        setStatus("Введите номер заказа", false);
+        return;
+      }
+      try {
+        await api("/api/orders/" + encodeURIComponent(no) + "/status");
+        setStatus("Статус заказа получен");
+      } catch (e) {
+        setStatus("Ошибка статуса: " + e.message, false);
+      }
+    }
+
+    async function runSeoCheck() {
+      const first = st.listItems[0];
+      if (!first || !first.slug) {
+        setStatus("Для SEO проверки сначала загрузите товары", false);
+        return;
+      }
+      try {
+        await api("/api/seo/product/" + encodeURIComponent(first.slug));
+        await api("/api/seo/category/" + encodeURIComponent(st.currentCategorySlug));
+        await api("/api/seo/canonical?url=" + encodeURIComponent("https://merniki.ru/categories/" + st.currentCategorySlug) + "&type=category");
+        setStatus("SEO endpoint'ы проверены");
+      } catch (e) {
+        setStatus("SEO check ошибка: " + e.message, false);
+      }
+    }
+
+    async function runSearch() {
+      const qv = ui.searchInput.value.trim();
+      if (!qv) {
+        setStatus("Введите запрос поиска", false);
+        return;
+      }
+      try {
+        const res = await api("/api/search?q=" + encodeURIComponent(qv) + "&type=all&page=1&limit=" + encodeURIComponent(ui.limitSelect.value));
+        const products = unwrapHydra(res.products || []);
+        const services = unwrapHydra(res.services || []);
+        st.listItems = products.length ? products : services;
+        ui.listTitle.textContent = "Поиск: " + qv + " (products/services)";
+        renderCards(products.length ? products : services, products.length ? "product" : "service");
+        setStatus("Найдено: products " + products.length + ", services " + services.length);
+      } catch (e) {
+        setStatus("Ошибка поиска: " + e.message, false);
+      }
+    }
+
+    async function loadPopular() {
+      try {
+        const res = await api("/api/products/popular?limit=" + encodeURIComponent(ui.limitSelect.value));
+        const items = unwrapHydra(res);
+        st.listItems = items;
+        ui.listTitle.textContent = "Популярные товары";
+        renderCards(items, "product");
+        setStatus("Популярные загружены: " + items.length);
+      } catch (e) {
+        setStatus("Ошибка популярных: " + e.message, false);
+      }
+    }
+
+    async function loadNew() {
+      try {
+        const res = await api("/api/products/new?limit=" + encodeURIComponent(ui.limitSelect.value));
+        const items = unwrapHydra(res);
+        st.listItems = items;
+        ui.listTitle.textContent = "Новые товары";
+        renderCards(items, "product");
+        setStatus("Новинки загружены: " + items.length);
+      } catch (e) {
+        setStatus("Ошибка новинок: " + e.message, false);
+      }
+    }
+
+    async function loadServices() {
+      try {
+        const res = await api("/api/services?page=1&limit=" + encodeURIComponent(ui.limitSelect.value));
+        const items = unwrapHydra(res);
+        st.listItems = items;
+        ui.listTitle.textContent = "Услуги";
+        renderCards(items, "service");
+        setStatus("Услуги загружены: " + items.length);
+      } catch (e) {
+        setStatus("Ошибка услуг: " + e.message, false);
+      }
+    }
+
+    function escapeHtml(s) {
+      return String(s != null ? s : "")
+        .split("&").join("&amp;")
+        .split("<").join("&lt;")
+        .split(">").join("&gt;");
+    }
+
+    function escapeAttr(s) {
+      return escapeHtml(s).split('"').join("&quot;");
+    }
+
+    function coerceUuid(value) {
+      if (typeof value !== "string") return null;
+      const s = value.trim();
+      if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s)) {
+        return s;
+      }
+      const prefixed = s.match(/^(?:product|service):([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i);
+      if (prefixed) return prefixed[1];
+      return null;
+    }
+
+    function extractIdFromIri(iri) {
+      if (typeof iri !== "string") return null;
+      const parts = iri.split("/").filter(Boolean);
+      if (!parts.length) return null;
+      const last = parts[parts.length - 1];
+      return coerceUuid(last);
+    }
+
+    function resolveEntityId(item) {
+      if (!item || typeof item !== "object") return null;
+      const candidates = [
+        item.product_id,
+        item.service_id,
+        item.entity_id,
+        item.id,
+        extractIdFromIri(item["@id"])
+      ];
+      for (const candidate of candidates) {
+        const u = coerceUuid(candidate);
+        if (u) return u;
+      }
+      return null;
+    }
+
+    async function bootstrap() {
+      try {
+        await loadCategories();
+        await loadCategoryProducts();
+        await refreshCart();
+      } catch (e) {
+        setStatus("Инициализация не завершена: " + e.message, false);
+      }
+    }
+
+    ui.initBtn.onclick = bootstrap;
+    ui.refreshCategoriesBtn.onclick = loadCategories;
+    ui.categorySelect.onchange = () => {
+      st.currentCategorySlug = ui.categorySelect.value;
+      st.mode = "category";
+      st.page = 1;
+      loadCategoryProducts();
+      renderCategories();
+    };
+    ui.searchBtn.onclick = runSearch;
+    ui.resetBtn.onclick = () => {
+      st.mode = "category";
+      st.page = 1;
+      ui.searchInput.value = "";
+      loadCategoryProducts();
+    };
+    ui.prevPageBtn.onclick = () => {
+      st.page = Math.max(1, st.page - 1);
+      loadCategoryProducts();
+    };
+    ui.nextPageBtn.onclick = () => {
+      st.page += 1;
+      loadCategoryProducts();
+    };
+    ui.sortSelect.onchange = () => { st.page = 1; loadCategoryProducts(); };
+    ui.orderSelect.onchange = () => { st.page = 1; loadCategoryProducts(); };
+    ui.limitSelect.onchange = () => { st.page = 1; loadCategoryProducts(); };
+    ui.popularBtn.onclick = loadPopular;
+    ui.newBtn.onclick = loadNew;
+    ui.servicesBtn.onclick = loadServices;
+    ui.refreshCartBtn.onclick = refreshCart;
+    ui.clearCartBtn.onclick = clearCart;
+    ui.checkoutBtn.onclick = checkout;
+    ui.createOrderBtn.onclick = createOrderDirect;
+    ui.orderStatusBtn.onclick = checkOrderStatus;
+    ui.seoBtn.onclick = runSeoCheck;
+
+    ui.closeModalBtn.onclick = () => ui.productModal.classList.remove("show");
+    ui.productModal.onclick = (e) => {
+      if (e.target === ui.productModal) ui.productModal.classList.remove("show");
+    };
+    ui.addFromModalBtn.onclick = () => {
+      if (!st.selectedProduct) return;
+      addToCart(st.selectedProduct.data, st.selectedProduct.type);
+    };
+    ui.copySlugBtn.onclick = async () => {
+      const slug = st.selectedProduct && st.selectedProduct.data ? st.selectedProduct.data.slug : "";
+      if (!slug) return;
+      try {
+        await navigator.clipboard.writeText(slug);
+        setStatus("slug скопирован: " + slug);
+      } catch (_) {
+        setStatus("Не удалось скопировать slug", false);
+      }
+    };
+
+    loadConfig();
+    bootstrap();
+  </script>
+</body>
+</html>

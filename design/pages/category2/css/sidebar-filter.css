@@ -1,0 +1,207 @@
+/* Block: sidebar filter (Figma left column) */
+.cat2-filter {
+  padding-bottom: 24px;
+}
+
+.cat2-filter__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.cat2-filter__icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.cat2-filter__title {
+  margin: 0;
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 24px;
+  color: var(--cat2-text-heading);
+}
+
+.cat2-filter__section {
+  border: none;
+  margin: 0 0 15px;
+  padding: 25px 20px 20px;
+  min-inline-size: 0;
+  background: var(--cat2-bg-muted);
+  border-radius: var(--cat2-radius-section);
+  position: relative;
+}
+
+.cat2-filter__section > legend.cat2-filter__section-title {
+  float: none;
+  padding: 0;
+}
+
+.cat2-filter__section-title {
+  margin: 0 0 16px;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 21px;
+  color: var(--cat2-text-group);
+}
+
+.cat2-filter__options {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.cat2-filter__option {
+  margin: 0;
+  padding: 0;
+  min-height: 39px;
+  display: flex;
+  align-items: center;
+}
+
+.cat2-filter__option--compact {
+  min-height: 19.5px;
+  margin-bottom: 6px;
+}
+
+.cat2-filter__option:last-child {
+  margin-bottom: 0;
+}
+
+.cat2-filter__label {
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  gap: 10px;
+  align-items: flex-start;
+  width: 100%;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 19.5px;
+  color: var(--cat2-text-body);
+}
+
+.cat2-filter__label-text {
+  padding-top: 1px;
+}
+
+.cat2-filter__checkbox {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+  flex-shrink: 0;
+  border: 1px solid var(--cat2-border-light);
+  border-radius: 2px;
+  background: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.cat2-filter__checkbox:checked {
+  background-color: var(--cat2-accent-orange);
+  border-color: rgba(0, 0, 0, 0.12);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 10'%3E%3Cpath fill='white' d='M1 5l3.5 3.5L11 1' stroke='white' stroke-width='1.2' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 10px auto;
+}
+
+.cat2-filter__checkbox:focus-visible {
+  outline: 2px solid var(--cat2-accent-orange);
+  outline-offset: 2px;
+}
+
+.cat2-filter__more {
+  margin-top: 12px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--cat2-text-link);
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cat2-filter__more:hover {
+  text-decoration: underline;
+}
+
+.cat2-filter__more-icon {
+  width: 12px;
+  height: 12px;
+  object-fit: contain;
+}
+
+.cat2-filter__footer {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.cat2-filter__submit {
+  margin-left: 44px;
+  min-height: 31px;
+  padding: 6px 16px;
+  border: 0;
+  border-radius: var(--cat2-radius-control);
+  font-family: var(--font-cat2);
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 20px;
+  color: #ffffff;
+  cursor: pointer;
+  background: linear-gradient(
+    90deg,
+    var(--cat2-btn-gradient-start) 0%,
+    var(--cat2-btn-gradient-end) 100%
+  );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.cat2-filter__submit:hover {
+  filter: brightness(1.03);
+}
+
+.cat2-filter__submit:focus-visible {
+  outline: 2px solid var(--cat2-text-heading);
+  outline-offset: 2px;
+}
+
+.cat2-filter__reset {
+  margin-left: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 10px;
+  line-height: 20px;
+  color: var(--cat2-text-reset);
+  opacity: 0.65;
+  cursor: pointer;
+}
+
+.cat2-filter__reset:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+@media (max-width: 1023px) {
+  .cat2-filter__footer {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .cat2-filter__submit {
+    margin-left: 0;
+  }
+}

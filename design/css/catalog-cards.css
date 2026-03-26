@@ -1,0 +1,285 @@
+/* Product category cards (Figma 7:427–7:528) */
+.catalog-card {
+  position: relative;
+  display: block;
+  min-height: var(--catalog-card-height);
+  border-radius: var(--catalog-radius-card);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  outline-offset: 2px;
+  background: var(--catalog-card-bg);
+  border: 1px solid var(--catalog-border);
+  box-sizing: border-box;
+}
+
+.catalog-card:focus-visible {
+  outline: 2px solid var(--catalog-orange-start);
+}
+
+@media (hover: hover) {
+  .catalog-card:hover {
+    background: var(--catalog-card-gradient);
+    border-color: transparent;
+  }
+
+  .catalog-card:hover .catalog-card__title {
+    color: #ffffff;
+  }
+
+  .catalog-card:hover .catalog-card__arrow {
+    color: rgba(255, 255, 255, 0.95);
+  }
+}
+
+.catalog-card:focus-visible .catalog-card__title {
+  color: #ffffff;
+}
+
+.catalog-card:focus-visible .catalog-card__arrow {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.catalog-card:focus-visible {
+  background: var(--catalog-card-gradient);
+  border-color: transparent;
+}
+
+/* «Featured» — как обычная карточка до наведения; акцент только при hover/focus */
+.catalog-card--featured {
+  background: var(--catalog-card-bg);
+  border: 1px solid var(--catalog-border);
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+@media (hover: hover) {
+  /* Featured тоже становится оранжевым при hover, но у него базовое оформление уже другое. */
+  .catalog-card--featured:hover {
+    box-shadow: none;
+  }
+}
+
+.catalog-card__title {
+  position: relative;
+  z-index: 2;
+  margin: 20px 20px 0;
+  max-width: calc(100% - 56px);
+  font-weight: 700;
+  font-size: 18px;
+  line-height: normal;
+  color: var(--catalog-card-title);
+  transition: color 0.2s ease;
+}
+
+.catalog-card__media {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.catalog-card__media img {
+  display: block;
+  max-width: none;
+}
+
+.catalog-card__arrow {
+  position: absolute;
+  z-index: 3;
+  right: 15px;
+  bottom: 17px;
+  width: 24px;
+  height: 24px;
+  color: rgba(0, 0, 0, 0.55);
+  transition: color 0.2s ease;
+}
+
+
+/* Card 1 — featured */
+.catalog-card--c1 .catalog-card__hero {
+  position: absolute;
+  left: 23%;
+  top: -3%;
+  width: 81%;
+  height: 183%;
+  object-fit: cover;
+  object-position: center bottom;
+}
+
+/* Card 2 — layered merники */
+.catalog-card--c2 .catalog-card__layer-a {
+  position: absolute;
+  right: -8%;
+  top: -22%;
+  width: 86%;
+  height: 171%;
+  object-fit: cover;
+}
+
+.catalog-card--c2 .catalog-card__layer-b {
+  position: absolute;
+  left: 20%;
+  top: 10%;
+  width: 57%;
+  height: 113%;
+  object-fit: cover;
+}
+
+.catalog-card--c2 .catalog-card__layer-c {
+  position: absolute;
+  left: -4%;
+  top: 15%;
+  width: 47%;
+  height: 105%;
+  object-fit: cover;
+}
+
+/* Card 3 — technical */
+.catalog-card--c3 .catalog-card__layer-a {
+  position: absolute;
+  left: 2%;
+  top: 12%;
+  width: 52%;
+  height: 117%;
+  object-fit: cover;
+}
+
+.catalog-card--c3 .catalog-card__layer-b {
+  position: absolute;
+  left: 31%;
+  top: 14%;
+  width: 40%;
+  height: 61%;
+  object-fit: cover;
+}
+
+.catalog-card--c3 .catalog-card__layer-c {
+  position: absolute;
+  right: 6%;
+  top: 11%;
+  width: 47%;
+  height: 62%;
+  object-fit: cover;
+}
+
+.catalog-card--c3 .catalog-card__disc {
+  position: absolute;
+  width: 15%;
+  height: 54%;
+  object-fit: contain;
+  opacity: 0.9;
+}
+
+.catalog-card--c3 .catalog-card__disc--1 {
+  left: 47%;
+  top: 33%;
+}
+
+.catalog-card--c3 .catalog-card__disc--2 {
+  left: 30%;
+  top: 49%;
+}
+
+/* Card 4 — T-shaped metroshtok */
+.catalog-card--c4 .catalog-card__rotate-wrap {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 130%;
+  height: 160%;
+  transform: translate(-50%, -50%) rotate(17.39deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.catalog-card--c4 .catalog-card__hero {
+  width: 92%;
+  height: 72%;
+  object-fit: cover;
+}
+
+/* Card 5 — round */
+.catalog-card--c5 .catalog-card__hero {
+  position: absolute;
+  left: 18%;
+  top: 3%;
+  width: 118%;
+  height: 97%;
+  object-fit: cover;
+  object-position: 40% 50%;
+}
+
+/* Card 6 — anodized */
+.catalog-card--c6 .catalog-card__layer-a {
+  position: absolute;
+  left: 50%;
+  top: 18%;
+  width: 47%;
+  height: 82%;
+  transform: translateX(-50%) rotate(0.55deg);
+  object-fit: cover;
+}
+
+.catalog-card--c6 .catalog-card__layer-b {
+  position: absolute;
+  right: 4%;
+  bottom: -35%;
+  width: 58%;
+  height: 95%;
+  object-fit: cover;
+}
+
+/* Card 7 — tape plumb */
+.catalog-card--c7 .catalog-card__tape-wrap {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  width: 82%;
+  height: 86%;
+  transform: translate(-50%, -50%) rotate(180deg) scaleY(-1);
+  overflow: hidden;
+}
+
+.catalog-card--c7 .catalog-card__hero {
+  position: absolute;
+  width: 159%;
+  height: 141%;
+  left: -43%;
+  top: -12%;
+  object-fit: cover;
+}
+
+/* Card 8 — tape ring */
+.catalog-card--c8 .catalog-card__rotate-wrap {
+  position: absolute;
+  left: 42%;
+  top: 36%;
+  width: 140%;
+  height: 152%;
+  transform: translate(-50%, -50%) rotate(-7.71deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.catalog-card--c8 .catalog-card__hero {
+  width: 93%;
+  height: 84%;
+  object-fit: cover;
+}
+
+/* Card 9 — sampling */
+.catalog-card--c9 .catalog-card__hero {
+  position: absolute;
+  left: 21%;
+  top: 6%;
+  width: 69%;
+  height: 213%;
+  object-fit: cover;
+  object-position: center top;
+}
