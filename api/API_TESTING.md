@@ -32,11 +32,13 @@ php bin/console doctrine:migrations:migrate --no-interaction
 
 ## 3) Run API
 
-Встроенный сервер PHP должен проксировать запросы в `public/index.php`, иначе маршруты Symfony (`/catalog`, `/design/...`) и часть страниц не заработают (будет 404 от PHP, не от приложения).
+Встроенный сервер PHP должен идти через `public/router.php` (или иначе в `public/index.php`), иначе маршруты Symfony (`/catalog`, `/design/...`) и часть страниц не заработают (будет 404 от PHP, не от приложения).
 
 ```bash
-php -S 127.0.0.1:8000 -t public public/index.php
+php -S 127.0.0.1:8000 -t public public/router.php
 ```
+
+Роутер `public/router.php` отдаёт существующие файлы из `public/` напрямую (нужный `Content-Type` для `admin.css` / `admin.js`). Если указать только `public/index.php`, встроенный сервер может отдать `.css` с `text/html`, и стили в админке не применятся.
 
 Проверка HTTP (после старта сервера):
 

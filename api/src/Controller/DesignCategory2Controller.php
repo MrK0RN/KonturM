@@ -36,17 +36,18 @@ final class DesignCategory2Controller
 
         $bp = rtrim($request->getBasePath(), '/');
         $GLOBALS['KONTURM_DESIGN_BASE'] = ($bp === '' ? '' : $bp) . '/design';
+        $GLOBALS['KONTURM_REQUEST_BASE_PATH'] = rtrim($request->getBasePath(), '/');
 
         ob_start();
         try {
             include $real;
         } catch (\Throwable $e) {
             ob_end_clean();
-            unset($GLOBALS['KONTURM_DESIGN_BASE']);
+            unset($GLOBALS['KONTURM_DESIGN_BASE'], $GLOBALS['KONTURM_REQUEST_BASE_PATH']);
             throw $e;
         }
         $html = ob_get_clean();
-        unset($GLOBALS['KONTURM_DESIGN_BASE']);
+        unset($GLOBALS['KONTURM_DESIGN_BASE'], $GLOBALS['KONTURM_REQUEST_BASE_PATH']);
 
         return new Response($html, Response::HTTP_OK, [
             'Content-Type' => 'text/html; charset=UTF-8',

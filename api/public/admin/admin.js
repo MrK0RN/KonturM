@@ -24,6 +24,38 @@ function authHeaders(withAuth = true) {
   return h;
 }
 
+/** Сообщение для формы входа при 401 на защищённых запросах (не логин). */
+function humanizeJwt401Message(data) {
+  const raw =
+    typeof data === "object" && data !== null
+      ? String(data.message ?? data.detail ?? data.title ?? "")
+      : String(data ?? "");
+  const r = raw.toLowerCase();
+  if (r.includes("expired")) {
+    return "Срок действия входа истёк. Войдите снова.";
+  }
+  if (r.includes("invalid") && r.includes("jwt")) {
+    return "Сессия недействительна. Войдите снова.";
+  }
+  return "Требуется повторный вход.";
+}
+
+function sessionExpiredToLogin(message) {
+  state.orderDetailId = null;
+  setToken("");
+  const modal = document.getElementById("modal");
+  if (modal) {
+    modal.classList.add("hidden");
+    modal.setAttribute("aria-hidden", "true");
+  }
+  const loginErr = document.getElementById("login-error");
+  if (loginErr) {
+    loginErr.textContent = message;
+    loginErr.classList.remove("hidden");
+  }
+  goSection("login");
+}
+
 async function apiFetch(path, options = {}) {
   const { skipAuth = false, ...rest } = options;
   const url = path.startsWith("http") ? path : `${API_BASE}${path}`;
@@ -42,6 +74,15 @@ async function apiFetch(path, options = {}) {
     }
   }
   if (!res.ok) {
+    if (res.status === 401 && !skipAuth) {
+      const authMsg = humanizeJwt401Message(data);
+      sessionExpiredToLogin(authMsg);
+      const err = new Error(authMsg);
+      err.status = 401;
+      err.body = data;
+      err.sessionEnded = true;
+      throw err;
+    }
     const msg =
       typeof data === "object" && data !== null
         ? data.detail || data.message || data["hydra:description"] || JSON.stringify(data)
@@ -52,6 +93,13 @@ async function apiFetch(path, options = {}) {
     throw err;
   }
   return data;
+}
+
+function notifyApiError(e) {
+  if (e && e.sessionEnded) {
+    return;
+  }
+  alert(e?.message || String(e));
 }
 
 function unwrapCollection(data) {
@@ -67,6 +115,129 @@ function unwrapCollection(data) {
   return { items: [], total: 0, next: null };
 }
 
+/** Кириллица и латиница → латинский slug (a-z, 0-9, дефисы) */
+const CYRILLIC_TO_LATIN = {
+  а: "a",
+  б: "b",
+  в: "v",
+  г: "g",
+  д: "d",
+  е: "e",
+  ё: "yo",
+  ж: "zh",
+  з: "z",
+  и: "i",
+  й: "y",
+  к: "k",
+  л: "l",
+  м: "m",
+  н: "n",
+  о: "o",
+  п: "p",
+  р: "r",
+  с: "s",
+  т: "t",
+  у: "u",
+  ф: "f",
+  х: "h",
+  ц: "ts",
+  ч: "ch",
+  ш: "sh",
+  щ: "shch",
+  ъ: "",
+  ы: "y",
+  ь: "",
+  э: "e",
+  ю: "yu",
+  я: "ya",
+  і: "i",
+  ї: "yi",
+  є: "ye",
+  ґ: "g",
+};
+
+function transliterateSlugSource(str) {
+  let out = "";
+  const s = String(str).toLowerCase();
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (Object.prototype.hasOwnProperty.call(CYRILLIC_TO_LATIN, ch)) {
+      out += CYRILLIC_TO_LATIN[ch];
+      continue;
+    }
+    if (/[a-z0-9]/.test(ch)) {
+      out += ch;
+      continue;
+    }
+    if (/\s/.test(ch) || ch === "-" || ch === "_" || ch === "." || ch === "/") {
+      out += "-";
+    }
+  }
+  return out
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+/**
+ * Категории / товары: при создании slug из названия (транслит).
+ * Alt фото повторяет slug, пока пользователь не задал свой alt (не пустой и отличный от slug).
+ */
+function setupCategoryProductSlugAndPhotoAlt(form, isCreate, entity) {
+  const nameEl = form.elements.name;
+  const slugEl = form.elements.slug;
+  const altEl = form.elements.photo_alt;
+  if (!(slugEl instanceof HTMLInputElement) || !(altEl instanceof HTMLInputElement)) {
+    return;
+  }
+
+  const a0 = String(entity?.photo_alt ?? "").trim();
+  const s0 = String(entity?.slug ?? "").trim();
+  let altManual = a0 !== "" && a0 !== s0;
+
+  const syncAltFromSlug = () => {
+    if (!altManual) {
+      altEl.value = slugEl.value;
+    }
+  };
+
+  altEl.addEventListener("input", () => {
+    altManual = true;
+  });
+  altEl.addEventListener("blur", () => {
+    if (altEl.value.trim() === "") {
+      altManual = false;
+      syncAltFromSlug();
+    }
+  });
+
+  if (isCreate && nameEl instanceof HTMLInputElement) {
+    let slugEditedByUser = false;
+    slugEl.addEventListener("input", () => {
+      slugEditedByUser = true;
+      syncAltFromSlug();
+    });
+    slugEl.addEventListener("blur", () => {
+      if (slugEl.value.trim() === "") {
+        slugEditedByUser = false;
+        slugEl.value = transliterateSlugSource(nameEl.value);
+        syncAltFromSlug();
+      }
+    });
+    nameEl.addEventListener("input", () => {
+      if (slugEditedByUser) {
+        return;
+      }
+      slugEl.value = transliterateSlugSource(nameEl.value);
+      syncAltFromSlug();
+    });
+    slugEl.value = transliterateSlugSource(nameEl.value);
+  } else {
+    slugEl.addEventListener("input", syncAltFromSlug);
+  }
+
+  syncAltFromSlug();
+}
+
 function setToken(t) {
   state.token = t || "";
   if (state.token) localStorage.setItem(STORAGE_KEY, state.token);
@@ -77,44 +248,43 @@ function setToken(t) {
 function updateAuthUi() {
   const logout = document.getElementById("btn-logout");
   const label = document.getElementById("user-label");
+  const app = document.getElementById("app");
   const loggedIn = Boolean(state.token);
   logout.classList.toggle("hidden", !loggedIn);
   label.textContent = loggedIn ? "Авторизован" : "";
+  app.classList.toggle("app--guest", !loggedIn);
 }
 
 /* ——— Navigation ——— */
 
 const SECTIONS = [
-  { id: "products", title: "Товары", type: "crud", resource: "/products", admin: true },
-  { id: "categories", title: "Категории", type: "crud", resource: "/categories", admin: true },
-  { id: "services", title: "Услуги", type: "crud", resource: "/services", admin: true },
-  { id: "orders", title: "Заказы", type: "crud", resource: "/orders", admin: true, hideNew: true },
-  { id: "api-playground", title: "Конструктор запросов", type: "api", admin: false },
+  { id: "categories", title: "Категории", type: "crud", resource: "/categories", admin: true, group: "Каталог" },
+  { id: "products", title: "Товары", type: "crud", resource: "/products", admin: true, group: "Каталог" },
+  { id: "photos", title: "Фотографии", type: "photos", admin: true, group: "Каталог" },
+  { id: "favorites", title: "Избранные категории", type: "favorites", admin: true, group: "Каталог" },
+  { id: "category_filters", title: "Фильтры категорий", type: "category_filters", admin: true, group: "Каталог" },
+  { id: "orders", title: "Заказы", type: "crud", resource: "/orders", admin: true, hideNew: true, group: "Заказы" },
+  { id: "api-playground", title: "Конструктор запросов", type: "api", admin: false, group: "Инструменты" },
 ];
 
 function buildNav() {
   const nav = document.getElementById("nav");
   nav.innerHTML = "";
-  const g1 = document.createElement("div");
-  g1.className = "nav-group";
-  g1.textContent = "Каталог и заказы";
-  nav.appendChild(g1);
-  SECTIONS.filter((s) => s.type === "crud").forEach((s) => {
+  let lastGroup = null;
+  SECTIONS.forEach((s) => {
+    if (s.group && s.group !== lastGroup) {
+      lastGroup = s.group;
+      const g = document.createElement("div");
+      g.className = "nav-group";
+      g.textContent = s.group;
+      nav.appendChild(g);
+    }
     const a = document.createElement("a");
     a.href = "#";
     a.dataset.section = s.id;
     a.textContent = s.title;
     nav.appendChild(a);
   });
-  const g2 = document.createElement("div");
-  g2.className = "nav-group";
-  g2.textContent = "Инструменты";
-  nav.appendChild(g2);
-  const a = document.createElement("a");
-  a.href = "#";
-  a.dataset.section = "api-playground";
-  a.textContent = "Конструктор запросов";
-  nav.appendChild(a);
 
   nav.querySelectorAll("a[data-section]").forEach((el) => {
     el.addEventListener("click", (e) => {
@@ -140,6 +310,9 @@ function goSection(id) {
   document.getElementById("view-crud").classList.add("hidden");
   document.getElementById("view-order-detail").classList.add("hidden");
   document.getElementById("view-api").classList.add("hidden");
+  document.getElementById("view-favorites").classList.add("hidden");
+  document.getElementById("view-category-filters").classList.add("hidden");
+  document.getElementById("view-photos").classList.add("hidden");
 
   if (id === "login") {
     document.getElementById("view-login").classList.remove("hidden");
@@ -148,6 +321,21 @@ function goSection(id) {
   }
   if (id === "api-playground") {
     document.getElementById("view-api").classList.remove("hidden");
+    return;
+  }
+  if (id === "favorites") {
+    document.getElementById("view-favorites").classList.remove("hidden");
+    loadFavoritesTable();
+    return;
+  }
+  if (id === "category_filters") {
+    document.getElementById("view-category-filters").classList.remove("hidden");
+    initCategoryFiltersSection();
+    return;
+  }
+  if (id === "photos") {
+    document.getElementById("view-photos").classList.remove("hidden");
+    void initPhotosSection();
     return;
   }
   state.orderDetailId = null;
@@ -168,7 +356,7 @@ const CRUD_SCHEMA = {
       { key: "stock_status", label: "Склад" },
     ],
     fields: [
-      { key: "category_id", label: "ID категории", type: "text", required: true },
+      { key: "category_id", label: "Категория", type: "product_category", required: true },
       { key: "name", label: "Название", type: "text", required: true },
       { key: "slug", label: "Slug", type: "text", required: true },
       { key: "article", label: "Артикул", type: "text" },
@@ -200,11 +388,13 @@ const CRUD_SCHEMA = {
     listColumns: [
       { key: "name", label: "Название" },
       { key: "slug", label: "Slug" },
+      { key: "is_favorite_main", label: "Главная" },
+      { key: "is_favorite_sidebar", label: "Сайдбар" },
       { key: "sort_order", label: "Порядок" },
       { key: "display_mode", label: "Режим" },
     ],
     fields: [
-      { key: "parent_id", label: "ID родителя (пусто = корень)", type: "text" },
+      { key: "parent_id", label: "Родительская категория", type: "category_parent" },
       { key: "name", label: "Название", type: "text", required: true },
       { key: "slug", label: "Slug", type: "text", required: true },
       { key: "description", label: "Описание", type: "textarea" },
@@ -223,36 +413,14 @@ const CRUD_SCHEMA = {
         ],
       },
       { key: "aggregate_products", label: "Агрегировать товары", type: "checkbox" },
-      { key: "meta_title", label: "Meta title", type: "text" },
-      { key: "meta_description", label: "Meta description", type: "textarea" },
-    ],
-  },
-  services: {
-    listColumns: [
-      { key: "name", label: "Название" },
-      { key: "slug", label: "Slug" },
-      { key: "price", label: "Цена" },
-      { key: "price_type", label: "Тип цены" },
-    ],
-    fields: [
-      { key: "name", label: "Название", type: "text", required: true },
-      { key: "slug", label: "Slug", type: "text", required: true },
-      { key: "description", label: "Описание", type: "textarea" },
-      { key: "price", label: "Цена", type: "text" },
       {
-        key: "price_type",
-        label: "Тип цены",
-        type: "select",
-        options: [
-          { v: "fixed", t: "Фиксированная" },
-          { v: "from", t: "От" },
-        ],
+        key: "filter_config",
+        label: 'Фильтры витрины (JSON: keys[], labels{}) — удобнее в разделе «Фильтры категорий»',
+        type: "json",
+        editOnly: true,
       },
-      { key: "photo", label: "Фото URL", type: "text" },
-      { key: "requires_technical_spec", label: "Нужно ТЗ", type: "checkbox" },
       { key: "meta_title", label: "Meta title", type: "text" },
       { key: "meta_description", label: "Meta description", type: "textarea" },
-      { key: "sort_order", label: "Порядок", type: "number" },
     ],
   },
   orders: {
@@ -315,18 +483,32 @@ async function loadCrudTable(url = null) {
       empty.classList.add("hidden");
       for (const row of items) {
         const tr = document.createElement("tr");
+        if (sec.id === "categories" && (row.is_favorite_main || row.is_favorite_sidebar)) {
+          tr.classList.add("row-favorite");
+        }
+        const phBtn =
+          sec.id === "products" || sec.id === "categories"
+            ? `<button type="button" class="btn btn-ghost btn-ph" data-id="${escapeHtml(row.id)}" data-ph-label="${escapeHtml(row.name || "")}">Фотографии</button>`
+            : "";
         tr.innerHTML =
           schema.listColumns
             .map((c) => `<td>${escapeHtml(formatCell(row[c.key]))}</td>`)
             .join("") +
           `<td class="actions">
             <button type="button" class="btn btn-edit" data-id="${escapeHtml(row.id)}">Изменить</button>
+            ${phBtn}
             <button type="button" class="btn btn-danger btn-del" data-id="${escapeHtml(row.id)}">Удалить</button>
           </td>`;
         tbody.appendChild(tr);
       }
       tbody.querySelectorAll(".btn-edit").forEach((b) => {
         b.addEventListener("click", () => openModal(sec.id, b.dataset.id));
+      });
+      tbody.querySelectorAll(".btn-ph").forEach((b) => {
+        b.addEventListener("click", () => {
+          const ot = sec.id === "categories" ? "category" : "product";
+          openPhotosForEntity(ot, b.dataset.id, b.dataset.phLabel || "");
+        });
       });
       tbody.querySelectorAll(".btn-del").forEach((b) => {
         b.addEventListener("click", () => deleteRow(sec.resource, b.dataset.id));
@@ -375,6 +557,9 @@ async function loadCrudTable(url = null) {
       pager.classList.add("hidden");
     }
   } catch (e) {
+    if (e.sessionEnded) {
+      return;
+    }
     tbody.innerHTML = "";
     empty.textContent = e.message || String(e);
     empty.classList.remove("hidden");
@@ -384,6 +569,7 @@ async function loadCrudTable(url = null) {
 
 function formatCell(v) {
   if (v === null || v === undefined) return "—";
+  if (typeof v === "boolean") return v ? "да" : "нет";
   if (typeof v === "object") return JSON.stringify(v);
   return String(v);
 }
@@ -402,8 +588,93 @@ async function deleteRow(resource, id) {
     await apiFetch(`${resource}/${id}`, { method: "DELETE" });
     loadCrudTable();
   } catch (e) {
-    alert(e.message);
+    notifyApiError(e);
   }
+}
+
+function getSelfAndDescendantIds(items, categoryId) {
+  const byParent = new Map();
+  for (const c of items) {
+    const p = c.parent_id != null && c.parent_id !== "" ? c.parent_id : null;
+    if (!byParent.has(p)) {
+      byParent.set(p, []);
+    }
+    byParent.get(p).push(c.id);
+  }
+  const out = new Set([categoryId]);
+  const stack = [...(byParent.get(categoryId) || [])];
+  while (stack.length) {
+    const id = stack.pop();
+    if (out.has(id)) {
+      continue;
+    }
+    out.add(id);
+    for (const ch of byParent.get(id) || []) {
+      stack.push(ch);
+    }
+  }
+  return out;
+}
+
+/** Для товаров: в списке только категории, где можно размещать товары (не «только подкатегории»). */
+function flattenCategoriesForProductAssignment(items) {
+  const children = new Map();
+  for (const c of items) {
+    const p = c.parent_id != null && c.parent_id !== "" ? c.parent_id : "__root__";
+    if (!children.has(p)) {
+      children.set(p, []);
+    }
+    children.get(p).push(c);
+  }
+  for (const [, arr] of children) {
+    arr.sort(
+      (a, b) =>
+        (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0) ||
+        String(a.name || "").localeCompare(String(b.name || ""), "ru"),
+    );
+  }
+  const out = [];
+  function walk(parentKey, depth) {
+    for (const c of children.get(parentKey) || []) {
+      const mode = c.display_mode != null && c.display_mode !== "" ? c.display_mode : "subcategories_only";
+      if (mode !== "subcategories_only") {
+        const pad = depth ? `${"· ".repeat(depth)}` : "";
+        out.push({ id: c.id, label: `${pad}${c.name} (${c.slug})` });
+      }
+      walk(c.id, depth + 1);
+    }
+  }
+  walk("__root__", 0);
+  return out;
+}
+
+/** Порядок как в дереве: sort_order, затем имя; подписи с отступом по уровню */
+function flattenCategoriesHierarchicalLabels(items) {
+  const children = new Map();
+  for (const c of items) {
+    const p = c.parent_id != null && c.parent_id !== "" ? c.parent_id : "__root__";
+    if (!children.has(p)) {
+      children.set(p, []);
+    }
+    children.get(p).push(c);
+  }
+  for (const [, arr] of children) {
+    arr.sort(
+      (a, b) =>
+        (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0) ||
+        String(a.name || "").localeCompare(String(b.name || ""), "ru"),
+    );
+  }
+  const out = [];
+  function walk(parentKey, depth) {
+    for (const c of children.get(parentKey) || []) {
+      const pad = depth ? `${"· ".repeat(depth)}` : "";
+      out.push({ id: c.id, label: `${pad}${c.name} (${c.slug})` });
+      walk(c.id, depth + 1);
+    }
+  }
+  walk("__root__", 0);
+  return out;
 }
 
 function buildFormFields(schemaKey, entity, isCreate) {
@@ -435,6 +706,14 @@ function buildFormFields(schemaKey, entity, isCreate) {
         input.appendChild(opt);
       }
       if (entity && entity[f.key] !== undefined) input.value = entity[f.key];
+    } else if (f.type === "category_parent" || f.type === "product_category") {
+      input = document.createElement("select");
+      input.name = f.key;
+      input.disabled = true;
+      const loading = document.createElement("option");
+      loading.value = "";
+      loading.textContent = "Загрузка категорий…";
+      input.appendChild(loading);
     } else if (f.type === "number") {
       input = document.createElement("input");
       input.type = "number";
@@ -477,6 +756,17 @@ function readFormPayload(form, schemaKey, isCreate) {
       payload[f.key] = val === "" ? 0 : Number(val);
       continue;
     }
+    if (f.type === "category_parent") {
+      payload[f.key] = val.trim() === "" ? null : val;
+      continue;
+    }
+    if (f.type === "product_category") {
+      if (val.trim() === "") {
+        throw new Error("Выберите категорию");
+      }
+      payload[f.key] = val.trim();
+      continue;
+    }
     if (f.type === "json") {
       const t = val.trim();
       if (t === "") {
@@ -500,6 +790,95 @@ function readFormPayload(form, schemaKey, isCreate) {
   return payload;
 }
 
+async function populateProductCategorySelect(form, entity) {
+  const sel = form.elements.category_id;
+  if (!(sel instanceof HTMLSelectElement)) {
+    return;
+  }
+  try {
+    const data = await apiFetch("/categories?itemsPerPage=500");
+    const { items } = unwrapCollection(data);
+    const rows = flattenCategoriesForProductAssignment(items);
+    sel.innerHTML = "";
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "— Выберите категорию —";
+    sel.appendChild(placeholder);
+    for (const row of rows) {
+      const o = document.createElement("option");
+      o.value = row.id;
+      o.textContent = row.label;
+      sel.appendChild(o);
+    }
+    const want = entity?.category_id != null && entity?.category_id !== "" ? String(entity.category_id) : "";
+    sel.value = want;
+    if (want && sel.value !== want) {
+      const miss = document.createElement("option");
+      miss.value = want;
+      miss.textContent = `${want} (не в списке)`;
+      miss.selected = true;
+      sel.appendChild(miss);
+    }
+    sel.disabled = false;
+  } catch (e) {
+    sel.innerHTML = "";
+    const err = document.createElement("option");
+    err.value = "";
+    err.textContent = `Ошибка загрузки: ${e.message}`;
+    sel.appendChild(err);
+    sel.disabled = true;
+  }
+}
+
+async function populateCategoryParentSelect(form, entity) {
+  const sel = form.elements.parent_id;
+  if (!(sel instanceof HTMLSelectElement)) {
+    return;
+  }
+  try {
+    const data = await apiFetch("/categories?itemsPerPage=500");
+    const { items } = unwrapCollection(data);
+    const excludeIds = entity?.id ? getSelfAndDescendantIds(items, entity.id) : new Set();
+    const choices = items
+      .filter((c) => !excludeIds.has(c.id))
+      .filter((c) => c.display_mode !== "products_only")
+      .sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "ru"))
+      .map((c) => ({
+        id: c.id,
+        label: `${c.name} (${c.slug})`,
+      }));
+    sel.innerHTML = "";
+    const rootOpt = document.createElement("option");
+    rootOpt.value = "";
+    rootOpt.textContent = "— Корень (без родителя) —";
+    sel.appendChild(rootOpt);
+    for (const row of choices) {
+      const o = document.createElement("option");
+      o.value = row.id;
+      o.textContent = row.label;
+      sel.appendChild(o);
+    }
+    const p = entity?.parent_id;
+    const want = p != null && p !== "" ? String(p) : "";
+    sel.value = want;
+    if (want && sel.value !== want) {
+      const miss = document.createElement("option");
+      miss.value = want;
+      miss.textContent = `${want} (не в списке)`;
+      miss.selected = true;
+      sel.appendChild(miss);
+    }
+    sel.disabled = false;
+  } catch (e) {
+    sel.innerHTML = "";
+    const err = document.createElement("option");
+    err.value = "";
+    err.textContent = `Ошибка загрузки: ${e.message}`;
+    sel.appendChild(err);
+    sel.disabled = true;
+  }
+}
+
 async function openModal(schemaKey, id) {
   const sec = SECTIONS.find((s) => s.id === schemaKey);
   const isCreate = !id;
@@ -514,12 +893,21 @@ async function openModal(schemaKey, id) {
     try {
       entity = await apiFetch(`${sec.resource}/${id}`);
     } catch (e) {
-      alert(e.message);
+      notifyApiError(e);
       return;
     }
   }
 
   form.appendChild(buildFormFields(schemaKey, entity, isCreate));
+  if (schemaKey === "categories") {
+    await populateCategoryParentSelect(form, entity);
+  }
+  if (schemaKey === "products") {
+    await populateProductCategorySelect(form, entity);
+  }
+  if (schemaKey === "categories" || schemaKey === "products") {
+    setupCategoryProductSlugAndPhotoAlt(form, isCreate, entity);
+  }
   modal.classList.remove("hidden");
   modal.setAttribute("aria-hidden", "false");
 
@@ -535,7 +923,7 @@ async function openModal(schemaKey, id) {
       modal.classList.add("hidden");
       loadCrudTable();
     } catch (e) {
-      alert(e.message);
+      notifyApiError(e);
     }
   };
 }
@@ -544,6 +932,864 @@ function closeModal() {
   const modal = document.getElementById("modal");
   modal.classList.add("hidden");
   modal.setAttribute("aria-hidden", "true");
+}
+
+const DEFAULT_FILTER_CONFIG_JSON = '{\n  "keys": [],\n  "labels": {}\n}';
+
+/** Подсказки для системных ключей (остальные — как в technical_specs) */
+const CF_KEY_HINTS = {
+  has_verification: "Поверка",
+};
+
+let cfSelectPopulated = false;
+let cfDiscoverBound = false;
+/** @type {string[]} */
+let cfDiscoveredKeys = [];
+/** @type {{ keys: string[], labels: Record<string, string> }} */
+let cfFilterState = { keys: [], labels: {} };
+
+function cfNormalizeFilterConfig(fc) {
+  if (fc == null) {
+    return { keys: [], labels: {} };
+  }
+  const keys = Array.isArray(fc.keys) ? fc.keys.filter((k) => typeof k === "string" && k !== "") : [];
+  const rawLabels =
+    fc.labels && typeof fc.labels === "object" && !Array.isArray(fc.labels) ? fc.labels : {};
+  const labels = {};
+  for (const [k, v] of Object.entries(rawLabels)) {
+    if (typeof k === "string" && typeof v === "string" && v.trim() !== "") {
+      labels[k] = v;
+    }
+  }
+  return { keys, labels };
+}
+
+function cfKeyTitle(key) {
+  return CF_KEY_HINTS[key] || key;
+}
+
+function cfPayloadForSave() {
+  const keys = [...cfFilterState.keys];
+  const labels = {};
+  for (const [k, v] of Object.entries(cfFilterState.labels)) {
+    if (typeof v === "string" && v.trim() !== "") {
+      labels[k] = v.trim();
+    }
+  }
+  if (keys.length === 0 && Object.keys(labels).length === 0) {
+    return null;
+  }
+  return { keys, labels };
+}
+
+function cfSyncTextareaFromState() {
+  const ta = document.getElementById("cf-config");
+  if (!(ta instanceof HTMLTextAreaElement)) {
+    return;
+  }
+  const payload = cfPayloadForSave();
+  ta.value = payload == null ? DEFAULT_FILTER_CONFIG_JSON : JSON.stringify(payload, null, 2);
+}
+
+function cfMoveKey(key, delta) {
+  const arr = cfFilterState.keys;
+  const i = arr.indexOf(key);
+  const j = i + delta;
+  if (i < 0 || j < 0 || j >= arr.length) {
+    return;
+  }
+  [arr[i], arr[j]] = [arr[j], arr[i]];
+  cfRenderKeyList();
+  cfSyncTextareaFromState();
+  cfPopulateAddSelect();
+}
+
+function cfRemoveKey(key) {
+  cfFilterState.keys = cfFilterState.keys.filter((k) => k !== key);
+  delete cfFilterState.labels[key];
+  cfRenderKeyList();
+  cfSyncTextareaFromState();
+  cfPopulateAddSelect();
+}
+
+function cfAddKey(key) {
+  if (!key || cfFilterState.keys.includes(key)) {
+    return;
+  }
+  cfFilterState.keys.push(key);
+  cfRenderKeyList();
+  cfSyncTextareaFromState();
+  cfPopulateAddSelect();
+}
+
+function cfRenderKeyList() {
+  const list = document.getElementById("cf-key-list");
+  if (!list) {
+    return;
+  }
+  list.innerHTML = "";
+  const keys = cfFilterState.keys;
+  if (keys.length === 0) {
+    const p = document.createElement("p");
+    p.className = "cf-empty muted small";
+    p.textContent =
+      "Список пуст — на витрине показываются все фильтры, найденные по товарам (в рамках выбранного режима агрегации).";
+    list.appendChild(p);
+    return;
+  }
+  keys.forEach((key, index) => {
+    const row = document.createElement("div");
+    row.className = "cf-key-row";
+    row.dataset.key = key;
+
+    const actions = document.createElement("div");
+    actions.className = "cf-key-row-actions";
+    const up = document.createElement("button");
+    up.type = "button";
+    up.className = "btn btn-sm";
+    up.textContent = "↑";
+    up.disabled = index === 0;
+    up.addEventListener("click", () => cfMoveKey(key, -1));
+    const down = document.createElement("button");
+    down.type = "button";
+    down.className = "btn btn-sm";
+    down.textContent = "↓";
+    down.disabled = index === keys.length - 1;
+    down.addEventListener("click", () => cfMoveKey(key, 1));
+    actions.appendChild(up);
+    actions.appendChild(down);
+    row.appendChild(actions);
+
+    const meta = document.createElement("div");
+    meta.className = "cf-key-meta";
+    const code = document.createElement("code");
+    code.className = "cf-key-code";
+    code.textContent = key;
+    const hint = document.createElement("span");
+    hint.className = "muted small";
+    hint.textContent = cfKeyTitle(key);
+    meta.appendChild(code);
+    meta.appendChild(hint);
+    row.appendChild(meta);
+
+    const labWrap = document.createElement("label");
+    labWrap.className = "cf-key-label";
+    labWrap.textContent = "Подпись на витрине";
+    const inp = document.createElement("input");
+    inp.type = "text";
+    inp.className = "cf-label-input";
+    inp.dataset.key = key;
+    inp.value = cfFilterState.labels[key] ?? "";
+    inp.placeholder = cfKeyTitle(key);
+    labWrap.appendChild(inp);
+    row.appendChild(labWrap);
+
+    const rm = document.createElement("button");
+    rm.type = "button";
+    rm.className = "btn btn-ghost cf-remove-key";
+    rm.textContent = "✕";
+    rm.title = "Убрать из списка";
+    rm.addEventListener("click", () => cfRemoveKey(key));
+    row.appendChild(rm);
+
+    list.appendChild(row);
+  });
+}
+
+function cfPopulateAddSelect() {
+  const sel = document.getElementById("cf-add-key");
+  if (!(sel instanceof HTMLSelectElement)) {
+    return;
+  }
+  const used = new Set(cfFilterState.keys);
+  sel.innerHTML = "";
+  const ph = document.createElement("option");
+  ph.value = "";
+  ph.textContent = "— выберите ключ —";
+  sel.appendChild(ph);
+  for (const key of cfDiscoveredKeys) {
+    if (used.has(key)) {
+      continue;
+    }
+    const o = document.createElement("option");
+    o.value = key;
+    o.textContent = `${key} (${cfKeyTitle(key)})`;
+    sel.appendChild(o);
+  }
+}
+
+async function cfRefreshDiscover() {
+  const sel = document.getElementById("cf-category");
+  const addSel = document.getElementById("cf-add-key");
+  const opt = sel?.selectedOptions?.[0];
+  const slug = opt?.dataset?.slug;
+  const aggEl = document.getElementById("cf-aggregate");
+  const aggregate = aggEl instanceof HTMLInputElement && aggEl.checked;
+  if (!slug) {
+    cfDiscoveredKeys = [];
+    cfPopulateAddSelect();
+    return;
+  }
+  if (addSel instanceof HTMLSelectElement) {
+    const ph = document.createElement("option");
+    ph.value = "";
+    ph.textContent = "Загрузка…";
+    addSel.innerHTML = "";
+    addSel.appendChild(ph);
+    addSel.disabled = true;
+  }
+  const errBox = document.getElementById("cf-error");
+  try {
+    const res = await apiFetch(
+      `/categories/${encodeURIComponent(slug)}/filters/discover?aggregate=${aggregate ? "true" : "false"}`,
+    );
+    cfDiscoveredKeys = Array.isArray(res.keys) ? res.keys.filter((k) => typeof k === "string") : [];
+    if (errBox) {
+      errBox.classList.add("hidden");
+    }
+  } catch (e) {
+    cfDiscoveredKeys = [];
+    if (!e.sessionEnded && errBox) {
+      errBox.textContent = `Ключи фильтров: ${e.message}`;
+      errBox.classList.remove("hidden");
+    }
+  }
+  if (addSel instanceof HTMLSelectElement) {
+    addSel.disabled = false;
+  }
+  cfPopulateAddSelect();
+}
+
+function cfApplyJsonFromTextarea() {
+  const err = document.getElementById("cf-error");
+  if (err) {
+    err.classList.add("hidden");
+  }
+  const ta = document.getElementById("cf-config");
+  if (!(ta instanceof HTMLTextAreaElement)) {
+    return;
+  }
+  try {
+    const raw = ta.value.trim();
+    if (raw === "") {
+      cfFilterState = { keys: [], labels: {} };
+    } else {
+      const parsed = JSON.parse(raw);
+      cfFilterState = cfNormalizeFilterConfig(parsed);
+    }
+    cfRenderKeyList();
+    cfPopulateAddSelect();
+  } catch (e) {
+    if (err) {
+      err.textContent = e.message || String(e);
+      err.classList.remove("hidden");
+    }
+  }
+}
+
+function cfBindFilterEditorEvents() {
+  const list = document.getElementById("cf-key-list");
+  if (list && !list.dataset.cfDelegation) {
+    list.dataset.cfDelegation = "1";
+    list.addEventListener("input", (e) => {
+      const t = e.target;
+      if (!(t instanceof HTMLInputElement) || !t.classList.contains("cf-label-input")) {
+        return;
+      }
+      const key = t.dataset.key;
+      if (!key) {
+        return;
+      }
+      const v = t.value.trim();
+      if (v === "") {
+        delete cfFilterState.labels[key];
+      } else {
+        cfFilterState.labels[key] = t.value;
+      }
+      cfSyncTextareaFromState();
+    });
+  }
+}
+
+async function loadFavoritesTable() {
+  const tbody = document.getElementById("favorites-tbody");
+  const empty = document.getElementById("favorites-empty");
+  const errEl = document.getElementById("favorites-error");
+  errEl.classList.add("hidden");
+  tbody.innerHTML = "";
+  try {
+    const data = await apiFetch("/categories?itemsPerPage=500");
+    const { items } = unwrapCollection(data);
+    if (items.length === 0) {
+      empty.classList.remove("hidden");
+      return;
+    }
+    empty.classList.add("hidden");
+    const sorted = [...items].sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "ru"));
+    for (const c of sorted) {
+      const tr = document.createElement("tr");
+      if (c.is_favorite_main || c.is_favorite_sidebar) {
+        tr.classList.add("row-favorite");
+      }
+      tr.innerHTML = `<td>${escapeHtml(c.name)}</td><td><code>${escapeHtml(c.slug)}</code></td>
+        <td class="td-cb"><input type="checkbox" data-cat-id="${escapeHtml(c.id)}" data-field="is_favorite_main" ${c.is_favorite_main ? "checked" : ""} /></td>
+        <td class="td-cb"><input type="checkbox" data-cat-id="${escapeHtml(c.id)}" data-field="is_favorite_sidebar" ${c.is_favorite_sidebar ? "checked" : ""} /></td>`;
+      tbody.appendChild(tr);
+    }
+  } catch (e) {
+    if (e.sessionEnded) {
+      return;
+    }
+    errEl.textContent = e.message;
+    errEl.classList.remove("hidden");
+  }
+}
+
+async function saveFavoriteFlags(categoryId, field, value) {
+  try {
+    const cur = await apiFetch(`/categories/${categoryId}`);
+    cur[field] = value;
+    await apiFetch(`/categories/${categoryId}`, { method: "PUT", body: JSON.stringify(cur) });
+  } catch (e) {
+    notifyApiError(e);
+    loadFavoritesTable();
+  }
+}
+
+async function loadCategoryFiltersEditor() {
+  const sel = document.getElementById("cf-category");
+  const id = sel?.value;
+  const err = document.getElementById("cf-error");
+  if (err) {
+    err.classList.add("hidden");
+  }
+  if (!id) {
+    cfFilterState = { keys: [], labels: {} };
+    cfSyncTextareaFromState();
+    cfRenderKeyList();
+    cfDiscoveredKeys = [];
+    cfPopulateAddSelect();
+    return;
+  }
+  try {
+    const c = await apiFetch(`/categories/${id}`);
+    cfFilterState = cfNormalizeFilterConfig(c.filter_config);
+    const aggEl = document.getElementById("cf-aggregate");
+    if (aggEl instanceof HTMLInputElement) {
+      aggEl.checked = Boolean(c.aggregate_products);
+    }
+    cfSyncTextareaFromState();
+    cfRenderKeyList();
+    await cfRefreshDiscover();
+  } catch (e) {
+    if (e.sessionEnded) {
+      return;
+    }
+    if (err) {
+      err.textContent = e.message;
+      err.classList.remove("hidden");
+    }
+  }
+}
+
+/* ——— Photos (media gallery) ——— */
+
+let photosEventsBound = false;
+
+const photosState = {
+  ownerType: "product",
+  ownerId: "",
+  items: [],
+  dragId: null,
+};
+
+/** Открытие «Фотографии» из таблицы категорий/товаров: { ownerType, ownerId, label } */
+let photosPendingOpen = null;
+
+function openPhotosForEntity(ownerType, ownerId, label) {
+  photosPendingOpen = {
+    ownerType: ownerType === "category" ? "category" : "product",
+    ownerId,
+    label: label || "",
+  };
+  goSection("photos");
+}
+
+function mediaPublicPath(path) {
+  if (!path) return "";
+  if (/^https?:\/\//i.test(path)) return path;
+  return path.startsWith("/") ? path : `/${path}`;
+}
+
+async function apiUploadFormData(relPath, formData) {
+  const h = { Accept: "application/json" };
+  if (state.token) h.Authorization = `Bearer ${state.token}`;
+  const res = await fetch(`${API_BASE}${relPath}`, {
+    method: "POST",
+    headers: h,
+    body: formData,
+    credentials: "include",
+  });
+  const text = await res.text();
+  let data = null;
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = text;
+    }
+  }
+  if (!res.ok) {
+    if (res.status === 401 && state.token) {
+      const authMsg = humanizeJwt401Message(data);
+      sessionExpiredToLogin(authMsg);
+      const err = new Error(authMsg);
+      err.sessionEnded = true;
+      throw err;
+    }
+    const msg =
+      typeof data === "object" && data !== null
+        ? data.detail || data.message || JSON.stringify(data)
+        : data || res.statusText;
+    throw new Error(msg);
+  }
+  return data;
+}
+
+async function fetchAllHydraMembers(resourceBase) {
+  const all = [];
+  let path = `${resourceBase}${resourceBase.includes("?") ? "&" : "?"}itemsPerPage=100`;
+  let guard = 0;
+  while (path && guard++ < 50) {
+    const data = await apiFetch(path.startsWith("/") ? path : `/${path}`);
+    const { items, next } = unwrapCollection(data);
+    all.push(...items);
+    if (!next) break;
+    let np = next;
+    try {
+      const u = new URL(next, window.location.origin);
+      np = u.pathname + u.search;
+    } catch {
+      const i = String(next).indexOf("/api/");
+      if (i !== -1) np = String(next).slice(i + 4);
+    }
+    np = np.replace(/^\/api/, "");
+    path = np.startsWith("/") ? np : `/${np}`;
+  }
+  return all;
+}
+
+async function loadPhotosEntitySelect() {
+  const sel = document.getElementById("ph-owner");
+  const typeEl = document.getElementById("ph-owner-type");
+  if (!sel || !(typeEl instanceof HTMLSelectElement)) return;
+  const type = typeEl.value || "product";
+  photosState.ownerType = type;
+  sel.innerHTML = "<option value=\"\">— Загрузка… —</option>";
+  try {
+    const base = type === "category" ? "/categories" : "/products";
+    const rows = await fetchAllHydraMembers(base);
+    sel.innerHTML = "<option value=\"\">— Выберите —</option>";
+    rows.sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "ru"));
+    for (const r of rows) {
+      const opt = document.createElement("option");
+      opt.value = r.id;
+      const extra = type === "product" && r.slug ? ` · ${r.slug}` : "";
+      opt.textContent = `${r.name || r.id}${extra}`;
+      sel.appendChild(opt);
+    }
+  } catch (e) {
+    sel.innerHTML = "<option value=\"\">Ошибка списка</option>";
+    notifyApiError(e);
+  }
+}
+
+function getPhotosOrderedIdsFromDom() {
+  const grid = document.getElementById("ph-grid");
+  if (!grid) return [];
+  return [...grid.querySelectorAll(".ph-card")].map((c) => c.dataset.id).filter(Boolean);
+}
+
+async function persistPhotosReorder() {
+  await apiFetch("/admin/media/reorder", {
+    method: "POST",
+    body: JSON.stringify({
+      owner_type: photosState.ownerType,
+      owner_id: photosState.ownerId,
+      ordered_ids: getPhotosOrderedIdsFromDom(),
+    }),
+  });
+}
+
+function renderPhotosGrid() {
+  const grid = document.getElementById("ph-grid");
+  const empty = document.getElementById("ph-empty");
+  if (!grid || !empty) return;
+  grid.innerHTML = "";
+  const items = photosState.items;
+  if (!items.length) {
+    empty.classList.remove("hidden");
+    empty.textContent = "Нет загруженных фото. Выберите файлы ниже.";
+    return;
+  }
+  empty.classList.add("hidden");
+  for (const it of items) {
+    const card = document.createElement("div");
+    card.className = `ph-card${it.is_primary ? " ph-card--primary" : ""}`;
+    card.draggable = true;
+    card.dataset.id = it.id;
+    const thumb = mediaPublicPath(it.thumb_url);
+    const starTitle = it.is_primary ? "Обложка (в карточке первой)" : "Сделать обложкой";
+    card.innerHTML = `
+      <div class="ph-card__drag" title="Перетащите для порядка">⋮⋮</div>
+      <div class="ph-card__img-wrap">
+        <img src="${escapeHtml(thumb)}" width="120" height="120" alt="" loading="lazy" decoding="async" />
+        ${it.is_primary ? "<span class=\"ph-badge\">Обложка</span>" : ""}
+      </div>
+      <label class="ph-alt-label">Alt<input type="text" class="ph-alt-input" data-id="${escapeHtml(it.id)}" value="${escapeHtml(it.alt || "")}" /></label>
+      <div class="ph-card__actions">
+        <button type="button" class="btn btn-ghost ph-star" data-id="${escapeHtml(it.id)}" title="${escapeHtml(starTitle)}">★</button>
+        <button type="button" class="btn btn-danger ph-del" data-id="${escapeHtml(it.id)}">Удалить</button>
+      </div>`;
+    grid.appendChild(card);
+  }
+}
+
+/** После loadPhotosEntitySelect: выбрать запись и открыть галерею (без повторной загрузки списка). */
+async function applyPhotosPendingOpenAfterListLoaded() {
+  if (!photosPendingOpen) {
+    return;
+  }
+  const po = photosPendingOpen;
+  photosPendingOpen = null;
+  const ownerEl = document.getElementById("ph-owner");
+  if (!(ownerEl instanceof HTMLSelectElement)) {
+    return;
+  }
+  const hasOpt = [...ownerEl.options].some((o) => o.value === po.ownerId);
+  if (!hasOpt) {
+    const opt = document.createElement("option");
+    opt.value = po.ownerId;
+    opt.textContent = po.label || `${po.ownerId.slice(0, 8)}…`;
+    ownerEl.appendChild(opt);
+  }
+  ownerEl.value = po.ownerId;
+  await loadPhotosGallery();
+}
+
+async function loadPhotosGallery() {
+  const err = document.getElementById("ph-error");
+  const grid = document.getElementById("ph-grid");
+  const empty = document.getElementById("ph-empty");
+  const typeEl = document.getElementById("ph-owner-type");
+  const ownerEl = document.getElementById("ph-owner");
+  if (!grid || !empty || !(typeEl instanceof HTMLSelectElement) || !(ownerEl instanceof HTMLSelectElement)) {
+    return;
+  }
+  err.classList.add("hidden");
+  const ot = typeEl.value || "product";
+  const oid = ownerEl.value || "";
+  if (!oid) {
+    grid.innerHTML = "";
+    empty.classList.remove("hidden");
+    empty.textContent = "Выберите запись в списке.";
+    photosState.items = [];
+    return;
+  }
+  photosState.ownerType = ot;
+  photosState.ownerId = oid;
+  empty.classList.add("hidden");
+  grid.innerHTML = "<p class=\"muted\">Загрузка…</p>";
+  try {
+    const data = await apiFetch(
+      `/admin/media?owner_type=${encodeURIComponent(ot)}&owner_id=${encodeURIComponent(oid)}`,
+    );
+    photosState.items = Array.isArray(data.items) ? data.items : [];
+    renderPhotosGrid();
+  } catch (e) {
+    grid.innerHTML = "";
+    photosState.items = [];
+    if (!e.sessionEnded) {
+      err.textContent = e.message;
+      err.classList.remove("hidden");
+    }
+  }
+}
+
+async function initPhotosSection() {
+  const grid = document.getElementById("ph-grid");
+  if (!grid) return;
+
+  if (!photosEventsBound) {
+    photosEventsBound = true;
+    grid.addEventListener("dragstart", (e) => {
+      const c = e.target.closest(".ph-card");
+      if (!c || !grid.contains(c)) return;
+      photosState.dragId = c.dataset.id;
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", photosState.dragId);
+      c.classList.add("ph-card--dragging");
+    });
+    grid.addEventListener("dragend", (e) => {
+      const c = e.target.closest(".ph-card");
+      if (c) c.classList.remove("ph-card--dragging");
+      photosState.dragId = null;
+    });
+    grid.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+    });
+    grid.addEventListener("drop", async (e) => {
+      e.preventDefault();
+      const target = e.target.closest(".ph-card");
+      const dragId = photosState.dragId;
+      const dragEl = dragId ? grid.querySelector(`.ph-card[data-id="${dragId}"]`) : null;
+      if (!target || !dragEl || target === dragEl) return;
+      const rect = target.getBoundingClientRect();
+      const before = e.clientX < rect.left + rect.width / 2;
+      if (before) {
+        grid.insertBefore(dragEl, target);
+      } else {
+        grid.insertBefore(dragEl, target.nextSibling);
+      }
+      try {
+        await persistPhotosReorder();
+        await loadPhotosGallery();
+      } catch (err) {
+        notifyApiError(err);
+        await loadPhotosGallery();
+      }
+    });
+    grid.addEventListener("click", async (e) => {
+      const star = e.target.closest(".ph-star");
+      if (star instanceof HTMLElement && star.dataset.id) {
+        e.preventDefault();
+        try {
+          await apiFetch(`/admin/media/${star.dataset.id}`, {
+            method: "PATCH",
+            body: JSON.stringify({ is_primary: true }),
+          });
+          await loadPhotosGallery();
+        } catch (err) {
+          notifyApiError(err);
+        }
+        return;
+      }
+      const del = e.target.closest(".ph-del");
+      if (del instanceof HTMLElement && del.dataset.id) {
+        if (!confirm("Удалить фото?")) return;
+        try {
+          await apiFetch(`/admin/media/${del.dataset.id}`, { method: "DELETE" });
+          await loadPhotosGallery();
+        } catch (err) {
+          notifyApiError(err);
+        }
+      }
+    });
+    grid.addEventListener("change", async (e) => {
+      const inp = e.target.closest(".ph-alt-input");
+      if (!(inp instanceof HTMLInputElement) || !inp.dataset.id) return;
+      try {
+        await apiFetch(`/admin/media/${inp.dataset.id}`, {
+          method: "PATCH",
+          body: JSON.stringify({ alt: inp.value }),
+        });
+      } catch (err) {
+        notifyApiError(err);
+      }
+    });
+
+    document.getElementById("ph-owner-type")?.addEventListener("change", () => {
+      loadPhotosEntitySelect();
+      const g = document.getElementById("ph-grid");
+      const em = document.getElementById("ph-empty");
+      if (g) g.innerHTML = "";
+      if (em) {
+        em.classList.remove("hidden");
+        em.textContent = "Выберите запись и нажмите «Показать фото».";
+      }
+      photosState.items = [];
+    });
+    document.getElementById("ph-reload-entities")?.addEventListener("click", () => loadPhotosEntitySelect());
+    document.getElementById("ph-load-gallery")?.addEventListener("click", () => loadPhotosGallery());
+    document.getElementById("ph-owner")?.addEventListener("change", () => {
+      const o = document.getElementById("ph-owner");
+      if (o instanceof HTMLSelectElement && o.value) {
+        loadPhotosGallery();
+      }
+    });
+    document.getElementById("ph-upload")?.addEventListener("change", async (e) => {
+      const t = e.target;
+      if (!(t instanceof HTMLInputElement) || !t.files?.length) return;
+      const ownerEl = document.getElementById("ph-owner");
+      const typeEl = document.getElementById("ph-owner-type");
+      if (!(ownerEl instanceof HTMLSelectElement) || !(typeEl instanceof HTMLSelectElement)) {
+        t.value = "";
+        return;
+      }
+      const oid = ownerEl.value;
+      const ot = typeEl.value || "product";
+      if (!oid) {
+        alert("Сначала выберите товар или категорию.");
+        t.value = "";
+        return;
+      }
+      photosState.ownerType = ot;
+      photosState.ownerId = oid;
+      const altEl = document.getElementById("ph-upload-alt");
+      const altVal = altEl instanceof HTMLInputElement ? altEl.value.trim() : "";
+      const files = [...t.files];
+      t.value = "";
+      for (const f of files) {
+        const fd = new FormData();
+        fd.append("file", f);
+        fd.append("owner_type", ot);
+        fd.append("owner_id", oid);
+        if (altVal) fd.append("alt", altVal);
+        try {
+          await apiUploadFormData("/admin/media", fd);
+        } catch (err) {
+          notifyApiError(err);
+          break;
+        }
+      }
+      await loadPhotosGallery();
+    });
+  }
+
+  try {
+    if (photosPendingOpen) {
+      const te = document.getElementById("ph-owner-type");
+      if (te instanceof HTMLSelectElement) {
+        te.value = photosPendingOpen.ownerType;
+      }
+    }
+    await loadPhotosEntitySelect();
+    await applyPhotosPendingOpenAfterListLoaded();
+  } catch (e) {
+    notifyApiError(e);
+  }
+}
+
+async function initCategoryFiltersSection() {
+  const sel = document.getElementById("cf-category");
+  const err = document.getElementById("cf-error");
+  if (!sel) {
+    return;
+  }
+  if (err) {
+    err.classList.add("hidden");
+  }
+  cfBindFilterEditorEvents();
+  if (!cfDiscoverBound) {
+    cfDiscoverBound = true;
+    const aggEl = document.getElementById("cf-aggregate");
+    if (aggEl instanceof HTMLInputElement) {
+      aggEl.addEventListener("change", () => cfRefreshDiscover());
+    }
+    document.getElementById("cf-add-btn")?.addEventListener("click", () => {
+      const s = document.getElementById("cf-add-key");
+      if (s instanceof HTMLSelectElement && s.value) {
+        cfAddKey(s.value);
+        s.value = "";
+      }
+    });
+    document.getElementById("cf-add-custom-btn")?.addEventListener("click", () => {
+      const inp = document.getElementById("cf-custom-key");
+      if (!(inp instanceof HTMLInputElement)) {
+        return;
+      }
+      const k = inp.value.trim().replace(/\s+/g, "_");
+      if (!k) {
+        return;
+      }
+      if (!/^[a-zA-Z0-9_-]+$/.test(k)) {
+        alert("Ключ: латиница, цифры, символы _ и -");
+        return;
+      }
+      cfAddKey(k);
+      inp.value = "";
+    });
+    document.getElementById("cf-reset-all")?.addEventListener("click", () => {
+      cfFilterState = { keys: [], labels: {} };
+      cfRenderKeyList();
+      cfSyncTextareaFromState();
+      cfPopulateAddSelect();
+    });
+    document.getElementById("cf-sync-discovered")?.addEventListener("click", () => {
+      const nextLabels = {};
+      for (const k of cfDiscoveredKeys) {
+        if (cfFilterState.labels[k]) {
+          nextLabels[k] = cfFilterState.labels[k];
+        }
+      }
+      cfFilterState = { keys: [...cfDiscoveredKeys], labels: nextLabels };
+      cfRenderKeyList();
+      cfSyncTextareaFromState();
+      cfPopulateAddSelect();
+    });
+    document.getElementById("cf-apply-json")?.addEventListener("click", () => cfApplyJsonFromTextarea());
+    document.getElementById("cf-refresh-discover")?.addEventListener("click", () => cfRefreshDiscover());
+  }
+  if (!cfSelectPopulated) {
+    try {
+      sel.innerHTML = "";
+      const data = await apiFetch("/categories?itemsPerPage=500");
+      const { items } = unwrapCollection(data);
+      const sorted = [...items].sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "ru"));
+      for (const c of sorted) {
+        const o = document.createElement("option");
+        o.value = c.id;
+        o.dataset.slug = c.slug;
+        o.textContent = `${c.name} (${c.slug})`;
+        sel.appendChild(o);
+      }
+      sel.addEventListener("change", () => loadCategoryFiltersEditor());
+      cfSelectPopulated = true;
+    } catch (e) {
+      if (e.sessionEnded) {
+        return;
+      }
+      if (err) {
+        err.textContent = e.message;
+        err.classList.remove("hidden");
+      }
+      return;
+    }
+  }
+  await loadCategoryFiltersEditor();
+}
+
+async function saveCategoryFilterConfig() {
+  const sel = document.getElementById("cf-category");
+  const id = sel?.value;
+  const err = document.getElementById("cf-error");
+  if (err) {
+    err.classList.add("hidden");
+  }
+  if (!id) {
+    if (err) {
+      err.textContent = "Выберите категорию";
+      err.classList.remove("hidden");
+    }
+    return;
+  }
+  const parsed = cfPayloadForSave();
+  try {
+    const cur = await apiFetch(`/categories/${id}`);
+    cur.filter_config = parsed;
+    await apiFetch(`/categories/${id}`, { method: "PUT", body: JSON.stringify(cur) });
+    alert("Сохранено");
+    await cfRefreshDiscover();
+  } catch (e) {
+    if (e.sessionEnded) {
+      return;
+    }
+    if (err) {
+      err.textContent = e.message;
+      err.classList.remove("hidden");
+    }
+  }
 }
 
 state.orderDetailId = null;
@@ -598,10 +1844,13 @@ async function showOrderDetail(id, orderNumberLabel) {
         alert("Статус обновлён");
         showOrderDetail(id, o.order_number);
       } catch (e) {
-        alert(e.message);
+        notifyApiError(e);
       }
     });
   } catch (e) {
+    if (e.sessionEnded) {
+      return;
+    }
     box.textContent = e.message;
   }
 }
@@ -663,20 +1912,13 @@ const API_PRESETS = [
     query: [{ key: "articles", label: "Артикулы через запятую", default: "" }],
   },
   {
-    id: "svc-slug",
-    name: "GET Услуга по slug",
-    method: "GET",
-    path: "/services/by-slug/{slug}",
-    params: [{ key: "slug", label: "Slug" }],
-  },
-  {
     id: "search",
     name: "GET Поиск",
     method: "GET",
     path: "/search",
     query: [
       { key: "q", label: "Запрос (от 2 симв.)", default: "мерник" },
-      { key: "type", label: "Тип: all|products|services|categories", default: "all" },
+      { key: "type", label: "Тип: all|products|categories", default: "all" },
       { key: "page", label: "Страница", default: "1" },
       { key: "limit", label: "Лимит", default: "20" },
     ],
@@ -697,7 +1939,7 @@ const API_PRESETS = [
     method: "GET",
     path: "/seo/{type}/{slug}",
     params: [
-      { key: "type", label: "Тип (category|product|service)", default: "category" },
+      { key: "type", label: "Тип (category|product)", default: "category" },
       { key: "slug", label: "Slug", default: "" },
     ],
   },
@@ -847,6 +2089,10 @@ async function runApiPreset() {
     const data = await apiFetch(urlPath, opts);
     pre.textContent = typeof data === "string" ? data : JSON.stringify(data, null, 2);
   } catch (e) {
+    if (e.sessionEnded) {
+      pre.textContent = "";
+      return;
+    }
     pre.textContent = `Ошибка ${e.status || ""}: ${e.message}`;
   }
 }
@@ -874,7 +2120,7 @@ document.getElementById("form-login").addEventListener("submit", async (ev) => {
     if (!data.token) throw new Error("Нет token в ответе");
     setToken(data.token);
     document.getElementById("view-login").classList.add("hidden");
-    goSection("products");
+    goSection("categories");
   } catch (e) {
     err.textContent = e.message;
     err.classList.remove("hidden");
@@ -902,9 +2148,18 @@ buildNav();
 initApiPlayground();
 updateAuthUi();
 
+document.getElementById("favorites-table").addEventListener("change", (e) => {
+  const t = e.target;
+  if (!(t instanceof HTMLInputElement) || t.type !== "checkbox" || !t.dataset.catId || !t.dataset.field) {
+    return;
+  }
+  saveFavoriteFlags(t.dataset.catId, t.dataset.field, t.checked);
+});
+document.getElementById("cf-save").addEventListener("click", () => saveCategoryFilterConfig());
+
 if (state.token) {
   document.getElementById("view-login").classList.add("hidden");
-  goSection("products");
+  goSection("categories");
 } else {
   goSection("login");
 }

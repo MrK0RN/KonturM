@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Проверка доступности страниц и API. Запускай, когда поднят сервер с роутером Symfony:
-#   php -S 127.0.0.1:8000 -t public public/index.php
+#   php -S 127.0.0.1:8000 -t public public/router.php
 # (только -t public без index.php — маршруты Symfony не работают, будет 404.)
 
 set -euo pipefail

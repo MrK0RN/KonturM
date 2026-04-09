@@ -75,16 +75,17 @@ final class DesignCatalogController
         }
 
         $GLOBALS['KONTURM_DESIGN_BASE'] = rtrim($this->designUrlPrefix($request), '/');
+        $GLOBALS['KONTURM_REQUEST_BASE_PATH'] = rtrim($request->getBasePath(), '/');
         ob_start();
         try {
             include $file;
         } catch (\Throwable $e) {
             ob_end_clean();
-            unset($GLOBALS['KONTURM_DESIGN_BASE']);
+            unset($GLOBALS['KONTURM_DESIGN_BASE'], $GLOBALS['KONTURM_REQUEST_BASE_PATH']);
             throw $e;
         }
         $html = ob_get_clean();
-        unset($GLOBALS['KONTURM_DESIGN_BASE']);
+        unset($GLOBALS['KONTURM_DESIGN_BASE'], $GLOBALS['KONTURM_REQUEST_BASE_PATH']);
         $html = $this->rewriteDesignStaticUrls($request, $html);
 
         return new Response($html, Response::HTTP_OK, [

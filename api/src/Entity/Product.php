@@ -10,6 +10,7 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
+use App\Validator\CategoryAcceptsDirectProducts;
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\Serializer\Annotation\SerializedName;
@@ -34,6 +35,7 @@ class Product
 
     #[ORM\Column(type: 'guid', name: 'category_id')]
     #[SerializedName('category_id')]
+    #[CategoryAcceptsDirectProducts]
     private string $categoryId;
 
     #[ORM\Column(type: 'string', length: 255)]

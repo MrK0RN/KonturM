@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Entity\Category;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Symfony\Contracts\Cache\CacheInterface;
@@ -29,7 +30,8 @@ SELECT
     p.*,
     c.id AS category_id,
     c.name AS category_name,
-    c.slug AS category_slug
+    c.slug AS category_slug,
+    c.display_mode AS category_display_mode
 FROM products p
 LEFT JOIN categories c ON c.id = p.category_id
 WHERE p.slug = :slug
@@ -38,6 +40,10 @@ SQL;
 
             $row = $this->connection->fetchAssociative($sql, ['slug' => $slug]);
             if ($row === false) {
+                return null;
+            }
+
+            if (($row['category_display_mode'] ?? null) === Category::DISPLAY_MODE_SUBCATEGORIES_ONLY) {
                 return null;
             }
 
@@ -53,6 +59,8 @@ SQL;
 
             $canonicalUrl = sprintf('https://merniki.ru/products/%s', $slug);
 
+            $photos = $this->fetchProductPhotos((string) $row['id']);
+
             return [
                 // product fields (match DB column naming from PROMPT where possible)
                 'id' => $row['id'],
@@ -62,6 +70,7 @@ SQL;
                 'article' => $row['article'],
                 'photo' => $row['photo'],
                 'photo_alt' => $row['photo_alt'],
+                'photos' => $photos,
                 'description' => $row['description'],
                 'technical_specs' => $row['technical_specs'],
                 'price' => $row['price'],
@@ -246,6 +255,34 @@ SQL;
             'name' => $r['name'],
             'slug' => $r['slug'],
         ], $rows);
+    }
+
+    /**
+     * @return list<array{id: string, url: string, thumb_url: string, alt: ?string, sort_order: int, is_primary: bool}>
+     */
+    private function fetchProductPhotos(string $productId): array
+    {
+        $sql = <<<'SQL'
+SELECT id, path, thumb_path, alt, sort_order, is_primary
+FROM media_assets
+WHERE owner_type = 'product' AND owner_id = :id
+ORDER BY is_primary DESC, sort_order ASC, created_at ASC
+SQL;
+
+        $rows = $this->connection->fetchAllAssociative($sql, ['id' => $productId]);
+
+        return array_map(static function (array $r): array {
+            $primary = $r['is_primary'];
+
+            return [
+                'id' => (string) $r['id'],
+                'url' => (string) $r['path'],
+                'thumb_url' => (string) $r['thumb_path'],
+                'alt' => isset($r['alt']) && $r['alt'] !== null && $r['alt'] !== '' ? (string) $r['alt'] : null,
+                'sort_order' => (int) $r['sort_order'],
+                'is_primary' => $primary === true || $primary === 't' || $primary === 1 || $primary === '1',
+            ];
+        }, $rows);
     }
 
     private function buildSeoForProductOrService(

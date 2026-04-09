@@ -1,0 +1,247 @@
+/* About — Hero section (Figma: контур-м 1:17) */
+
+.ab-hero {
+  background: #fff;
+  overflow: hidden;
+}
+
+.ab-hero__shell {
+  max-width: 1440px;
+  margin-inline: auto;
+  padding: 0px clamp(16px, 5.69vw, 82px) 40px;
+  display: grid;
+  grid-template-columns: minmax(0, 648fr) minmax(0, 628fr);
+  align-items: start;
+  position: relative;
+  min-height: 620px;
+  gap: 0;
+}
+
+/* ── Left column: title, description, CTA ──────────────────────────── */
+
+.ab-hero__left {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  padding-top: 60px;
+  max-width: 500px;
+  position: relative;
+  z-index: 2;
+}
+
+.ab-hero__title {
+  font-family: var(--font-sans, "Inter", system-ui, sans-serif);
+  font-size: clamp(28px, 3.14vw, 48px);
+  font-weight: 500;
+  color: #0e0f0f;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.ab-hero__desc {
+  font-family: var(--font-sans, "Inter", system-ui, sans-serif);
+  font-size: 18px;
+  font-weight: 400;
+  color: #5e6266;
+  margin: 0;
+  line-height: 1.5;
+  max-width: 412px;
+}
+
+.ab-hero__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  padding: 0 20px;
+  background: #0e0f0f;
+  border: 1px solid #fff;
+  border-radius: 20px;
+  font-family: var(--font-sans, "Inter", system-ui, sans-serif);
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: opacity 0.18s ease;
+  margin-top: auto;
+}
+
+.ab-hero__cta:hover {
+  opacity: 0.85;
+}
+
+/* ── Center: decorative product image ──────────────────────────────── */
+
+.ab-hero__image-wrap {
+  position: absolute;
+  left: 20.1%;
+  top: 23%;
+  width: 28.3%;
+  max-width: 540px;
+  height: 100%;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+}
+
+.ab-hero__image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 820px;
+  object-fit: contain;
+  object-position: top center;
+}
+
+/* ── Right column: product category link grid ──────────────────────── */
+
+.ab-hero__links {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  z-index: 2;
+  align-self: start;
+  padding-top: 20px;
+}
+
+.ab-hero__links-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: 10px;
+  height: 682px;
+}
+
+/* ── Link cell ─────────────────────────────────────────────────────── */
+
+.ab-link-cell {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  position: relative;
+  text-decoration: none;
+  border: 1px solid rgba(94, 98, 102, 0.12);
+  border-radius: 16px;
+  padding: 20px;
+  min-width: 0;
+  overflow: hidden;
+  background: #fff;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.2s ease;
+}
+
+.ab-link-cell__bg-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.ab-link-cell__name {
+  font-family: var(--font-sans, "Inter", system-ui, sans-serif);
+  font-size: 16px;
+  font-weight: 400;
+  color: rgba(94, 98, 102, 0.75);
+  line-height: 1.35;
+  width: 100%;
+  margin: 0;
+  position: relative;
+  z-index: 1;
+  transition: color 0.2s ease;
+}
+
+.ab-link-cell__arrow {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  color: rgba(94, 98, 102, 0.75);
+  margin-top: 8px;
+  position: relative;
+  z-index: 1;
+  transition: color 0.2s ease;
+}
+
+.ab-link-cell:hover,
+.ab-link-cell:focus-visible {
+  border-color: transparent;
+  box-shadow: 0 4px 20px rgba(222, 104, 20, 0.3);
+  background: linear-gradient(99.38deg, #de6814 0%, #cc4a0a 100%);
+}
+
+.ab-link-cell:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.95);
+  outline-offset: 2px;
+}
+
+.ab-link-cell:hover .ab-link-cell__bg-img,
+.ab-link-cell:focus-visible .ab-link-cell__bg-img {
+  opacity: 0.35;
+}
+
+.ab-link-cell:hover .ab-link-cell__name,
+.ab-link-cell:hover .ab-link-cell__arrow,
+.ab-link-cell:focus-visible .ab-link-cell__name,
+.ab-link-cell:focus-visible .ab-link-cell__arrow {
+  color: #fff;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────── */
+
+@media (max-width: 1100px) {
+  .ab-hero__shell {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .ab-hero__image-wrap {
+    display: none;
+  }
+
+  .ab-hero__left {
+    max-width: 100%;
+    padding-top: 0;
+  }
+
+  .ab-hero__links {
+    grid-column: 1;
+    padding-top: 32px;
+  }
+
+  .ab-hero__links-grid {
+    height: auto;
+    grid-template-rows: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .ab-hero__links-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .ab-hero__links-grid .ab-link-cell--featured {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 380px) {
+  .ab-hero__links-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ab-hero__links-grid .ab-link-cell--featured {
+    grid-column: 1;
+  }
+}

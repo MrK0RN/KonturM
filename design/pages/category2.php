@@ -3,6 +3,9 @@ declare(strict_types=1);
 
 require __DIR__ . '/../includes/design-base.php';
 
+$slugIn = $_GET['slug'] ?? 'merniki';
+$category2Slug = is_string($slugIn) && preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slugIn) ? $slugIn : 'merniki';
+
 $c2css = static function (string $file): string {
     return htmlspecialchars(
         konturm_design_pages_asset('category2', 'css/' . ltrim($file, '/')),
@@ -36,6 +39,7 @@ $c2css = static function (string $file): string {
     <link rel="stylesheet" href="<?= $c2css('active-filters.css') ?>" />
     <link rel="stylesheet" href="<?= $c2css('catalog-toolbar.css') ?>" />
     <link rel="stylesheet" href="<?= $c2css('product-cards.css') ?>" />
+    <link rel="stylesheet" href="<?= $c2css('subcategory-grid.css') ?>" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -49,9 +53,11 @@ $c2css = static function (string $file): string {
       }
     </script>
   </head>
-  <body class="cat2-page">
+  <body class="cat2-page" data-category-slug="<?= htmlspecialchars($category2Slug, ENT_QUOTES, 'UTF-8') ?>">
     <?php require __DIR__ . '/../includes/header.php'; ?>
     <?php require __DIR__ . '/category2/includes/page-body.php'; ?>
     <?php require __DIR__ . '/../includes/footer.php'; ?>
+    <?php require __DIR__ . '/../includes/scripts-bridge.php'; ?>
+    <script src="<?= htmlspecialchars(konturm_design_url('js/category2.js'), ENT_QUOTES, 'UTF-8') ?>" defer></script>
   </body>
 </html>

@@ -1,5 +1,6 @@
 /* Block: sidebar filter (Figma left column) */
 .cat2-filter {
+  padding-top: 8px;
   padding-bottom: 24px;
 }
 
@@ -27,21 +28,21 @@
 
 .cat2-filter__section {
   border: none;
-  margin: 0 0 15px;
-  padding: 25px 20px 20px;
+  margin: 0 0 10px;
+  padding: 20px;
   min-inline-size: 0;
   background: var(--cat2-bg-muted);
   border-radius: var(--cat2-radius-section);
-  position: relative;
 }
 
 .cat2-filter__section > legend.cat2-filter__section-title {
-  float: none;
+  float: left;
+  width: 100%;
   padding: 0;
 }
 
 .cat2-filter__section-title {
-  margin: 0 0 16px;
+  margin: 0 0 12px;
   font-weight: 700;
   font-size: 14px;
   line-height: 21px;
@@ -52,6 +53,7 @@
   list-style: none;
   margin: 0;
   padding: 0;
+  clear: left;
 }
 
 .cat2-filter__option {
@@ -93,7 +95,7 @@
   height: 16px;
   margin: 2px 0 0;
   flex-shrink: 0;
-  border: 1px solid var(--cat2-border-light);
+  border: 1px solid var(--cat2-border-input);
   border-radius: 2px;
   background: #ffffff;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
@@ -140,22 +142,21 @@
 }
 
 .cat2-filter__footer {
-  margin-top: 20px;
+  margin-top: 16px;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
+  align-items: stretch;
+  gap: 10px;
 }
 
 .cat2-filter__submit {
-  margin-left: 44px;
-  min-height: 31px;
-  padding: 6px 16px;
+  min-height: 36px;
+  padding: 8px 16px;
   border: 0;
   border-radius: var(--cat2-radius-control);
   font-family: var(--font-cat2);
   font-weight: 700;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 20px;
   color: #ffffff;
   cursor: pointer;
@@ -177,16 +178,16 @@
 }
 
 .cat2-filter__reset {
-  margin-left: 0;
   padding: 0;
   border: 0;
   background: none;
   font-family: inherit;
-  font-size: 10px;
+  font-size: 11px;
   line-height: 20px;
   color: var(--cat2-text-reset);
   opacity: 0.65;
   cursor: pointer;
+  text-align: center;
 }
 
 .cat2-filter__reset:hover {
@@ -202,6 +203,11 @@
   }
 
   .cat2-filter__submit {
-    margin-left: 0;
+    flex: 1;
+    min-width: 160px;
+  }
+
+  .cat2-filter__reset {
+    text-align: left;
   }
 }

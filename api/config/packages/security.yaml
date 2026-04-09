@@ -26,6 +26,9 @@ security:
         catalog_redirect_public:
             pattern: ^/catalog$
             security: false
+        storefront_pages:
+            pattern: ^/(category2|cart|search|product|about|contacts|promo|price-list)$
+            security: false
         login:
             pattern: ^/api/auth
             stateless: true
@@ -54,6 +57,7 @@ security:
         - { path: ^/api/cart, roles: PUBLIC_ACCESS }
         - { path: ^/api/search, roles: PUBLIC_ACCESS }
         - { path: ^/api/seo, roles: PUBLIC_ACCESS }
+        - { path: ^/api/admin, roles: ROLE_ADMIN }
         - { path: ^/api/orders, roles: ROLE_ADMIN }
 
 when@test:

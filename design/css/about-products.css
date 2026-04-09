@@ -1,0 +1,181 @@
+/* About — Product cards (Figma: контур-м 1:123) */
+
+.ab-products {
+  background: #fff;
+  padding: 64px 0;
+}
+
+.ab-products__shell {
+  max-width: 1440px;
+  margin-inline: auto;
+  padding-inline: clamp(16px, 5.69vw, 82px);
+}
+
+.ab-products__title {
+  font-family: var(--font-sans, "Inter", system-ui, sans-serif);
+  font-size: clamp(28px, 3.14vw, 40px);
+  font-weight: 500;
+  color: #0e0f0f;
+  margin: 0 0 20px;
+  line-height: 1.2;
+}
+
+.ab-products__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  list-style: none;
+  margin: 0;
+  padding-left: 0;
+}
+
+.ab-products__grid > li {
+  list-style: none;
+}
+
+/* ── Card base ───────────────────────────────────────────────────────── */
+
+.ab-pcard {
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #f7f6f5;
+  min-width: 0;
+  transition: box-shadow 0.2s ease;
+}
+
+.ab-pcard:hover,
+.ab-pcard:focus-within {
+  box-shadow: 0 8px 28px rgba(210, 94, 36, 0.22);
+}
+
+.ab-pcard__body {
+  position: relative;
+  height: 400px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #f7f6f5;
+  transition: background-color 0.2s ease;
+}
+
+.ab-pcard:hover .ab-pcard__body,
+.ab-pcard:focus-within .ab-pcard__body {
+  background: #d25e24;
+}
+
+.ab-pcard__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  pointer-events: none;
+  user-select: none;
+  transition: object-position 0.2s ease;
+}
+
+
+.ab-pcard__meta {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  z-index: 1;
+  color: #879199;
+  transition: color 0.2s ease;
+}
+
+.ab-pcard:hover .ab-pcard__meta,
+.ab-pcard:focus-within .ab-pcard__meta {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.ab-pcard__time-icon {
+  width: 16px;
+  height: 16px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.ab-pcard__delivery {
+  font-family: var(--font-sans, "Inter", system-ui, sans-serif);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.ab-pcard__name {
+  position: relative;
+  font-family: var(--font-sans, "Inter", system-ui, sans-serif);
+  font-size: 26px;
+  font-weight: 500;
+  text-transform: uppercase;
+  line-height: 1.15;
+  margin: 0;
+  z-index: 1;
+  color: #3d403f;
+  transition: color 0.2s ease;
+}
+
+.ab-pcard:hover .ab-pcard__name,
+.ab-pcard:focus-within .ab-pcard__name {
+  color: #fff;
+}
+
+/* ── Card footer ─────────────────────────────────────────────────────── */
+
+.ab-pcard__footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  padding: 0 20px;
+  border-top: 1px solid rgba(210, 94, 36, 0.24);
+  flex-shrink: 0;
+  background: transparent;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.ab-pcard:hover .ab-pcard__footer,
+.ab-pcard:focus-within .ab-pcard__footer {
+  background: #f7f6f5;
+  border-top-color: rgba(255, 255, 255, 0.24);
+}
+
+.ab-pcard__cta {
+  font-family: var(--font-sans, "Inter", system-ui, sans-serif);
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  display: block;
+  width: 100%;
+  text-align: center;
+  color: #d25e24;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────── */
+
+@media (max-width: 1100px) {
+  .ab-products__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .ab-products__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ab-pcard__body {
+    height: 320px;
+  }
+}

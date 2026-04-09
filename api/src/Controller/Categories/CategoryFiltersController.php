@@ -20,10 +20,12 @@ final class CategoryFiltersController
     {
         $aggregate = $this->parseBool($request->query->get('aggregate'), true);
 
-        $filters = $this->queryService->getAvailableFilters($slug, $aggregate);
+        $available = $this->queryService->getAvailableFilters($slug, $aggregate);
 
         return [
-            'filters' => $filters,
+            'filters' => $available['filters'],
+            'filter_labels' => $available['filter_labels'],
+            'filter_order' => $available['filter_order'],
         ];
     }
 

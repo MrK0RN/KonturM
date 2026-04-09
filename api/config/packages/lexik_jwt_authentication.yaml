@@ -2,3 +2,5 @@ lexik_jwt_authentication:
     secret_key: '%env(resolve:JWT_SECRET_KEY)%'
     public_key: '%env(resolve:JWT_PUBLIC_KEY)%'
     pass_phrase: '%env(JWT_PASSPHRASE)%'
+    # Секунды (8 ч). Было быстро истекать при дефолте Lexik 3600 — неудобно в админке.
+    token_ttl: 28800

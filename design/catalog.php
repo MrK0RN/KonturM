@@ -34,5 +34,7 @@ require __DIR__ . '/includes/design-base.php';
     </div>
 
     <?php require __DIR__ . '/includes/footer.php'; ?>
+    <?php require __DIR__ . '/includes/scripts-bridge.php'; ?>
+    <script src="<?= htmlspecialchars(konturm_design_url('js/catalog-home.js'), ENT_QUOTES, 'UTF-8') ?>" defer></script>
   </body>
 </html>

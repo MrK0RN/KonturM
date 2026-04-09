@@ -65,12 +65,20 @@
     padding-top: 8px;
     padding-inline: clamp(24px, 5.69vw, 82px);
     gap: 0;
+    align-items: flex-start;
   }
 
   .cat2-shell__sidebar {
     flex: 0 0 var(--cat2-sidebar-width);
     width: var(--cat2-sidebar-width);
     max-width: var(--cat2-sidebar-width);
+    padding-right: clamp(16px, 2vw, 28px);
+    position: sticky;
+    top: 16px;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--cat2-border-input) transparent;
   }
 
   .cat2-shell__main {
@@ -81,17 +89,79 @@
   }
 }
 
+/* Filter toggle button — hidden on desktop */
+.cat2-filter-toggle {
+  display: none;
+}
+
 @media (max-width: 1023px) {
   .cat2-shell {
     flex-direction: column;
   }
 
+  /* Sidebar hidden by default on mobile; shown when expanded */
   .cat2-shell__sidebar {
     width: 100%;
-    max-width: 480px;
+    max-width: 100%;
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.32s ease;
+  }
+
+  .cat2-shell__sidebar.is-filter-open {
+    max-height: 2000px;
   }
 
   .cat2-shell__main {
     width: 100%;
+  }
+
+  /* Show filter toggle button on mobile */
+  .cat2-filter-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding: 9px 18px;
+    border: 1.5px solid var(--cat2-border-input);
+    border-radius: var(--cat2-radius-btn);
+    background: #fff;
+    font-family: var(--font-cat2);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--cat2-text-heading);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+
+  .cat2-filter-toggle:hover {
+    background: var(--cat2-bg-muted);
+    border-color: var(--cat2-accent-orange);
+  }
+
+  .cat2-filter-toggle:focus-visible {
+    outline: 2px solid var(--cat2-accent-orange);
+    outline-offset: 2px;
+  }
+
+  .cat2-filter-toggle[aria-expanded="true"] {
+    background: var(--cat2-bg-muted);
+    border-color: var(--cat2-accent-orange);
+    color: var(--cat2-accent-orange);
+  }
+
+  .cat2-filter-toggle__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 10px;
+    background: var(--cat2-accent-orange);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
   }
 }

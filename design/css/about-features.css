@@ -1,0 +1,76 @@
+/* About — Features bar (Figma: контур-м 1:102) */
+
+.ab-features {
+  background: #fff;
+  padding: 0 0 48px 0;
+}
+
+.ab-features__shell {
+  max-width: 1440px;
+  margin-inline: auto;
+  padding-inline: clamp(16px, 5.69vw, 82px);
+}
+
+.ab-features__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.ab-feature {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.ab-feature__icon {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  background: #f7f6f5;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ab-feature__icon img {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.ab-feature__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ab-feature__title {
+  font-family: var(--font-sans, "Inter", system-ui, sans-serif);
+  font-size: 18px;
+  font-weight: 500;
+  color: #0e0f0f;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.ab-feature__sub {
+  font-family: var(--font-sans, "Inter", system-ui, sans-serif);
+  font-size: 16px;
+  font-weight: 400;
+  color: #3d403f;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .ab-features__grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}

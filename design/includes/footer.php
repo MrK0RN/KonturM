@@ -1,8 +1,10 @@
 <?php
 declare(strict_types=1);
 
-// Figma MCP assets (mirror to /design/assets for production; URLs expire ~7 days).
-$footerWordmark = 'https://www.figma.com/api/mcp/asset/6e84a2e2-8ce7-47ec-ab85-82b5038d25ec';
+require_once __DIR__ . '/design-base.php';
+
+// Локальный wordmark (Figma MCP URL для подвала больше не доступен).
+$footerWordmark = konturm_design_url('assets/logo-wordmark.svg');
 ?>
 
 <footer class="site-footer" aria-label="Подвал сайта">

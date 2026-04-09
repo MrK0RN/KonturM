@@ -1,0 +1,318 @@
+/* Price List page */
+
+.pl-page {
+  max-width: var(--catalog-shell-max);
+  margin-inline: auto;
+  padding: 0 var(--catalog-inner-pad-x) 64px;
+  box-sizing: border-box;
+}
+
+/* ── Hero ─────────────────────────────────────────────────── */
+.pl-hero {
+  padding: 36px 0 28px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--catalog-border);
+  margin-bottom: 28px;
+}
+
+.pl-hero__left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pl-hero__title {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #0e0f0f;
+  line-height: 1.1;
+}
+
+.pl-hero__sub {
+  margin: 0;
+  font-size: 15px;
+  color: var(--catalog-text-muted);
+  max-width: 560px;
+  line-height: 1.5;
+}
+
+.pl-hero__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.pl-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border-radius: 10px;
+  font: 600 15px/1 var(--font-sans);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  border: none;
+  transition: filter 0.15s;
+}
+
+.pl-btn--primary {
+  background: var(--catalog-card-gradient);
+  color: #fff;
+}
+
+.pl-btn--primary:hover { filter: brightness(1.05); }
+
+.pl-btn--outline {
+  background: transparent;
+  color: #0e0f0f;
+  border: 1.5px solid rgba(94, 98, 102, 0.3);
+}
+
+.pl-btn--outline:hover {
+  border-color: #de6814;
+  color: #de6814;
+}
+
+/* ── Tab navigation ───────────────────────────────────────── */
+.pl-tabs {
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  margin-bottom: 28px;
+  background: #f7f6f5;
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.pl-tabs::-webkit-scrollbar { display: none; }
+
+.pl-tab {
+  flex-shrink: 0;
+  padding: 9px 18px;
+  border-radius: 9px;
+  font: 500 14px/1.2 var(--font-sans);
+  color: var(--catalog-text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.pl-tab:hover { color: #0e0f0f; }
+
+.pl-tab.is-active {
+  background: #fff;
+  color: #0e0f0f;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+/* ── Panel ────────────────────────────────────────────────── */
+.pl-panel {
+  display: none;
+}
+
+.pl-panel.is-active {
+  display: block;
+}
+
+/* ── Section inside a panel ───────────────────────────────── */
+.pl-section {
+  margin-bottom: 40px;
+}
+
+.pl-section__title {
+  margin: 0 0 16px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #0e0f0f;
+  letter-spacing: -0.01em;
+}
+
+.pl-section__sub {
+  margin: 20px 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--catalog-text-muted);
+}
+
+.pl-note {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--catalog-text-muted);
+  line-height: 1.5;
+  font-style: italic;
+}
+
+/* ── Base table ───────────────────────────────────────────── */
+.pl-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--catalog-frame-border);
+  border-radius: 12px;
+}
+
+.pl-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.pl-table thead tr {
+  background: #f7f6f5;
+}
+
+.pl-table th {
+  padding: 11px 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--catalog-text-muted);
+  white-space: nowrap;
+  border-bottom: 1px solid var(--catalog-frame-border);
+}
+
+.pl-table th.th-price,
+.pl-table td.td-price {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.pl-table td {
+  padding: 10px 16px;
+  color: #0e0f0f;
+  border-bottom: 1px solid rgba(94, 98, 102, 0.07);
+  vertical-align: top;
+}
+
+.pl-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.pl-table tbody tr:hover td {
+  background: #faf9f8;
+}
+
+.pl-table .td-code {
+  font-family: ui-monospace, "Roboto Mono", monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: #de6814;
+  white-space: nowrap;
+}
+
+.pl-table .td-price {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: #0e0f0f;
+}
+
+.pl-table .td-price-empty {
+  color: rgba(94, 98, 102, 0.4);
+  font-size: 12px;
+  text-align: right;
+}
+
+/* ── Group header row (inside tbody) ──────────────────────── */
+.pl-table .tr-group-header td {
+  background: #f0eeec;
+  font-weight: 700;
+  font-size: 13px;
+  color: #0e0f0f;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--catalog-frame-border);
+}
+
+/* ── Two-column layout for side-by-side tables ────────────── */
+.pl-dual {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 860px) {
+  .pl-dual {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pl-dual__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--catalog-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 8px;
+}
+
+/* ── Badge for material ───────────────────────────────────── */
+.pl-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pl-badge--carbon {
+  background: rgba(14, 15, 15, 0.07);
+  color: #3a3d3f;
+}
+
+.pl-badge--stainless {
+  background: rgba(222, 104, 20, 0.10);
+  color: #9e3700;
+}
+
+/* ── Three-column for metroshtoki ────────────────────────── */
+.pl-triple {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .pl-triple {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 720px) {
+  .pl-hero {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .pl-hero__title {
+    font-size: 24px;
+  }
+
+  .pl-hero__actions {
+    flex-wrap: wrap;
+  }
+
+  .pl-page {
+    padding-bottom: 40px;
+  }
+
+  .pl-tab {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+}

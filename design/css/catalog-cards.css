@@ -87,6 +87,16 @@
   max-width: none;
 }
 
+/* Одно фото на карточке категории: на всю область карточки, без «дырок» */
+.catalog-card__media .catalog-card__hero {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
 .catalog-card__arrow {
   position: absolute;
   z-index: 3;
@@ -98,17 +108,6 @@
   transition: color 0.2s ease;
 }
 
-
-/* Card 1 — featured */
-.catalog-card--c1 .catalog-card__hero {
-  position: absolute;
-  left: 23%;
-  top: -3%;
-  width: 81%;
-  height: 183%;
-  object-fit: cover;
-  object-position: center bottom;
-}
 
 /* Card 2 — layered merники */
 .catalog-card--c2 .catalog-card__layer-a {
@@ -197,23 +196,6 @@
   justify-content: center;
 }
 
-.catalog-card--c4 .catalog-card__hero {
-  width: 92%;
-  height: 72%;
-  object-fit: cover;
-}
-
-/* Card 5 — round */
-.catalog-card--c5 .catalog-card__hero {
-  position: absolute;
-  left: 18%;
-  top: 3%;
-  width: 118%;
-  height: 97%;
-  object-fit: cover;
-  object-position: 40% 50%;
-}
-
 /* Card 6 — anodized */
 .catalog-card--c6 .catalog-card__layer-a {
   position: absolute;
@@ -245,15 +227,6 @@
   overflow: hidden;
 }
 
-.catalog-card--c7 .catalog-card__hero {
-  position: absolute;
-  width: 159%;
-  height: 141%;
-  left: -43%;
-  top: -12%;
-  object-fit: cover;
-}
-
 /* Card 8 — tape ring */
 .catalog-card--c8 .catalog-card__rotate-wrap {
   position: absolute;
@@ -267,19 +240,23 @@
   justify-content: center;
 }
 
-.catalog-card--c8 .catalog-card__hero {
-  width: 93%;
-  height: 84%;
-  object-fit: cover;
+/* Mobile single-column: bigger cards for better visuals */
+@media (max-width: 640px) {
+  .catalog-card {
+    min-height: 200px;
+  }
+
+  .catalog-card__title {
+    font-size: 20px;
+    margin: 24px 24px 0;
+    max-width: calc(100% - 64px);
+  }
+
+  .catalog-card__arrow {
+    width: 28px;
+    height: 28px;
+    right: 18px;
+    bottom: 18px;
+  }
 }
 
-/* Card 9 — sampling */
-.catalog-card--c9 .catalog-card__hero {
-  position: absolute;
-  left: 21%;
-  top: 6%;
-  width: 69%;
-  height: 213%;
-  object-fit: cover;
-  object-position: center top;
-}

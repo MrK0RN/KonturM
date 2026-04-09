@@ -4,10 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Админ — KonturM API</title>
+  <base href="/admin/" />
   <link rel="stylesheet" href="admin.css" />
 </head>
 <body>
-  <div id="app">
+  <div id="app" class="app--guest">
     <aside class="sidebar">
       <div class="brand">KonturM <span>admin</span></div>
       <nav id="nav"></nav>
@@ -47,6 +48,95 @@
         <button type="button" class="btn" id="btn-order-back">← К списку заказов</button>
         <div id="order-detail" class="card detail-block"></div>
       </section>
+      <section id="view-favorites" class="view hidden">
+        <p class="muted intro-text">Быстрое переключение избранных категорий для главной страницы и бокового меню. Полный список полей — в разделе «Категории».</p>
+        <div class="table-wrap">
+          <table class="data-table" id="favorites-table">
+            <thead>
+              <tr>
+                <th>Название</th>
+                <th>Slug</th>
+                <th>На главной</th>
+                <th>В сайдбаре</th>
+              </tr>
+            </thead>
+            <tbody id="favorites-tbody"></tbody>
+          </table>
+        </div>
+        <p id="favorites-empty" class="muted hidden">Нет категорий</p>
+        <p id="favorites-error" class="error hidden"></p>
+      </section>
+      <section id="view-photos" class="view hidden">
+        <p class="muted intro-text">
+          Загрузка в WebP: полноразмер до 1920px и миниатюра для карточек. Поле <strong>Обложка</strong> (★) задаёт изображение для карточки товара/категории и поля <code>photo</code> в API. Перетаскивание меняет порядок галереи на витрине.
+        </p>
+        <div class="toolbar ph-toolbar">
+          <label>Тип
+            <select id="ph-owner-type">
+              <option value="product">Товар</option>
+              <option value="category">Категория</option>
+            </select>
+          </label>
+          <label class="ph-owner-label">Запись
+            <select id="ph-owner"><option value="">— Загрузка… —</option></select>
+          </label>
+          <button type="button" id="ph-reload-entities" class="btn">Обновить список</button>
+          <button type="button" id="ph-load-gallery" class="btn btn-primary">Показать фото</button>
+        </div>
+        <div class="ph-upload-bar card">
+          <label class="ph-file-label">Добавить файлы
+            <input type="file" id="ph-upload" accept="image/jpeg,image/png,image/webp,image/gif" multiple />
+          </label>
+          <label>Alt (опционально, для следующей загрузки)
+            <input type="text" id="ph-upload-alt" class="ph-upload-alt-input" placeholder="подпись для SEO" autocomplete="off" />
+          </label>
+          <p class="muted small ph-upload-hint">Можно выбрать несколько файлов подряд (до 8 МБ каждый). После выбора файла загрузка начнётся сразу.</p>
+        </div>
+        <p id="ph-empty" class="muted hidden">Выберите товар или категорию и нажмите «Показать фото».</p>
+        <div id="ph-grid" class="ph-grid" aria-live="polite"></div>
+        <p id="ph-error" class="error hidden"></p>
+      </section>
+      <section id="view-category-filters" class="view hidden">
+        <p class="muted intro-text">Фильтры на витрине берутся из характеристик товаров (<code>technical_specs</code>) и опционально <code>has_verification</code>. Ниже можно выбрать, какие фильтры показывать, задать порядок и подписи без ручного JSON.</p>
+        <div class="toolbar cf-toolbar cf-toolbar-wrap">
+          <label class="cf-cat-label">Категория
+            <select id="cf-category"></select>
+          </label>
+          <label class="cf-agg-label inline"><input type="checkbox" id="cf-aggregate" checked /> Агрегировать товары из подкатегорий (как у категории)</label>
+          <div class="cf-toolbar-actions">
+            <button type="button" id="cf-refresh-discover" class="btn">Обновить список ключей</button>
+            <button type="button" id="cf-save" class="btn btn-primary">Сохранить</button>
+          </div>
+        </div>
+        <div class="cf-grid cf-grid-single">
+          <div class="card cf-editor-card">
+            <h2 class="card-title">Фильтры для витрины</h2>
+            <p class="muted small cf-hint">Перетаскивайте порядок кнопками ↑↓. Пустой список — показываются <strong>все</strong> найденные по товарам фильтры.</p>
+            <div id="cf-key-list" class="cf-key-list" aria-live="polite"></div>
+            <div class="cf-add-bar">
+              <label class="cf-add-label">Из товаров
+                <select id="cf-add-key" class="cf-add-select"></select>
+              </label>
+              <button type="button" id="cf-add-btn" class="btn">Добавить</button>
+              <label class="cf-custom-wrap">Свой ключ
+                <input type="text" id="cf-custom-key" class="cf-custom-key-input" placeholder="например material_type" autocomplete="off" />
+              </label>
+              <button type="button" id="cf-add-custom-btn" class="btn btn-ghost">Добавить ключ</button>
+            </div>
+            <div class="cf-bulk-actions">
+              <button type="button" id="cf-reset-all" class="btn btn-ghost">Показывать все (очистить список)</button>
+              <button type="button" id="cf-sync-discovered" class="btn btn-ghost">Вставить все ключи из товаров</button>
+            </div>
+            <details class="cf-advanced">
+              <summary>JSON (копирование и отладка)</summary>
+              <p class="muted small">После правок нажмите «Применить из JSON».</p>
+              <textarea id="cf-config" rows="12" spellcheck="false" class="cf-textarea"></textarea>
+              <button type="button" id="cf-apply-json" class="btn">Применить из JSON</button>
+            </details>
+            <p id="cf-error" class="error hidden"></p>
+          </div>
+        </div>
+      </section>
       <section id="view-api" class="view hidden">
         <div class="card api-builder">
           <label>Эндпоинт
@@ -79,6 +169,6 @@
       </footer>
     </div>
   </div>
-  <script src="admin.js" type="module"></script>
+  <script src="admin.js"></script>
 </body>
 </html>

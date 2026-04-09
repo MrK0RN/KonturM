@@ -10,6 +10,8 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
+use App\Validator\ParentCategoryAcceptsChildCategories;
+use App\Validator\SubcategoriesOnlyWithoutProducts;
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\Serializer\Annotation\SerializedName;
@@ -28,12 +30,17 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
 )]
 class Category
 {
+    public const DISPLAY_MODE_SUBCATEGORIES_ONLY = 'subcategories_only';
+
+    public const DISPLAY_MODE_PRODUCTS_ONLY = 'products_only';
+
     #[ORM\Id]
     #[ORM\Column(type: 'guid', unique: true)]
     private string $id;
 
     #[ORM\Column(type: 'guid', name: 'parent_id', nullable: true)]
     #[SerializedName('parent_id')]
+    #[ParentCategoryAcceptsChildCategories]
     private ?string $parentId = null;
 
     #[ORM\Column(type: 'string', length: 255)]
@@ -66,11 +73,17 @@ class Category
 
     #[ORM\Column(type: 'string', length: 50, options: ['default' => 'subcategories_only'])]
     #[SerializedName('display_mode')]
+    #[SubcategoriesOnlyWithoutProducts]
     private string $displayMode = 'subcategories_only';
 
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
     #[SerializedName('aggregate_products')]
     private bool $aggregateProducts = false;
+
+    /** @var array<string, mixed>|null keys: string[] whitelist/order; labels: array<string,string> for UI */
+    #[ORM\Column(type: 'json', nullable: true)]
+    #[SerializedName('filter_config')]
+    private ?array $filterConfig = null;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     #[SerializedName('meta_title')]
@@ -242,6 +255,18 @@ class Category
     public function setAggregateProducts(bool $aggregateProducts): self
     {
         $this->aggregateProducts = $aggregateProducts;
+
+        return $this;
+    }
+
+    public function getFilterConfig(): ?array
+    {
+        return $this->filterConfig;
+    }
+
+    public function setFilterConfig(?array $filterConfig): self
+    {
+        $this->filterConfig = $filterConfig;
 
         return $this;
     }

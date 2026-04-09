@@ -88,3 +88,10 @@
     border-right: 0;
   }
 }
+
+/* Hide sidebar entirely on small phones — category cards cover the same content */
+@media (max-width: 480px) {
+  .catalog-sidebar {
+    display: none;
+  }
+}
