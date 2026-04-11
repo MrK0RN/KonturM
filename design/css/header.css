@@ -1,3 +1,6 @@
+@import url("header-mobile-strip.css");
+@import url("header-mobile-toolbar.css");
+
 /* Design tokens — Figma: контур-м Header 177:141 */
 :root {
   --color-text: #0e0f0f;
@@ -366,138 +369,26 @@ body {
   display: none;
 }
 
+.site-header__mobile-figma {
+  display: none;
+}
+
 .site-header__drawer {
   display: none;
 }
 
-/* Mobile: compact header + hamburger drawer */
+/* Mobile: Figma 1:587 strip + toolbar + drawer */
 @media (max-width: 720px) {
   .site-header__shell {
     padding-inline: 0;
   }
 
-  /* Compact one-line top bar: brand (left) + mobile-bar (right) */
-  .site-header__top-row {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    padding-right: 8px;
-    min-height: 56px;
-    border-inline: 0;
-    max-width: none;
-    grid-template-columns: none;
-    grid-template-rows: none;
+  .site-header__top-row.site-header__top-row--desktop {
+    display: none !important;
   }
 
-  /* Hide desktop-only items */
-  .site-header__search,
-  .site-header__contacts,
-  .site-header__cta,
-  .site-header__cart {
-    display: none;
-  }
-
-  .site-header__brand {
-    border-right: 0;
-    border-bottom: 0;
-    padding: 8px 12px;
-    grid-column: auto;
-    grid-row: auto;
-  }
-
-  /* Mobile bar: phone + burger */
-  .site-header__mobile-bar {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-  }
-
-  .site-header__mobile-phone {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    text-decoration: none;
-    color: var(--color-text);
-  }
-
-  .site-header__mobile-phone:hover {
-    background: var(--color-search-bg);
-  }
-
-  .site-header__mobile-phone:focus-visible {
-    outline: 2px solid #de6814;
-    outline-offset: 2px;
-  }
-
-  .site-header__mobile-cart {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    text-decoration: none;
-    color: var(--color-text);
-  }
-
-  .site-header__mobile-cart:hover {
-    background: var(--color-search-bg);
-  }
-
-  .site-header__mobile-cart:focus-visible {
-    outline: 2px solid #de6814;
-    outline-offset: 2px;
-  }
-
-  /* Hamburger button */
-  .site-header__burger {
-    display: inline-flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 5px;
-    width: 40px;
-    height: 40px;
-    padding: 0;
-    border: 0;
-    border-radius: 10px;
-    background: transparent;
-    cursor: pointer;
-  }
-
-  .site-header__burger:hover {
-    background: var(--color-search-bg);
-  }
-
-  .site-header__burger:focus-visible {
-    outline: 2px solid #de6814;
-    outline-offset: 2px;
-  }
-
-  .site-header__burger-line {
+  .site-header__mobile-figma {
     display: block;
-    width: 22px;
-    height: 2px;
-    background: var(--color-text);
-    border-radius: 2px;
-    transition: transform 0.22s ease, opacity 0.22s ease;
-    transform-origin: center;
-  }
-
-  /* Burger → X animation when drawer open */
-  body.is-nav-open .site-header__burger-line:nth-child(1) {
-    transform: translateY(7px) rotate(45deg);
-  }
-  body.is-nav-open .site-header__burger-line:nth-child(2) {
-    opacity: 0;
-    transform: scaleX(0);
-  }
-  body.is-nav-open .site-header__burger-line:nth-child(3) {
-    transform: translateY(-7px) rotate(-45deg);
   }
 
   /* Hide desktop nav row */

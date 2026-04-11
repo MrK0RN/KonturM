@@ -239,8 +239,19 @@
     });
   }
 
+  function scheduleCartBadgeRefresh() {
+    function run() {
+      refreshCartBadge();
+    }
+    if (typeof window.requestIdleCallback === "function") {
+      window.requestIdleCallback(run, { timeout: 2500 });
+    } else {
+      window.setTimeout(run, 0);
+    }
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
-    refreshCartBadge();
+    scheduleCartBadgeRefresh();
     setupHeaderSearchAutocomplete();
     setupMobileNav();
   });

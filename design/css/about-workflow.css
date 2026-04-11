@@ -1,0 +1,218 @@
+/* About — «Как мы работаем» (Figma 1:175) */
+
+.ab-workflow {
+  background: #f7f6f5;
+  padding: clamp(48px, 8vw, 100px) 0 clamp(48px, 6vw, 80px);
+}
+
+.ab-workflow__shell {
+  max-width: 1440px;
+  margin-inline: auto;
+  padding-inline: clamp(16px, 5.69vw, 82px);
+}
+
+.ab-workflow__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px 32px;
+  margin-bottom: 32px;
+}
+
+.ab-workflow__title {
+  font-family: var(--font-sans, "Inter", system-ui, sans-serif);
+  font-size: clamp(28px, 3.14vw, 40px);
+  font-weight: 500;
+  color: #0e0f0f;
+  margin: 0;
+  max-width: 580px;
+  line-height: 1.2;
+}
+
+.ab-workflow__subtitle {
+  font-family: var(--font-sans, "Inter", system-ui, sans-serif);
+  font-size: 18px;
+  font-weight: 400;
+  color: #3d403f;
+  margin: 0;
+  max-width: 580px;
+  line-height: 1.45;
+  text-align: left;
+}
+
+@media (min-width: 900px) {
+  .ab-workflow__subtitle {
+    text-align: right;
+    margin-left: auto;
+  }
+}
+
+.ab-workflow__viewport {
+  margin-inline: calc(-1 * clamp(16px, 5.69vw, 82px));
+  padding-inline: clamp(16px, 5.69vw, 82px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
+}
+
+.ab-workflow__viewport:focus-visible {
+  outline: 2px solid #d25e24;
+  outline-offset: 4px;
+}
+
+.ab-workflow__track {
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+  padding: 0 0 8px;
+  margin: 0;
+  list-style: none;
+}
+
+.ab-workflow__card {
+  flex: 0 0 min(628px, calc(100vw - 48px));
+  scroll-snap-align: start;
+  min-height: 600px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 32px;
+  background: #fff;
+  border: 2px solid #f7f6f5;
+  border-radius: 32px;
+}
+
+@media (min-width: 1200px) {
+  .ab-workflow__track .ab-workflow__card + .ab-workflow__card {
+    margin-left: -412px;
+  }
+
+  .ab-workflow__track {
+    padding-right: 300px;
+  }
+}
+
+.ab-workflow__card-top {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 24px;
+  width: 100%;
+}
+
+.ab-workflow__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-end;
+  padding: 6px 24px 7px;
+  border: 1px solid #d25e24;
+  border-radius: 12px;
+  font-family: var(--font-sans, "Inter", system-ui, sans-serif);
+  font-size: 26px;
+  font-weight: 500;
+  line-height: 1;
+  color: #d25e24;
+  text-transform: uppercase;
+}
+
+.ab-workflow__card-title {
+  font-family: var(--font-sans, "Inter", system-ui, sans-serif);
+  font-size: clamp(22px, 2.2vw, 30px);
+  font-weight: 500;
+  color: #d25e24;
+  margin: 0;
+  width: 100%;
+  text-align: left;
+  line-height: 1.25;
+}
+
+.ab-workflow__text {
+  font-family: var(--font-sans, "Inter", system-ui, sans-serif);
+  font-size: 18px;
+  font-weight: 400;
+  color: #3d403f;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.ab-workflow__result {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
+  background: #f7f6f5;
+  border-radius: 12px;
+}
+
+.ab-workflow__result-label {
+  font-family: var(--font-sans, "Inter", system-ui, sans-serif);
+  font-size: 16px;
+  font-weight: 400;
+  color: #d25e24;
+  margin: 0;
+}
+
+.ab-workflow__result-text {
+  font-family: var(--font-sans, "Inter", system-ui, sans-serif);
+  font-size: 18px;
+  font-weight: 400;
+  color: #0e0f0f;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.ab-workflow__cta-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  width: 100%;
+}
+
+.ab-workflow__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 16px 20px;
+  box-sizing: border-box;
+  width: 100%;
+  background: #d25e24;
+  border: none;
+  border-radius: 12px;
+  font-family: var(--font-sans, "Inter", system-ui, sans-serif);
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: none;
+  text-align: center;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.ab-workflow__cta:hover {
+  opacity: 0.92;
+}
+
+.ab-workflow__cta:focus-visible {
+  outline: 2px solid #0e0f0f;
+  outline-offset: 3px;
+}
+
+@media (max-width: 1199px) {
+  .ab-workflow__track {
+    gap: 16px;
+    scroll-snap-type: x mandatory;
+  }
+
+  .ab-workflow__track .ab-workflow__card + .ab-workflow__card {
+    margin-left: 0;
+  }
+
+  .ab-workflow__card {
+    min-height: auto;
+  }
+}

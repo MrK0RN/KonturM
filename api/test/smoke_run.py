@@ -32,6 +32,7 @@ def main() -> None:
     # public endpoints
     public_paths = [
         "/api/categories/tree",
+        "/api/categories/favorites",
         "/api/categories/favorites/main",
         "/api/categories/favorites/sidebar",
         "/api/categories/by-slug/merniki",

@@ -45,5 +45,6 @@ final class CategoryFavoritesCacheInvalidator
 
         $this->cache->deleteItem('favorites_main');
         $this->cache->deleteItem('favorites_sidebar');
+        $this->cache->deleteItem('favorites_combined');
     }
 }

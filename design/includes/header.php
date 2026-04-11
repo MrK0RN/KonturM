@@ -5,7 +5,7 @@ require_once __DIR__ . '/design-base.php';
 <header class="site-header">
   <div class="site-header__shell">
     <div class="site-header__top" aria-label="Шапка сайта">
-      <div class="site-header__top-row">
+      <div class="site-header__top-row site-header__top-row--desktop">
         <a class="site-header__brand" href="/">
           <img
             class="site-header__logo-mark"
@@ -76,31 +76,12 @@ require_once __DIR__ . '/design-base.php';
             decoding="async"
           />
         </a>
+      </div>
 
-        <!-- Mobile only: phone + cart + hamburger -->
-        <div class="site-header__mobile-bar">
-          <a class="site-header__mobile-phone" href="tel:+79785654997" aria-label="Позвонить">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" width="22" height="22">
-              <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.58.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1C10.29 21 3 13.71 3 4.82c0-.55.45-1 1-1H7.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.58.11.35.03.74-.24 1.02L6.6 10.8z" fill="currentColor"/>
-            </svg>
-          </a>
-          <a class="site-header__mobile-cart" href="/cart" aria-label="Корзина">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" width="22" height="22">
-              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </a>
-          <button
-            class="site-header__burger"
-            type="button"
-            aria-label="Открыть меню"
-            aria-expanded="false"
-            aria-controls="site-mobile-drawer"
-          >
-            <span class="site-header__burger-line"></span>
-            <span class="site-header__burger-line"></span>
-            <span class="site-header__burger-line"></span>
-          </button>
-        </div>
+      <!-- Mobile (≤720px): Figma frame 1:587 — strip + toolbar -->
+      <div class="site-header__mobile-figma">
+        <?php require __DIR__ . '/header-mobile-strip.php'; ?>
+        <?php require __DIR__ . '/header-mobile-toolbar.php'; ?>
       </div>
     </div>
 

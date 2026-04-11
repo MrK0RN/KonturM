@@ -1,0 +1,120 @@
+/* Figma node 1:591 — mobile header: logo, search, menu */
+
+.mh-toolbar {
+  display: grid;
+  grid-template-columns: minmax(96px, 126px) minmax(0, 1fr) 60px;
+  align-items: stretch;
+  width: 100%;
+  min-height: 44px;
+}
+
+.mh-toolbar__logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border-right: 1px solid var(--color-line);
+  text-decoration: none;
+  color: inherit;
+  outline-offset: 2px;
+}
+
+.mh-toolbar__logo:hover {
+  background: rgba(94, 98, 102, 0.06);
+}
+
+.mh-toolbar__logo:focus-visible {
+  outline: 2px solid #de6814;
+}
+
+.mh-toolbar__logo img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: 20px;
+}
+
+.mh-toolbar__search {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 12px;
+  background: var(--color-search-bg);
+}
+
+.mh-toolbar__search-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  line-height: normal;
+  color: var(--color-text);
+  outline: none;
+}
+
+.mh-toolbar__search-input::placeholder {
+  color: var(--color-text);
+  opacity: 0.4;
+}
+
+.mh-toolbar__search-submit {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.mh-toolbar__search-submit:focus-visible {
+  outline: 2px solid #de6814;
+  outline-offset: 2px;
+}
+
+.mh-toolbar__search-submit img {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
+.mh-toolbar .site-header__burger {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  min-height: 44px;
+  margin: 0;
+  padding: 12px;
+  border: 0;
+  border-left: 1px solid var(--color-line);
+  border-radius: 0;
+  background: #fff;
+  cursor: pointer;
+}
+
+.mh-toolbar .site-header__burger:hover {
+  background: rgba(94, 98, 102, 0.06);
+}
+
+.mh-toolbar .site-header__burger:focus-visible {
+  outline: 2px solid #de6814;
+  outline-offset: -2px;
+}
+
+.mh-toolbar__burger-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+}

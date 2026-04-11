@@ -1,0 +1,124 @@
+/* About — «О предприятии» (Figma 1:158) */
+
+.ab-enterprise {
+  background: #fff;
+  padding: 48px 0 64px;
+}
+
+.ab-enterprise__shell {
+  max-width: 1440px;
+  margin-inline: auto;
+  padding-inline: clamp(16px, 5.69vw, 82px);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 20px;
+}
+
+.ab-enterprise__content {
+  flex: 1 1 320px;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 32px;
+  min-height: min(560px, 70vw);
+  padding-right: clamp(0px, 2vw, 20px);
+}
+
+.ab-enterprise__intro {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.ab-enterprise__title {
+  font-family: var(--font-sans, "Inter", system-ui, sans-serif);
+  font-size: clamp(28px, 3.14vw, 40px);
+  font-weight: 500;
+  color: #000;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.ab-enterprise__lead {
+  font-family: var(--font-sans, "Inter", system-ui, sans-serif);
+  font-size: 18px;
+  font-weight: 400;
+  color: #3d403f;
+  margin: 0;
+  line-height: 1.55;
+}
+
+.ab-enterprise__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  width: 100%;
+}
+
+.ab-enterprise__stat {
+  flex: 1 1 200px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ab-enterprise__stat-value {
+  font-family: var(--font-sans, "Inter", system-ui, sans-serif);
+  font-size: clamp(48px, 8vw, 72px);
+  font-weight: 600;
+  line-height: 1;
+  color: #d25e24;
+  margin: 0;
+}
+
+.ab-enterprise__stat-label {
+  font-family: var(--font-sans, "Inter", system-ui, sans-serif);
+  font-size: 16px;
+  font-weight: 400;
+  color: #3d403f;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.ab-enterprise__media {
+  flex: 1 1 280px;
+  min-height: 320px;
+  border-radius: 32px;
+  overflow: hidden;
+  position: relative;
+}
+
+.ab-enterprise__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  object-fit: cover;
+  object-position: center;
+}
+
+@media (max-width: 900px) {
+  .ab-enterprise__content {
+    min-height: 0;
+    max-width: none;
+    padding-right: 0;
+  }
+
+  .ab-enterprise__shell {
+    flex-direction: column;
+  }
+
+  .ab-enterprise__media {
+    order: -1;
+    min-height: 240px;
+    max-height: 420px;
+  }
+
+  .ab-enterprise__img {
+    min-height: 240px;
+    max-height: 420px;
+  }
+}

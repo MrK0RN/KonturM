@@ -1,0 +1,65 @@
+/* Figma node 1:588 — mobile header: phone, hours, price link */
+
+.mh-strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 10px 16px 10px;
+  gap: 12px;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.mh-strip__contact {
+  margin: 0;
+  max-width: 158px;
+  font-style: normal;
+}
+
+.mh-strip__phone {
+  display: block;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: normal;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.mh-strip__phone:hover {
+  text-decoration: underline;
+}
+
+.mh-strip__phone:focus-visible {
+  outline: 2px solid #de6814;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.mh-strip__hours {
+  margin: 0;
+  margin-top: 2px;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: normal;
+  color: var(--color-muted);
+}
+
+.mh-strip__cta {
+  flex-shrink: 0;
+  margin-top: 9px;
+  font-weight: 600;
+  font-size: 12px;
+  line-height: normal;
+  color: #d25e24;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.mh-strip__cta:hover {
+  text-decoration: underline;
+}
+
+.mh-strip__cta:focus-visible {
+  outline: 2px solid #d25e24;
+  outline-offset: 2px;
+  border-radius: 2px;
+}

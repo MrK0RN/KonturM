@@ -17,8 +17,9 @@
   cart_items_delete                            DELETE     ANY      ANY    /api/cart/items/{item_id}              
   cart_items_update                            PATCH      ANY      ANY    /api/cart/items/{item_id}              
   category_by_slug                             GET        ANY      ANY    /api/categories/by-slug/{slug}         
-  favorites_main                               GET        ANY      ANY    /api/categories/favorites/main         
-  favorites_sidebar                            GET        ANY      ANY    /api/categories/favorites/sidebar      
+  favorites_combined                           GET        ANY      ANY    /api/categories/favorites
+  favorites_main                               GET        ANY      ANY    /api/categories/favorites/main
+  favorites_sidebar                            GET        ANY      ANY    /api/categories/favorites/sidebar
   category_filters                             GET        ANY      ANY    /api/categories/{slug}/filters         
   category_products                            GET        ANY      ANY    /api/categories/{slug}/products        
   category_tree                                GET        ANY      ANY    /api/categories/tree                   

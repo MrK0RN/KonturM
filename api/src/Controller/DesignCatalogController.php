@@ -144,6 +144,8 @@ final class DesignCatalogController
         $response = new BinaryFileResponse($full);
         // finfo часто даёт text/plain для .css — браузер не применяет как stylesheet без text/css
         $response->headers->set('Content-Type', $this->designAssetMimeType($ext));
+        $response->setPublic();
+        $response->headers->set('Cache-Control', 'public, max-age=604800');
 
         return $response;
     }

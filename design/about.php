@@ -17,18 +17,21 @@ $figma = static function (string $file): string {
       name="description"
       content="ООО «Контур-М» — производитель мерников, метроштоков и пробоотборников для АЗС и нефтебаз. Работаем с 1999 года. Поверка СИ, соответствие ГОСТ, собственное производство."
     />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <?php require __DIR__ . '/includes/head-fonts.php'; ?>
+    <style>
+      :root {
+        --ab-link-bg: url("<?= htmlspecialchars(konturm_design_url('assets/figma/80e08696-8d13-4c05-8b70-8f6ebf0aa209.png'), ENT_QUOTES, 'UTF-8') ?>");
+      }
+    </style>
     <link rel="stylesheet" href="<?= htmlspecialchars(konturm_design_url('css/header.css'), ENT_QUOTES, 'UTF-8') ?>" />
     <link rel="stylesheet" href="<?= htmlspecialchars(konturm_design_url('css/catalog-shared.css'), ENT_QUOTES, 'UTF-8') ?>" />
     <link rel="stylesheet" href="<?= htmlspecialchars(konturm_design_url('css/footer.css'), ENT_QUOTES, 'UTF-8') ?>" />
     <link rel="stylesheet" href="<?= htmlspecialchars(konturm_design_url('css/about-hero.css'), ENT_QUOTES, 'UTF-8') ?>" />
     <link rel="stylesheet" href="<?= htmlspecialchars(konturm_design_url('css/about-features.css'), ENT_QUOTES, 'UTF-8') ?>" />
     <link rel="stylesheet" href="<?= htmlspecialchars(konturm_design_url('css/about-products.css'), ENT_QUOTES, 'UTF-8') ?>" />
+    <link rel="stylesheet" href="<?= htmlspecialchars(konturm_design_url('css/about-enterprise.css'), ENT_QUOTES, 'UTF-8') ?>" />
+    <link rel="stylesheet" href="<?= htmlspecialchars(konturm_design_url('css/about-workflow.css'), ENT_QUOTES, 'UTF-8') ?>" />
+    <link rel="stylesheet" href="<?= htmlspecialchars(konturm_design_url('css/about-why-us.css'), ENT_QUOTES, 'UTF-8') ?>" />
   </head>
   <body>
     <?php require __DIR__ . '/includes/header.php'; ?>
@@ -68,12 +71,10 @@ $figma = static function (string $file): string {
 
           <!-- Right column: product category links -->
           <nav class="ab-hero__links" aria-label="Категории продукции">
-            <?php $abHeroCardBg = $figma('80e08696-8d13-4c05-8b70-8f6ebf0aa209.png'); ?>
             <div class="ab-hero__links-grid">
 
               <!-- Row 1 -->
               <a href="/catalog/merniki-uglerodnaya" class="ab-link-cell">
-                <img class="ab-link-cell__bg-img" src="<?= $abHeroCardBg ?>" alt="" aria-hidden="true" />
                 <span class="ab-link-cell__name">Мерники 2-го разряда из углеродистой стали</span>
                 <svg class="ab-link-cell__arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M7 17L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -81,7 +82,6 @@ $figma = static function (string $file): string {
                 </svg>
               </a>
               <a href="/catalog/merniki-nerzhaveyushchaya" class="ab-link-cell">
-                <img class="ab-link-cell__bg-img" src="<?= $abHeroCardBg ?>" alt="" aria-hidden="true" />
                 <span class="ab-link-cell__name">Мерники 2-го разряда из нержавеющей стали</span>
                 <svg class="ab-link-cell__arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M7 17L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -89,7 +89,6 @@ $figma = static function (string $file): string {
                 </svg>
               </a>
               <a href="/catalog/merniki-tehnicheskie" class="ab-link-cell">
-                <img class="ab-link-cell__bg-img" src="<?= $abHeroCardBg ?>" alt="" aria-hidden="true" />
                 <span class="ab-link-cell__name">Мерники технические 1-го класса</span>
                 <svg class="ab-link-cell__arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M7 17L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -99,7 +98,6 @@ $figma = static function (string $file): string {
 
               <!-- Row 2 — featured cell (orange) -->
               <a href="/catalog/merniki-1-razryad" class="ab-link-cell ab-link-cell--featured">
-                <img class="ab-link-cell__bg-img" src="<?= $abHeroCardBg ?>" alt="" aria-hidden="true" />
                 <span class="ab-link-cell__name">Мерники 1-го разряда</span>
                 <svg class="ab-link-cell__arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M7 17L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -107,7 +105,6 @@ $figma = static function (string $file): string {
                 </svg>
               </a>
               <a href="/catalog/metroshток-anodirovannyj" class="ab-link-cell">
-                <img class="ab-link-cell__bg-img" src="<?= $abHeroCardBg ?>" alt="" aria-hidden="true" />
                 <span class="ab-link-cell__name">Метрошток анодированный</span>
                 <svg class="ab-link-cell__arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M7 17L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -115,7 +112,6 @@ $figma = static function (string $file): string {
                 </svg>
               </a>
               <a href="/catalog/metroshток-t-obraznyj" class="ab-link-cell">
-                <img class="ab-link-cell__bg-img" src="<?= $abHeroCardBg ?>" alt="" aria-hidden="true" />
                 <span class="ab-link-cell__name">Метрошток Т-образный</span>
                 <svg class="ab-link-cell__arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M7 17L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -125,7 +121,6 @@ $figma = static function (string $file): string {
 
               <!-- Row 3 -->
               <a href="/catalog/metroshток" class="ab-link-cell">
-                <img class="ab-link-cell__bg-img" src="<?= $abHeroCardBg ?>" alt="" aria-hidden="true" />
                 <span class="ab-link-cell__name">Метрошток анодированный</span>
                 <svg class="ab-link-cell__arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M7 17L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -133,7 +128,6 @@ $figma = static function (string $file): string {
                 </svg>
               </a>
               <a href="/catalog/ruletki-s-lotom" class="ab-link-cell">
-                <img class="ab-link-cell__bg-img" src="<?= $abHeroCardBg ?>" alt="" aria-hidden="true" />
                 <span class="ab-link-cell__name">Рулетки с лотом</span>
                 <svg class="ab-link-cell__arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M7 17L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -141,7 +135,6 @@ $figma = static function (string $file): string {
                 </svg>
               </a>
               <a href="/catalog/ruletki-s-kolcom" class="ab-link-cell">
-                <img class="ab-link-cell__bg-img" src="<?= $abHeroCardBg ?>" alt="" aria-hidden="true" />
                 <span class="ab-link-cell__name">Рулетки с кольцом</span>
                 <svg class="ab-link-cell__arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M7 17L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -151,7 +144,6 @@ $figma = static function (string $file): string {
 
               <!-- Row 4 -->
               <a href="/catalog/zabornye-vedra" class="ab-link-cell">
-                <img class="ab-link-cell__bg-img" src="<?= $abHeroCardBg ?>" alt="" aria-hidden="true" />
                 <span class="ab-link-cell__name">Заборные ведра</span>
                 <svg class="ab-link-cell__arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M7 17L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -159,7 +151,6 @@ $figma = static function (string $file): string {
                 </svg>
               </a>
               <a href="/catalog/pasta-indikatornaya" class="ab-link-cell">
-                <img class="ab-link-cell__bg-img" src="<?= $abHeroCardBg ?>" alt="" aria-hidden="true" />
                 <span class="ab-link-cell__name">Паста индикаторная</span>
                 <svg class="ab-link-cell__arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M7 17L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -167,7 +158,6 @@ $figma = static function (string $file): string {
                 </svg>
               </a>
               <a href="/catalog/sovki-skrebki" class="ab-link-cell">
-                <img class="ab-link-cell__bg-img" src="<?= $abHeroCardBg ?>" alt="" aria-hidden="true" />
                 <span class="ab-link-cell__name">Совки и скребки</span>
                 <svg class="ab-link-cell__arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M7 17L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -356,6 +346,10 @@ $figma = static function (string $file): string {
           </ul>
         </div>
       </section>
+
+      <?php require __DIR__ . '/includes/about-enterprise-block.php'; ?>
+      <?php require __DIR__ . '/includes/about-workflow-block.php'; ?>
+      <?php require __DIR__ . '/includes/about-why-us-block.php'; ?>
 
     </main>
 

@@ -58,13 +58,10 @@
     var errEl = document.getElementById("catalog-home-error");
     if (!grid || !nav) return;
 
-    Promise.all([
-      K.fetchJson("/categories/favorites/main").then(K.normalizeTree),
-      K.fetchJson("/categories/favorites/sidebar").then(K.normalizeTree),
-    ])
-      .then(function (pair) {
-        var mainList = pair[0] || [];
-        var sideList = pair[1] || [];
+    K.fetchJson("/categories/favorites")
+      .then(function (data) {
+        var mainList = K.normalizeTree(data && data.main) || [];
+        var sideList = K.normalizeTree(data && data.sidebar) || [];
 
         if (!mainList.length) {
           grid.innerHTML =
