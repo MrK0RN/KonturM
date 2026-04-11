@@ -1,14 +1,32 @@
 # Полный стек: из корня репозитория — `docker compose up --build`
-# API: http://localhost:8000  (витрина design подключается через Symfony)
+# HTTP:  http://localhost:${CADDY_HTTP_PORT:-80}
+# HTTPS: https://localhost:${CADDY_HTTPS_PORT:-443}  (по умолчанию сертификат Caddy «internal», браузер попросит доверие)
+# Прямой доступ к PHP без прокси: задайте APP_PORT (например 8000) — см. сервис app
 # Mailpit UI: http://localhost:8025
 
 services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "${CADDY_HTTP_PORT:-80}:80"
+      - "${CADDY_HTTPS_PORT:-443}:443"
+    volumes:
+      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
   app:
     build:
       context: ./api
       dockerfile: Dockerfile
-    ports:
-      - "${APP_PORT:-8000}:8000"
+    expose:
+      - "8000"
+    # Прямой доступ к контейнеру app (минуя Caddy): раскомментируйте
+    # ports:
+    #   - "8000:8000"
     environment:
       APP_ENV: ${APP_ENV:-dev}
       APP_SECRET: ${APP_SECRET:-496f664afff3a3d54cd4176e029a0561}
@@ -58,3 +76,5 @@ volumes:
   database_data:
   api_vendor:
   api_var:
+  caddy_data:
+  caddy_config:

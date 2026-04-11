@@ -1,0 +1,19 @@
+# Пример для боевого домена: положите как Caddyfile и пересоберите Caddy.
+# Caddy сам получит сертификат Let's Encrypt (нужны открытые 80/443 и DNS на этот сервер).
+#
+# www.example.com {
+# 	encode gzip zstd
+# 	reverse_proxy app:8000 {
+# 		header_up Host {host}
+# 		header_up X-Forwarded-Proto {scheme}
+# 		header_up X-Forwarded-For {remote_host}
+# 		header_up X-Forwarded-Host {host}
+# 		header_up X-Forwarded-Port {server_port}
+# 	}
+# }
+#
+# Или свои PEM-файлы:
+# www.example.com {
+# 	tls /etc/certs/fullchain.pem /etc/certs/privkey.pem
+# 	...
+# }
