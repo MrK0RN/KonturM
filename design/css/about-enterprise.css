@@ -105,20 +105,28 @@
     min-height: 0;
     max-width: none;
     padding-right: 0;
+    gap: 24px;
   }
 
   .ab-enterprise__shell {
     flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 24px;
   }
 
   .ab-enterprise__media {
     order: -1;
-    min-height: 240px;
-    max-height: 420px;
+    min-height: 200px;
+    max-height: 320px;
+    border-radius: 16px;
   }
 
   .ab-enterprise__img {
-    min-height: 240px;
-    max-height: 420px;
+    min-height: 200px;
+    max-height: 320px;
+  }
+
+  .ab-enterprise__stats {
+    gap: 16px;
   }
 }

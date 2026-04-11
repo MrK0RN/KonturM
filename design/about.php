@@ -58,7 +58,7 @@ $figma = static function (string $file): string {
             <a href="/contacts" class="ab-hero__cta">Заказать звонок</a>
           </div>
 
-          <!-- Decorative product image (hidden on narrow screens via CSS) -->
+          <!-- Decorative product image -->
           <div class="ab-hero__image-wrap" aria-hidden="true">
             <img
               class="ab-hero__image"

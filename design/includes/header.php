@@ -50,7 +50,7 @@ require_once __DIR__ . '/design-base.php';
             />
             <span>kontur_m16@mail.ru</span>
           </a>
-          <a class="site-header__contact-link" href="tel:+79785654997">
+          <a class="site-header__contact-link" href="tel:+78432023170">
             <img
               class="site-header__contact-icon"
               src="<?= htmlspecialchars(konturm_design_url('assets/icon-phone.png'), ENT_QUOTES, 'UTF-8') ?>"
@@ -59,7 +59,7 @@ require_once __DIR__ . '/design-base.php';
               alt=""
               decoding="async"
             />
-            <span>+7 978 565-49-97</span>
+            <span>+7 (843) 202-31-70</span>
           </a>
         </address>
 
@@ -187,11 +187,11 @@ require_once __DIR__ . '/design-base.php';
       </ul>
 
       <address class="site-header__drawer-contacts">
-        <a class="site-header__drawer-contact-link" href="tel:+79785654997">
+        <a class="site-header__drawer-contact-link" href="tel:+78432023170">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" width="20" height="20">
             <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.58.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1C10.29 21 3 13.71 3 4.82c0-.55.45-1 1-1H7.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.58.11.35.03.74-.24 1.02L6.6 10.8z" fill="currentColor"/>
           </svg>
-          +7 978 565-49-97
+          +7 (843) 202-31-70
         </a>
         <a class="site-header__drawer-contact-link" href="mailto:kontur_m16@mail.ru">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" width="20" height="20">

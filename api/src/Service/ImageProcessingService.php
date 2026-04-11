@@ -32,33 +32,36 @@ final class ImageProcessingService
         if (! extension_loaded('gd')) {
             throw new \RuntimeException('PHP extension gd is required for image processing.');
         }
+        if (! function_exists('imagewebp')) {
+            throw new \RuntimeException('PHP GD must be built with WebP support (imagewebp).');
+        }
 
-        $img = @imagecreatefromstring($binary);
+        $img = @\imagecreatefromstring($binary);
         if ($img === false) {
             throw new \InvalidArgumentException('Файл не является поддерживаемым изображением.');
         }
 
-        if (function_exists('imagepalettetotruecolor') && ! imageistruecolor($img)) {
-            imagepalettetotruecolor($img);
+        if (\function_exists('imagepalettetotruecolor') && ! \imageistruecolor($img)) {
+            \imagepalettetotruecolor($img);
         }
-        imagealphablending($img, true);
-        imagesavealpha($img, true);
+        \imagealphablending($img, true);
+        \imagesavealpha($img, true);
 
-        $w = imagesx($img);
-        $h = imagesy($img);
+        $w = \imagesx($img);
+        $h = \imagesy($img);
         if ($w < 1 || $h < 1) {
-            imagedestroy($img);
+            \imagedestroy($img);
             throw new \InvalidArgumentException('Некорректный размер изображения.');
         }
 
         $full = $this->resizeMaxSide($img, self::FULL_MAX);
         $thumb = $this->resizeMaxSide($img, self::THUMB_MAX);
-        imagedestroy($img);
+        \imagedestroy($img);
 
         $dir = $this->projectDir.'/public/media/'.$ownerType.'/'.$ownerId;
         if (! is_dir($dir) && ! mkdir($dir, 0775, true) && ! is_dir($dir)) {
-            imagedestroy($full);
-            imagedestroy($thumb);
+            \imagedestroy($full);
+            \imagedestroy($thumb);
             throw new \RuntimeException('Не удалось создать каталог для медиа.');
         }
 
@@ -66,14 +69,14 @@ final class ImageProcessingService
         $fullAbs = $base.'_full.webp';
         $thumbAbs = $base.'_thumb.webp';
 
-        if (! imagewebp($full, $fullAbs, self::WEBP_QUALITY) || ! imagewebp($thumb, $thumbAbs, self::WEBP_QUALITY)) {
-            imagedestroy($full);
-            imagedestroy($thumb);
+        if (! \imagewebp($full, $fullAbs, self::WEBP_QUALITY) || ! \imagewebp($thumb, $thumbAbs, self::WEBP_QUALITY)) {
+            \imagedestroy($full);
+            \imagedestroy($thumb);
             throw new \RuntimeException('Не удалось сохранить WebP.');
         }
 
-        imagedestroy($full);
-        imagedestroy($thumb);
+        \imagedestroy($full);
+        \imagedestroy($thumb);
 
         $fullWeb = '/media/'.$ownerType.'/'.$ownerId.'/'.$assetId.'_full.webp';
         $thumbWeb = '/media/'.$ownerType.'/'.$ownerId.'/'.$assetId.'_thumb.webp';
@@ -103,8 +106,8 @@ final class ImageProcessingService
 
     private function resizeMaxSide(\GdImage $src, int $maxSide): \GdImage
     {
-        $w = imagesx($src);
-        $h = imagesy($src);
+        $w = \imagesx($src);
+        $h = \imagesy($src);
         if ($w <= $maxSide && $h <= $maxSide) {
             return $this->copyImage($src);
         }
@@ -113,25 +116,25 @@ final class ImageProcessingService
         $nw = max(1, (int) round($w * $ratio));
         $nh = max(1, (int) round($h * $ratio));
 
-        $dst = imagecreatetruecolor($nw, $nh);
-        imagealphablending($dst, false);
-        imagesavealpha($dst, true);
-        $transparent = imagecolorallocatealpha($dst, 0, 0, 0, 127);
-        imagefilledrectangle($dst, 0, 0, $nw, $nh, $transparent);
-        imagealphablending($dst, true);
-        imagecopyresampled($dst, $src, 0, 0, 0, 0, $nw, $nh, $w, $h);
+        $dst = \imagecreatetruecolor($nw, $nh);
+        \imagealphablending($dst, false);
+        \imagesavealpha($dst, true);
+        $transparent = \imagecolorallocatealpha($dst, 0, 0, 0, 127);
+        \imagefilledrectangle($dst, 0, 0, $nw, $nh, $transparent);
+        \imagealphablending($dst, true);
+        \imagecopyresampled($dst, $src, 0, 0, 0, 0, $nw, $nh, $w, $h);
 
         return $dst;
     }
 
     private function copyImage(\GdImage $src): \GdImage
     {
-        $w = imagesx($src);
-        $h = imagesy($src);
-        $dst = imagecreatetruecolor($w, $h);
-        imagealphablending($dst, false);
-        imagesavealpha($dst, true);
-        imagecopy($dst, $src, 0, 0, 0, 0, $w, $h);
+        $w = \imagesx($src);
+        $h = \imagesy($src);
+        $dst = \imagecreatetruecolor($w, $h);
+        \imagealphablending($dst, false);
+        \imagesavealpha($dst, true);
+        \imagecopy($dst, $src, 0, 0, 0, 0, $w, $h);
 
         return $dst;
     }
