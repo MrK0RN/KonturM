@@ -13,7 +13,9 @@ api_platform:
         cache_headers:
             vary: ['Content-Type', 'Authorization', 'Origin']
         extra_properties:
-            standard_put: true
+            # When true, PUT deserializes into a new object (no OBJECT_TO_POPULATE), so Doctrine
+            # entities with non-writable timestamps (created_at/updated_at) stay uninitialized.
+            standard_put: false
             rfc_7807_compliant_errors: true
     keep_legacy_inflector: false
     use_symfony_listeners: true
