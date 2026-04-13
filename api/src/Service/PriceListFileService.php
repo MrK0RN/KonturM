@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
- * Прайс-лист для скачивания: загруженный файл в var/price_list/; иначе — public/price-list.xlsx.
+ * Прайс-лист для скачивания: загруженный файл в var/price_list/; иначе — resources/default/price-list.xlsx.
  */
 final class PriceListFileService
 {
@@ -40,7 +40,7 @@ final class PriceListFileService
 
     private function defaultXlsxPath(): string
     {
-        return $this->projectDir . '/public/price-list.xlsx';
+        return $this->projectDir . '/resources/default/price-list.xlsx';
     }
 
     /**

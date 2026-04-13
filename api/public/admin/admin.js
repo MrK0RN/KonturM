@@ -1405,7 +1405,7 @@ async function loadPriceListSection() {
       resetBtn.classList.remove("hidden");
     } else {
       box.innerHTML = `<h2 class="card-title">Текущий файл</h2>
-        <p><strong>Источник:</strong> файл по умолчанию из поставки (<code>public/price-list.xlsx</code>)</p>
+        <p><strong>Источник:</strong> файл по умолчанию из поставки (<code>resources/default/price-list.xlsx</code>)</p>
         <p><strong>Размер:</strong> ${formatBytes(data.bytes)}</p>
         <p><strong>Ссылка для проверки:</strong> <a href="${escapeHtml(absUrl)}" target="_blank" rel="noopener">${escapeHtml(absUrl)}</a></p>
         <p class="muted small">Загрузите файл ниже, чтобы заменить его без деплоя.</p>`;
@@ -2371,7 +2371,7 @@ document.getElementById("pl-upload")?.addEventListener("click", async () => {
 });
 
 document.getElementById("pl-reset")?.addEventListener("click", async () => {
-  if (!window.confirm("Удалить загруженный файл и снова использовать прайс из поставки (public/price-list.xlsx)?")) {
+  if (!window.confirm("Удалить загруженный файл и снова использовать прайс из поставки (resources/default/price-list.xlsx)?")) {
     return;
   }
   const errEl = document.getElementById("pl-error");

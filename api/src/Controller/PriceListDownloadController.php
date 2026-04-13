@@ -6,7 +6,6 @@ namespace App\Controller;
 
 use App\Service\PriceListFileService;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -27,7 +26,7 @@ final class PriceListDownloadController
         methods: ['GET'],
         priority: 15,
     )]
-    public function download(string $ext, Request $request): BinaryFileResponse
+    public function download(string $ext): BinaryFileResponse
     {
         $path = $this->priceList->resolveDownloadPath($ext);
         if ($path === null) {
