@@ -10,7 +10,10 @@ declare(strict_types=1);
  */
 $uri = rawurldecode(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '');
 
-if ($uri !== '' && $uri !== '/' && !str_contains($uri, '..')) {
+// Прайс-лист обрабатывается Symfony (var/price_list или смена файла в админке), не как голая статика из public/.
+$isPriceListFile = $uri !== '' && preg_match('#^/price-list\.(pdf|xlsx)$#', $uri) === 1;
+
+if ($uri !== '' && $uri !== '/' && !str_contains($uri, '..') && !$isPriceListFile) {
     $file = __DIR__ . $uri;
     if (is_file($file)) {
         return false;

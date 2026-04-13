@@ -4,8 +4,12 @@
 - категории (лист = категория, display_mode=products_only);
 - товары с technical_specs из характеристик;
 - filter_config на каждой категории (keys + labels по ключам характеристик).
+- поле price_rub из JSON (после merge_prices_into_product_specs.py) передаётся в API как price.
 
 Повторный запуск идемпотентен: категории и товары с тем же slug пропускаются.
+
+Обновить только цены у уже созданных товаров:
+  python3 api/test/seed_product_specs_catalog.py --sync-prices
 
 Переменные окружения (как в smoke_common):
   API_BASE_URL, API_ADMIN_USER, API_ADMIN_PASSWORD
@@ -240,6 +244,62 @@ def put_category_filter_config(
         raise RuntimeError(f"PUT filter_config {category_id} failed: {status} {resp}")
 
 
+def put_product_price(client: SmokeClient, product_id: str, price_rub: float) -> None:
+    status, cur = client.call("GET", f"/api/products/{product_id}", token="")
+    if status != 200:
+        raise RuntimeError(f"GET product {product_id} failed: {status} {cur}")
+    body = {k: v for k, v in cur.items() if not k.startswith("hydra:")}
+    body["price"] = f"{float(price_rub):.2f}"
+    status, resp = client.call(
+        "PUT",
+        f"/api/products/{product_id}",
+        body,
+        content_type="application/ld+json",
+    )
+    if status not in (200, 204):
+        raise RuntimeError(f"PUT product {product_id} price failed: {status} {resp}")
+
+
+def sync_prices_from_json(client: SmokeClient, json_path: Path) -> Dict[str, int]:
+    """Выставляет price в API по slug, совпадающему с расчётом сидера."""
+    with open(json_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    categories_in = data.get("categories") or []
+    existing = fetch_all_hydra_members(client, "/api/products", public_read=False)
+    by_slug: Dict[str, str] = {}
+    for p in existing:
+        if isinstance(p, dict) and p.get("slug") and p.get("id"):
+            by_slug[str(p["slug"])] = str(p["id"])
+
+    slug_map = load_category_slug_map(client)
+    updated = 0
+    missing_slug = 0
+    for block in categories_in:
+        cat_name = (block.get("category") or "").strip()
+        if not cat_name:
+            continue
+        products = block.get("products") or []
+        slug = resolve_category_slug(cat_name, slug_map)
+        for prod in products:
+            pr = prod.get("price_rub")
+            if pr is None:
+                continue
+            orig = (prod.get("original_name") or prod.get("name") or "").strip()
+            if not orig:
+                continue
+            chars = prod.get("characteristics") or {}
+            if not isinstance(chars, dict):
+                chars = {}
+            pslug = stable_product_slug(slug, orig, chars)
+            pid = by_slug.get(pslug)
+            if not pid:
+                missing_slug += 1
+                continue
+            put_product_price(client, pid, float(pr))
+            updated += 1
+    return {"prices_updated": updated, "products_not_found_by_slug": missing_slug}
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Seed categories/products from product-specs-by-category.json")
     parser.add_argument(
@@ -253,11 +313,23 @@ def main() -> None:
         action="store_true",
         help="Только показать план, без запросов к API",
     )
+    parser.add_argument(
+        "--sync-prices",
+        action="store_true",
+        help="Только обновить цены у существующих товаров из price_rub в JSON",
+    )
     args = parser.parse_args()
     json_path = args.json_path or default_json_path()
     if not json_path.is_file():
         print(f"Файл не найден: {json_path}", file=sys.stderr)
         sys.exit(1)
+
+    if args.sync_prices:
+        client = env_client()
+        client.login()
+        stats = sync_prices_from_json(client, json_path)
+        print(json.dumps(stats, ensure_ascii=False, indent=2))
+        return
 
     with open(json_path, "r", encoding="utf-8") as f:
         data = json.load(f)
@@ -330,6 +402,9 @@ def main() -> None:
                 stats["products_skipped"] += 1
                 continue
 
+            price_val = prod.get("price_rub")
+            price_api = f"{float(price_val):.2f}" if price_val is not None else None
+
             body = {
                 "category_id": cat_id,
                 "name": name,
@@ -337,7 +412,7 @@ def main() -> None:
                 "article": None,
                 "description": None,
                 "technical_specs": specs,
-                "price": None,
+                "price": price_api,
                 "stock_status": "on_order",
                 "manufacturing_time": None,
                 "has_verification": False,

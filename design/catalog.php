@@ -7,6 +7,7 @@ require __DIR__ . '/includes/design-base.php';
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <?php require __DIR__ . '/includes/head-favicon.php'; ?>
     <title>Каталог — Контур-М | Оборудование для АЗС</title>
     <meta
       name="description"

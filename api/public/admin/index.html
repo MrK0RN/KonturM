@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Админ — KonturM API</title>
+  <link rel="icon" href="/design/assets/logo-mark.svg" type="image/svg+xml" />
   <base href="/admin/" />
   <link rel="stylesheet" href="admin.css" />
 </head>
@@ -32,6 +33,23 @@
           </div>
           <p id="sc-error" class="error hidden"></p>
         </form>
+      </section>
+      <section id="view-price-list" class="view hidden">
+        <p class="muted intro-text">
+          Файл, который отдаётся по ссылкам <code>/price-list.xlsx</code> и <code>/price-list.pdf</code> на витрине (кнопки «Скачать прайс»). После загрузки нового файла ссылки на сайте менять не нужно.
+        </p>
+        <div id="pl-status" class="card pl-status-card"></div>
+        <div class="card pl-upload-card">
+          <h2 class="card-title">Заменить файл</h2>
+          <label class="pl-file-label">Файл (.xlsx или .pdf, до 30 МБ)
+            <input type="file" id="pl-file" accept=".xlsx,.pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf" />
+          </label>
+          <div class="toolbar pl-toolbar">
+            <button type="button" id="pl-upload" class="btn btn-primary">Загрузить</button>
+            <button type="button" id="pl-reset" class="btn btn-ghost hidden">Вернуть файл по умолчанию</button>
+          </div>
+          <p id="pl-error" class="error hidden"></p>
+        </div>
       </section>
       <section id="view-visit-stats" class="view hidden">
         <p class="muted intro-text">

@@ -259,6 +259,7 @@ function updateAuthUi() {
 
 const SECTIONS = [
   { id: "site_contacts", title: "Контакты сайта", type: "site_contacts", admin: true, group: "Витрина" },
+  { id: "price_list", title: "Прайс-лист", type: "price_list", admin: true, group: "Витрина" },
   { id: "visit_stats", title: "Статистика посещений", type: "visit_stats", admin: true, group: "Витрина" },
   { id: "categories", title: "Категории", type: "crud", resource: "/categories", admin: true, group: "Каталог" },
   { id: "products", title: "Товары", type: "crud", resource: "/products", admin: true, group: "Каталог" },
@@ -316,6 +317,7 @@ function goSection(id) {
   document.getElementById("view-category-filters").classList.add("hidden");
   document.getElementById("view-photos").classList.add("hidden");
   document.getElementById("view-site-contacts").classList.add("hidden");
+  document.getElementById("view-price-list").classList.add("hidden");
   document.getElementById("view-visit-stats").classList.add("hidden");
 
   if (id === "login") {
@@ -346,6 +348,12 @@ function goSection(id) {
     state.orderDetailId = null;
     document.getElementById("view-site-contacts").classList.remove("hidden");
     void loadSiteContactsForm();
+    return;
+  }
+  if (id === "price_list") {
+    state.orderDetailId = null;
+    document.getElementById("view-price-list").classList.remove("hidden");
+    void loadPriceListSection();
     return;
   }
   if (id === "visit_stats") {
@@ -1359,6 +1367,60 @@ async function loadSiteContactsForm() {
   }
 }
 
+function formatBytes(n) {
+  if (n == null || Number.isNaN(Number(n))) return "—";
+  const v = Number(n);
+  if (v < 1024) return `${v} Б`;
+  if (v < 1024 * 1024) return `${(v / 1024).toFixed(1)} КБ`;
+  return `${(v / (1024 * 1024)).toFixed(1)} МБ`;
+}
+
+async function loadPriceListSection() {
+  const box = document.getElementById("pl-status");
+  const errEl = document.getElementById("pl-error");
+  const resetBtn = document.getElementById("pl-reset");
+  errEl.classList.add("hidden");
+  errEl.textContent = "";
+  if (!box) return;
+  box.innerHTML = "<p class=\"muted\">Загрузка…</p>";
+  try {
+    const data = await apiFetch("/admin/price-list");
+    const path = data.download_path || "/price-list.xlsx";
+    const absUrl = path.startsWith("http") ? path : `${window.location.origin}${path}`;
+    const when =
+      data.updated_at && typeof data.updated_at === "string"
+        ? new Date(data.updated_at).toLocaleString("ru-RU", { timeZone: "UTC" }) + " UTC"
+        : "—";
+    const nameLine = data.original_filename
+      ? `<p><strong>Имя при загрузке:</strong> ${escapeHtml(String(data.original_filename))}</p>`
+      : "";
+    if (data.has_custom) {
+      box.innerHTML = `<h2 class="card-title">Текущий файл</h2>
+        <p><strong>Источник:</strong> загруженный в админке</p>
+        <p><strong>Тип:</strong> .${escapeHtml(String(data.extension || ""))}</p>
+        ${nameLine}
+        <p><strong>Размер:</strong> ${formatBytes(data.bytes)}</p>
+        <p><strong>Обновлён:</strong> ${escapeHtml(when)}</p>
+        <p><strong>Ссылка для проверки:</strong> <a href="${escapeHtml(absUrl)}" target="_blank" rel="noopener">${escapeHtml(absUrl)}</a></p>`;
+      resetBtn.classList.remove("hidden");
+    } else {
+      box.innerHTML = `<h2 class="card-title">Текущий файл</h2>
+        <p><strong>Источник:</strong> файл по умолчанию из поставки (<code>public/price-list.xlsx</code>)</p>
+        <p><strong>Размер:</strong> ${formatBytes(data.bytes)}</p>
+        <p><strong>Ссылка для проверки:</strong> <a href="${escapeHtml(absUrl)}" target="_blank" rel="noopener">${escapeHtml(absUrl)}</a></p>
+        <p class="muted small">Загрузите файл ниже, чтобы заменить его без деплоя.</p>`;
+      resetBtn.classList.add("hidden");
+    }
+  } catch (e) {
+    if (e.sessionEnded) {
+      return;
+    }
+    box.innerHTML = "";
+    errEl.textContent = e.message || String(e);
+    errEl.classList.remove("hidden");
+  }
+}
+
 async function loadFavoritesTable() {
   const tbody = document.getElementById("favorites-tbody");
   const empty = document.getElementById("favorites-empty");
@@ -2284,6 +2346,42 @@ document.getElementById("btn-logout").addEventListener("click", () => {
 
 document.getElementById("vs-refresh")?.addEventListener("click", () => {
   void loadVisitStats();
+});
+
+document.getElementById("pl-upload")?.addEventListener("click", async () => {
+  const inp = document.getElementById("pl-file");
+  const errEl = document.getElementById("pl-error");
+  errEl.classList.add("hidden");
+  errEl.textContent = "";
+  if (!(inp instanceof HTMLInputElement) || !inp.files?.length) {
+    errEl.textContent = "Выберите файл (.xlsx или .pdf).";
+    errEl.classList.remove("hidden");
+    return;
+  }
+  const fd = new FormData();
+  fd.append("file", inp.files[0]);
+  try {
+    await apiUploadFormData("/admin/price-list", fd);
+    inp.value = "";
+    await loadPriceListSection();
+    alert("Прайс-лист обновлён.");
+  } catch (e) {
+    notifyApiError(e);
+  }
+});
+
+document.getElementById("pl-reset")?.addEventListener("click", async () => {
+  if (!window.confirm("Удалить загруженный файл и снова использовать прайс из поставки (public/price-list.xlsx)?")) {
+    return;
+  }
+  const errEl = document.getElementById("pl-error");
+  errEl.classList.add("hidden");
+  try {
+    await apiFetch("/admin/price-list", { method: "DELETE" });
+    await loadPriceListSection();
+  } catch (e) {
+    notifyApiError(e);
+  }
 });
 
 document.getElementById("form-site-contacts").addEventListener("submit", async (ev) => {

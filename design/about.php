@@ -12,6 +12,7 @@ $figma = static function (string $file): string {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <?php require __DIR__ . '/includes/head-favicon.php'; ?>
     <title>О компании — Контур-М | Производство средств измерений для АЗС</title>
     <meta
       name="description"

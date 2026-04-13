@@ -19,6 +19,7 @@ $c2css = static function (string $file): string {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <?php require __DIR__ . '/../includes/head-favicon.php'; ?>
     <title>Мерники для нефтепродуктов — каталог | Контур-М</title>
     <meta
       name="description"
