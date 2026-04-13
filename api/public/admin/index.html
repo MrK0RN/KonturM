@@ -110,6 +110,57 @@
           <button type="button" id="btn-refresh" class="btn">Обновить</button>
           <button type="button" id="btn-new" class="btn btn-primary">Создать</button>
         </div>
+        <div id="crud-products-filters" class="products-filters card hidden" aria-label="Фильтры товаров">
+          <div class="products-filters-grid">
+            <label>Название
+              <input type="search" id="pf-name" class="pf-input" placeholder="Подстрока" autocomplete="off" />
+            </label>
+            <label>Артикул
+              <input type="search" id="pf-article" class="pf-input" placeholder="Подстрока" autocomplete="off" />
+            </label>
+            <label>Slug
+              <input type="search" id="pf-slug" class="pf-input" placeholder="Подстрока" autocomplete="off" />
+            </label>
+            <label>Категория
+              <select id="pf-category" class="pf-select">
+                <option value="">Все</option>
+              </select>
+            </label>
+            <label>Склад
+              <select id="pf-stock" class="pf-select">
+                <option value="">Все</option>
+                <option value="in_stock">В наличии</option>
+                <option value="on_order">Под заказ</option>
+              </select>
+            </label>
+            <label>Сортировка
+              <select id="pf-sort" class="pf-select">
+                <option value="name:asc">Название А→Я</option>
+                <option value="name:desc">Название Я→А</option>
+                <option value="createdAt:desc">Сначала новые по дате</option>
+                <option value="createdAt:asc">Сначала старые по дате</option>
+                <option value="updatedAt:desc">По обновлению (новые)</option>
+                <option value="price:asc">Цена по возрастанию</option>
+                <option value="price:desc">Цена по убыванию</option>
+                <option value="article:asc">Артикул А→Я</option>
+                <option value="slug:asc">Slug А→Я</option>
+                <option value="stockStatus:asc">Статус склада А→Я</option>
+              </select>
+            </label>
+            <label>На странице
+              <select id="pf-per-page" class="pf-select">
+                <option value="10">10</option>
+                <option value="25" selected>25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </label>
+          </div>
+          <div class="products-filters-actions">
+            <button type="button" class="btn btn-primary" id="pf-apply">Применить</button>
+            <button type="button" class="btn btn-ghost" id="pf-reset">Сбросить</button>
+          </div>
+        </div>
         <div class="table-wrap">
           <table class="data-table" id="crud-table">
             <thead id="crud-thead"></thead>

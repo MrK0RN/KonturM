@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\Get;
@@ -18,9 +21,30 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
 #[ORM\Entity]
 #[ORM\Table(name: 'products')]
 #[ORM\HasLifecycleCallbacks]
+#[ApiFilter(SearchFilter::class, properties: [
+    'name' => 'ipartial',
+    'slug' => 'ipartial',
+    'article' => 'ipartial',
+    'categoryId' => 'exact',
+    'stockStatus' => 'exact',
+])]
+#[ApiFilter(OrderFilter::class, properties: [
+    'name' => 'ASC',
+    'slug' => 'ASC',
+    'article' => 'ASC',
+    'price' => 'ASC',
+    'stockStatus' => 'ASC',
+    'createdAt' => 'DESC',
+    'updatedAt' => 'DESC',
+])]
 #[ApiResource(
     operations: [
-        new GetCollection(),
+        new GetCollection(
+            paginationItemsPerPage: 25,
+            paginationMaximumItemsPerPage: 100,
+            paginationClientEnabled: true,
+            paginationClientItemsPerPage: true,
+        ),
         new Get(),
         new Post(security: 'is_granted("ROLE_ADMIN")'),
         new Put(security: 'is_granted("ROLE_ADMIN")'),

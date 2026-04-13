@@ -11,6 +11,18 @@ const state = {
   collectionUrl: "",
   nextPageUrl: null,
   editing: null,
+  /** Пагинация / фильтры списка товаров в админке */
+  productsList: {
+    page: 1,
+    itemsPerPage: 25,
+    name: "",
+    article: "",
+    slug: "",
+    categoryId: "",
+    stockStatus: "",
+    orderField: "name",
+    orderDir: "asc",
+  },
 };
 
 function authHeaders(withAuth = true) {
@@ -113,6 +125,242 @@ function unwrapCollection(data) {
   if (data && Array.isArray(data.member))
     return { items: data.member, total: data.totalItems ?? data.member.length, next: data.view?.next || null };
   return { items: [], total: 0, next: null };
+}
+
+function buildProductsListUrl() {
+  const st = state.productsList;
+  const params = new URLSearchParams();
+  params.set("page", String(st.page));
+  params.set("itemsPerPage", String(st.itemsPerPage));
+  const qName = st.name.trim();
+  if (qName) {
+    params.set("name", qName);
+  }
+  const qArticle = st.article.trim();
+  if (qArticle) {
+    params.set("article", qArticle);
+  }
+  const qSlug = st.slug.trim();
+  if (qSlug) {
+    params.set("slug", qSlug);
+  }
+  if (st.categoryId) {
+    params.set("categoryId", st.categoryId);
+  }
+  if (st.stockStatus) {
+    params.set("stockStatus", st.stockStatus);
+  }
+  params.set(`order[${st.orderField}]`, st.orderDir);
+  return `/products?${params.toString()}`;
+}
+
+function parseSortSelectValue(val) {
+  const i = val.lastIndexOf(":");
+  if (i <= 0) {
+    return { field: "name", dir: "asc" };
+  }
+  return { field: val.slice(0, i), dir: val.slice(i + 1).toLowerCase() };
+}
+
+function syncProductsFilterFormFromState() {
+  const name = document.getElementById("pf-name");
+  const article = document.getElementById("pf-article");
+  const slug = document.getElementById("pf-slug");
+  const cat = document.getElementById("pf-category");
+  const stock = document.getElementById("pf-stock");
+  const sort = document.getElementById("pf-sort");
+  const per = document.getElementById("pf-per-page");
+  const st = state.productsList;
+  if (name instanceof HTMLInputElement) {
+    name.value = st.name;
+  }
+  if (article instanceof HTMLInputElement) {
+    article.value = st.article;
+  }
+  if (slug instanceof HTMLInputElement) {
+    slug.value = st.slug;
+  }
+  if (cat instanceof HTMLSelectElement) {
+    cat.value = st.categoryId;
+  }
+  if (stock instanceof HTMLSelectElement) {
+    stock.value = st.stockStatus;
+  }
+  if (sort instanceof HTMLSelectElement) {
+    const v = `${st.orderField}:${st.orderDir}`;
+    const has = Array.from(sort.options).some((o) => o.value === v);
+    sort.value = has ? v : "name:asc";
+    if (!has) {
+      const p = parseSortSelectValue(sort.value);
+      st.orderField = p.field;
+      st.orderDir = p.dir;
+    }
+  }
+  if (per instanceof HTMLSelectElement) {
+    per.value = String(st.itemsPerPage);
+  }
+}
+
+function readProductsFiltersFromForm() {
+  const st = state.productsList;
+  const name = document.getElementById("pf-name");
+  const article = document.getElementById("pf-article");
+  const slug = document.getElementById("pf-slug");
+  const cat = document.getElementById("pf-category");
+  const stock = document.getElementById("pf-stock");
+  const sort = document.getElementById("pf-sort");
+  const per = document.getElementById("pf-per-page");
+  if (name instanceof HTMLInputElement) {
+    st.name = name.value;
+  }
+  if (article instanceof HTMLInputElement) {
+    st.article = article.value;
+  }
+  if (slug instanceof HTMLInputElement) {
+    st.slug = slug.value;
+  }
+  if (cat instanceof HTMLSelectElement) {
+    st.categoryId = cat.value;
+  }
+  if (stock instanceof HTMLSelectElement) {
+    st.stockStatus = stock.value;
+  }
+  if (sort instanceof HTMLSelectElement) {
+    const p = parseSortSelectValue(sort.value);
+    st.orderField = p.field;
+    st.orderDir = p.dir;
+  }
+  if (per instanceof HTMLSelectElement) {
+    st.itemsPerPage = Math.min(100, Math.max(1, parseInt(per.value, 10) || 25));
+  }
+}
+
+async function populateProductsFilterCategoryOptions() {
+  const sel = document.getElementById("pf-category");
+  if (!(sel instanceof HTMLSelectElement)) {
+    return;
+  }
+  const keep = state.productsList.categoryId;
+  try {
+    const data = await apiFetch("/categories?itemsPerPage=500");
+    const { items } = unwrapCollection(data);
+    const rows = flattenCategoriesForProductAssignment(items);
+    sel.innerHTML = "";
+    const all = document.createElement("option");
+    all.value = "";
+    all.textContent = "Все";
+    sel.appendChild(all);
+    for (const row of rows) {
+      const o = document.createElement("option");
+      o.value = row.id;
+      o.textContent = row.label;
+      sel.appendChild(o);
+    }
+    sel.value = keep;
+    if (keep && sel.value !== keep) {
+      const miss = document.createElement("option");
+      miss.value = keep;
+      miss.textContent = `${keep.slice(0, 8)}…`;
+      miss.selected = true;
+      sel.appendChild(miss);
+    }
+  } catch {
+    /* оставляем «Все» */
+  }
+}
+
+function configureCrudProductsPanel(sectionId) {
+  const panel = document.getElementById("crud-products-filters");
+  if (!panel) {
+    return;
+  }
+  const show = sectionId === "products";
+  panel.classList.toggle("hidden", !show);
+  if (show) {
+    syncProductsFilterFormFromState();
+    void populateProductsFilterCategoryOptions();
+  }
+}
+
+function resetProductsListFilters() {
+  const st = state.productsList;
+  st.page = 1;
+  st.itemsPerPage = 25;
+  st.name = "";
+  st.article = "";
+  st.slug = "";
+  st.categoryId = "";
+  st.stockStatus = "";
+  st.orderField = "name";
+  st.orderDir = "asc";
+  syncProductsFilterFormFromState();
+}
+
+function renderProductsPager(pagerEl, totalItems) {
+  const st = state.productsList;
+  const perPage = st.itemsPerPage;
+  const total = typeof totalItems === "number" ? totalItems : 0;
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+  const page = st.page;
+  pagerEl.classList.remove("hidden");
+  pagerEl.innerHTML = "";
+  const info = document.createElement("span");
+  info.className = "pager-info muted";
+  info.textContent = `Всего: ${total} · стр. ${page} из ${totalPages} · по ${perPage}`;
+  const prev = document.createElement("button");
+  prev.type = "button";
+  prev.className = "btn";
+  prev.textContent = "Назад";
+  prev.disabled = page <= 1;
+  prev.addEventListener("click", () => {
+    st.page = page - 1;
+    void loadCrudTable();
+  });
+  const next = document.createElement("button");
+  next.type = "button";
+  next.className = "btn";
+  next.textContent = "Вперёд";
+  next.disabled = page >= totalPages || total === 0;
+  next.addEventListener("click", () => {
+    st.page = page + 1;
+    void loadCrudTable();
+  });
+  pagerEl.appendChild(info);
+  pagerEl.appendChild(prev);
+  pagerEl.appendChild(next);
+}
+
+function renderLegacyCrudPager(pagerEl, next, loadedFromPagedUrl) {
+  pagerEl.classList.remove("hidden");
+  pagerEl.innerHTML = "";
+  if (next) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn";
+    btn.textContent = "Следующая страница";
+    btn.addEventListener("click", () => {
+      let path = next;
+      try {
+        const u = new URL(next, window.location.origin);
+        path = u.pathname + u.search;
+      } catch {
+        const i = next.indexOf("/api/");
+        if (i !== -1) path = next.slice(i + 4);
+      }
+      path = path.replace(/^\/api/, "");
+      void loadCrudTable(path);
+    });
+    pagerEl.appendChild(btn);
+  } else if (loadedFromPagedUrl) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn";
+    btn.textContent = "К первой странице";
+    btn.addEventListener("click", () => void loadCrudTable());
+    pagerEl.appendChild(btn);
+  } else {
+    pagerEl.classList.add("hidden");
+  }
 }
 
 /** Кириллица и латиница → латинский slug (a-z, 0-9, дефисы) */
@@ -365,7 +613,8 @@ function goSection(id) {
   state.orderDetailId = null;
   document.getElementById("view-order-detail").classList.add("hidden");
   document.getElementById("view-crud").classList.remove("hidden");
-  loadCrudTable();
+  configureCrudProductsPanel(id);
+  void loadCrudTable();
 }
 
 /* ——— CRUD schemas ——— */
@@ -491,13 +740,33 @@ async function loadCrudTable(url = null) {
   const pager = document.getElementById("crud-pager");
   document.getElementById("btn-new").classList.toggle("hidden", Boolean(sec.hideNew));
 
-  const fetchUrl = url || sec.resource;
+  let fetchUrl;
+  if (url) {
+    fetchUrl = url;
+  } else if (sec.id === "products") {
+    fetchUrl = buildProductsListUrl();
+  } else {
+    fetchUrl = sec.resource;
+  }
   state.collectionUrl = sec.resource;
 
   try {
     const data = await apiFetch(fetchUrl);
-    const { items, next } = unwrapCollection(data);
+    empty.textContent = "Нет записей";
+    let { items, total, next } = unwrapCollection(data);
     state.nextPageUrl = next;
+
+    if (sec.id === "products") {
+      const st = state.productsList;
+      const perPage = st.itemsPerPage;
+      const totalN = typeof total === "number" ? total : 0;
+      const totalPages = Math.max(1, Math.ceil(totalN / perPage));
+      if (st.page > totalPages) {
+        st.page = totalPages;
+        await loadCrudTable();
+        return;
+      }
+    }
 
     thead.innerHTML = `<tr>${schema.listColumns.map((c) => `<th>${escapeHtml(c.label)}</th>`).join("")}<th class="actions">Действия</th></tr>`;
     tbody.innerHTML = "";
@@ -550,35 +819,10 @@ async function loadCrudTable(url = null) {
       }
     }
 
-    pager.classList.remove("hidden");
-    pager.innerHTML = "";
-    if (next) {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "btn";
-      btn.textContent = "Следующая страница";
-      btn.addEventListener("click", () => {
-        let path = next;
-        try {
-          const u = new URL(next, window.location.origin);
-          path = u.pathname + u.search;
-        } catch {
-          const i = next.indexOf("/api/");
-          if (i !== -1) path = next.slice(i + 4);
-        }
-        path = path.replace(/^\/api/, "");
-        loadCrudTable(path);
-      });
-      pager.appendChild(btn);
-    } else if (url) {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "btn";
-      btn.textContent = "К первой странице";
-      btn.addEventListener("click", () => loadCrudTable());
-      pager.appendChild(btn);
+    if (sec.id === "products") {
+      renderProductsPager(pager, typeof total === "number" ? total : 0);
     } else {
-      pager.classList.add("hidden");
+      renderLegacyCrudPager(pager, next, Boolean(url));
     }
   } catch (e) {
     if (e.sessionEnded) {
@@ -2408,7 +2652,49 @@ document.getElementById("form-site-contacts").addEventListener("submit", async (
   }
 });
 
-document.getElementById("btn-refresh").addEventListener("click", () => loadCrudTable());
+function initProductsFiltersUi() {
+  document.getElementById("pf-apply")?.addEventListener("click", () => {
+    readProductsFiltersFromForm();
+    state.productsList.page = 1;
+    void loadCrudTable();
+  });
+  document.getElementById("pf-reset")?.addEventListener("click", () => {
+    resetProductsListFilters();
+    void loadCrudTable();
+  });
+  document.getElementById("pf-sort")?.addEventListener("change", () => {
+    readProductsFiltersFromForm();
+    state.productsList.page = 1;
+    void loadCrudTable();
+  });
+  document.getElementById("pf-per-page")?.addEventListener("change", () => {
+    readProductsFiltersFromForm();
+    state.productsList.page = 1;
+    void loadCrudTable();
+  });
+  document.getElementById("pf-category")?.addEventListener("change", () => {
+    readProductsFiltersFromForm();
+    state.productsList.page = 1;
+    void loadCrudTable();
+  });
+  document.getElementById("pf-stock")?.addEventListener("change", () => {
+    readProductsFiltersFromForm();
+    state.productsList.page = 1;
+    void loadCrudTable();
+  });
+  for (const id of ["pf-name", "pf-article", "pf-slug"]) {
+    document.getElementById(id)?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        readProductsFiltersFromForm();
+        state.productsList.page = 1;
+        void loadCrudTable();
+      }
+    });
+  }
+}
+
+document.getElementById("btn-refresh").addEventListener("click", () => void loadCrudTable());
 document.getElementById("btn-new").addEventListener("click", () => {
   const sec = SECTIONS.find((s) => s.id === state.section);
   if (sec && sec.type === "crud") openModal(sec.id, null);
@@ -2419,6 +2705,7 @@ document.querySelectorAll(".modal [data-close]").forEach((el) => {
 });
 
 buildNav();
+initProductsFiltersUi();
 initApiPlayground();
 updateAuthUi();
 
