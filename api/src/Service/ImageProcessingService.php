@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace App\Service;
 
 /**
- * Decodes raster images, scales down, writes WebP (full + thumbnail).
+ * Decodes raster images, scales down, writes full + thumbnail.
+ * Prefers WebP when GD supports it; otherwise JPEG (servers without libwebp).
  */
 final class ImageProcessingService
 {
@@ -14,6 +15,8 @@ final class ImageProcessingService
     private const THUMB_MAX = 400;
 
     private const WEBP_QUALITY = 85;
+
+    private const JPEG_QUALITY = 85;
 
     public function __construct(
         private readonly string $projectDir,
@@ -32,9 +35,10 @@ final class ImageProcessingService
         if (! extension_loaded('gd')) {
             throw new \RuntimeException('PHP extension gd is required for image processing.');
         }
-        if (! function_exists('imagewebp')) {
-            throw new \RuntimeException('PHP GD must be built with WebP support (imagewebp).');
-        }
+
+        $useWebp = \function_exists('imagewebp');
+        $suffix = $useWebp ? '_full.webp' : '_full.jpg';
+        $thumbSuffix = $useWebp ? '_thumb.webp' : '_thumb.jpg';
 
         $img = @\imagecreatefromstring($binary);
         if ($img === false) {
@@ -66,20 +70,36 @@ final class ImageProcessingService
         }
 
         $base = $dir.'/'.$assetId;
-        $fullAbs = $base.'_full.webp';
-        $thumbAbs = $base.'_thumb.webp';
+        $fullAbs = $base.$suffix;
+        $thumbAbs = $base.$thumbSuffix;
 
-        if (! \imagewebp($full, $fullAbs, self::WEBP_QUALITY) || ! \imagewebp($thumb, $thumbAbs, self::WEBP_QUALITY)) {
+        if ($useWebp) {
+            $ok = \imagewebp($full, $fullAbs, self::WEBP_QUALITY) && \imagewebp($thumb, $thumbAbs, self::WEBP_QUALITY);
             \imagedestroy($full);
             \imagedestroy($thumb);
-            throw new \RuntimeException('Не удалось сохранить WebP.');
+            if (! $ok) {
+                throw new \RuntimeException('Не удалось сохранить WebP.');
+            }
+        } else {
+            if (! \function_exists('imagejpeg')) {
+                \imagedestroy($full);
+                \imagedestroy($thumb);
+                throw new \RuntimeException('PHP GD must support WebP (imagewebp) or JPEG (imagejpeg) for image output.');
+            }
+            $fullFlat = $this->flattenAlphaToWhite($full);
+            $thumbFlat = $this->flattenAlphaToWhite($thumb);
+            \imagedestroy($full);
+            \imagedestroy($thumb);
+            $ok = \imagejpeg($fullFlat, $fullAbs, self::JPEG_QUALITY) && \imagejpeg($thumbFlat, $thumbAbs, self::JPEG_QUALITY);
+            \imagedestroy($fullFlat);
+            \imagedestroy($thumbFlat);
+            if (! $ok) {
+                throw new \RuntimeException('Не удалось сохранить JPEG.');
+            }
         }
 
-        \imagedestroy($full);
-        \imagedestroy($thumb);
-
-        $fullWeb = '/media/'.$ownerType.'/'.$ownerId.'/'.$assetId.'_full.webp';
-        $thumbWeb = '/media/'.$ownerType.'/'.$ownerId.'/'.$assetId.'_thumb.webp';
+        $fullWeb = '/media/'.$ownerType.'/'.$ownerId.'/'.$assetId.$suffix;
+        $thumbWeb = '/media/'.$ownerType.'/'.$ownerId.'/'.$assetId.$thumbSuffix;
 
         return [
             'full_absolute' => $fullAbs,
@@ -123,6 +143,22 @@ final class ImageProcessingService
         \imagefilledrectangle($dst, 0, 0, $nw, $nh, $transparent);
         \imagealphablending($dst, true);
         \imagecopyresampled($dst, $src, 0, 0, 0, 0, $nw, $nh, $w, $h);
+
+        return $dst;
+    }
+
+    /**
+     * JPEG has no alpha; composite onto white so transparent PNG/GIF do not turn black.
+     */
+    private function flattenAlphaToWhite(\GdImage $src): \GdImage
+    {
+        $w = \imagesx($src);
+        $h = \imagesy($src);
+        $dst = \imagecreatetruecolor($w, $h);
+        $white = \imagecolorallocate($dst, 255, 255, 255);
+        \imagefilledrectangle($dst, 0, 0, $w, $h, $white);
+        \imagealphablending($dst, true);
+        \imagecopy($dst, $src, 0, 0, 0, 0, $w, $h);
 
         return $dst;
     }
