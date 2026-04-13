@@ -2,12 +2,20 @@
 """
 Подтягивает цены из прайса Excel в design/product-specs-by-category.json.
 
-Использование:
-  python3 api/test/merge_prices_into_product_specs.py \\
-    --prices /path/to/прайс.xlsx \\
-    --json design/product-specs-by-category.json
+Команда по умолчанию (прайс из documents/, JSON в design/):
 
-По умолчанию ищет прайс в Downloads и JSON в design/ от корня репозитория.
+  cd api && python3 test/merge_prices_into_product_specs.py
+
+Явные пути:
+
+  cd api && python3 test/merge_prices_into_product_specs.py \\
+    --prices ../documents/прайс\\ Контур-М\\ апрель\\ 2026.xlsx \\
+    --json ../design/product-specs-by-category.json
+
+Порядок поиска прайса, если --prices не задан:
+  1) documents/прайс Контур-М апрель 2026.xlsx в корне репозитория
+  2) любой documents/*прайс*.xlsx
+  3) ~/Downloads/*прайс*…*.xlsx
 """
 from __future__ import annotations
 
@@ -28,6 +36,19 @@ if str(_SCRIPT_DIR) not in sys.path:
 
 def _repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
+
+
+def default_price_list_path(repo: Path) -> Optional[Path]:
+    """Прайс в репозитории: documents/прайс Контур-М апрель 2026.xlsx или documents/*прайс*.xlsx"""
+    exact = repo / "documents" / "прайс Контур-М апрель 2026.xlsx"
+    if exact.is_file():
+        return exact
+    docs = repo / "documents"
+    if docs.is_dir():
+        found = sorted(docs.glob("*прайс*.xlsx"))
+        if found:
+            return found[0]
+    return None
 
 
 def _norm(s: str) -> str:
@@ -441,12 +462,17 @@ def main() -> None:
     repo = _repo_root()
     price_path = args.prices
     if price_path is None:
-        d = Path.home() / "Downloads"
-        candidates = list(d.glob("*прайс*Контур*2026*.xlsx")) + list(d.glob("*прайс*.xlsx"))
-        if not candidates:
-            print("Не найден прайс в Downloads — укажите --prices", file=sys.stderr)
-            sys.exit(1)
-        price_path = candidates[0]
+        price_path = default_price_list_path(repo)
+        if price_path is None:
+            d = Path.home() / "Downloads"
+            candidates = list(d.glob("*прайс*Контур*2026*.xlsx")) + list(d.glob("*прайс*.xlsx"))
+            if not candidates:
+                print(
+                    "Прайс не найден: положите xlsx в documents/ или укажите --prices",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+            price_path = candidates[0]
 
     json_path = args.json or (repo / "design" / "product-specs-by-category.json")
     if not json_path.is_file():
