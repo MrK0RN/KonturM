@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require __DIR__ . '/includes/design-base.php';
+$c = konturm_site_contacts();
 ?>
 <!DOCTYPE html>
 <html lang="ru">
@@ -34,7 +35,7 @@ require __DIR__ . '/includes/design-base.php';
           <div class="contacts-messengers">
 
             <!-- ВКонтакте -->
-            <a class="contacts-messenger-link" href="https://vk.com/konturm" target="_blank" rel="noopener">
+            <a class="contacts-messenger-link" href="<?= htmlspecialchars($c['messenger_vk'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener">
               <span class="contacts-messenger-icon" style="background: transparent; border: none; overflow: hidden; border-radius: 12px;">
                 <img src="<?= htmlspecialchars(konturm_design_url('assets/icon-vk.png'), ENT_QUOTES, 'UTF-8') ?>" width="48" height="48" alt="" style="display: block; clip-path: inset(6.5% round 21%);" />
               </span>
@@ -42,7 +43,7 @@ require __DIR__ . '/includes/design-base.php';
             </a>
 
             <!-- Telegram -->
-            <a class="contacts-messenger-link" href="https://t.me/konturm" target="_blank" rel="noopener">
+            <a class="contacts-messenger-link" href="<?= htmlspecialchars($c['messenger_telegram'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener">
               <span class="contacts-messenger-icon" style="background: transparent; border: none;">
                 <svg viewBox="0 0 32 32" width="48" height="48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                   <defs>
@@ -59,7 +60,7 @@ require __DIR__ . '/includes/design-base.php';
             </a>
 
             <!-- WhatsApp -->
-            <a class="contacts-messenger-link" href="https://wa.me/79785654997" target="_blank" rel="noopener">
+            <a class="contacts-messenger-link" href="<?= htmlspecialchars($c['messenger_whatsapp'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener">
               <span class="contacts-messenger-icon" style="background: transparent; border: none;">
                 <svg viewBox="0 0 64 64" width="48" height="48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                   <defs>
@@ -79,7 +80,7 @@ require __DIR__ . '/includes/design-base.php';
             </a>
 
             <!-- Max (российский мессенджер) -->
-            <a class="contacts-messenger-link" href="https://max.ru/konturm" target="_blank" rel="noopener">
+            <a class="contacts-messenger-link" href="<?= htmlspecialchars($c['messenger_max'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener">
               <span class="contacts-messenger-icon" style="background: transparent; border: none;">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="48" height="48" aria-hidden="true">
                   <defs>
@@ -112,7 +113,7 @@ require __DIR__ . '/includes/design-base.php';
                       <path d="M3.62 2h2.98l1.5 3.75-1.73 1.04C7.1 8.37 9.63 10.9 11.2 12.65l1.04-1.73L16 12.42V15.4A1.6 1.6 0 0114.4 17C7.53 17 2 11.47 2 4.6A1.6 1.6 0 013.62 2z" fill="#de6814"/>
                     </svg>
                   </span>
-                  <a class="contacts-group__link" href="tel:+78432023170">+7 (843) 202-31-70</a>
+                  <a class="contacts-group__link" href="<?= htmlspecialchars($c['phone_main_href'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($c['phone_main_label'], ENT_QUOTES, 'UTF-8') ?></a>
                 </li>
                 <li class="contacts-group__item">
                   <span class="contacts-group__icon">
@@ -120,7 +121,7 @@ require __DIR__ . '/includes/design-base.php';
                       <path d="M3.62 2h2.98l1.5 3.75-1.73 1.04C7.1 8.37 9.63 10.9 11.2 12.65l1.04-1.73L16 12.42V15.4A1.6 1.6 0 0114.4 17C7.53 17 2 11.47 2 4.6A1.6 1.6 0 013.62 2z" fill="#de6814"/>
                     </svg>
                   </span>
-                  <a class="contacts-group__link" href="tel:+79272495218">+7 927-249-52-18</a>
+                  <a class="contacts-group__link" href="<?= htmlspecialchars($c['phone_extra_href'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($c['phone_extra_label'], ENT_QUOTES, 'UTF-8') ?></a>
                 </li>
                 <li class="contacts-group__item">
                   <span class="contacts-group__icon">
@@ -128,7 +129,7 @@ require __DIR__ . '/includes/design-base.php';
                       <path d="M2 5a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm2 0l5 3.5L14 5H4zm0 2.5V13h10V7.5L9 11 4 7.5z" fill="#de6814"/>
                     </svg>
                   </span>
-                  <a class="contacts-group__link" href="mailto:kontur_m16@mail.ru">kontur_m16@mail.ru</a>
+                  <a class="contacts-group__link" href="mailto:<?= htmlspecialchars($c['email_sales'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($c['email_sales'], ENT_QUOTES, 'UTF-8') ?></a>
                 </li>
               </address>
             </div>
@@ -143,7 +144,7 @@ require __DIR__ . '/includes/design-base.php';
                       <path d="M2 5a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm2 0l5 3.5L14 5H4zm0 2.5V13h10V7.5L9 11 4 7.5z" fill="#de6814"/>
                     </svg>
                   </span>
-                  <a class="contacts-group__link" href="mailto:kontur_metrolog@mail.ru">kontur_metrolog@mail.ru</a>
+                  <a class="contacts-group__link" href="mailto:<?= htmlspecialchars($c['email_metrology'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($c['email_metrology'], ENT_QUOTES, 'UTF-8') ?></a>
                 </li>
               </address>
             </div>
@@ -156,7 +157,7 @@ require __DIR__ . '/includes/design-base.php';
             <div class="contacts-map__frame-wrap">
               <iframe
                 class="contacts-map__iframe"
-                src="https://yandex.ru/map-widget/v1/?oid=92963604301&amp;ll=49.275773%2C55.911633&amp;z=17"
+                src="<?= htmlspecialchars($c['map_iframe_src'], ENT_QUOTES, 'UTF-8') ?>"
                 title="Контур-М на Яндекс Картах"
                 loading="lazy"
                 referrerpolicy="strict-origin-when-cross-origin"
@@ -165,7 +166,7 @@ require __DIR__ . '/includes/design-base.php';
             </div>
             <a
               class="contacts-map__open-link"
-              href="https://yandex.ru/maps/org/kontur_m/92963604301/?ll=49.275773%2C55.911633&amp;z=17"
+              href="<?= htmlspecialchars($c['map_yandex_link'], ENT_QUOTES, 'UTF-8') ?>"
               target="_blank"
               rel="noopener noreferrer"
             >

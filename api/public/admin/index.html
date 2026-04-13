@@ -21,11 +21,68 @@
       <header class="topbar">
         <h1 id="page-title">Вход</h1>
       </header>
+      <section id="view-site-contacts" class="view hidden">
+        <p class="muted intro-text">
+          Телефоны, e-mail, ссылки на мессенджеры и карту: эти данные подставляются в шапку, подвал и страницу «Контакты».
+        </p>
+        <form id="form-site-contacts" class="card sc-card">
+          <div id="sc-fields" class="sc-grid"></div>
+          <div class="toolbar sc-toolbar">
+            <button type="submit" class="btn btn-primary" id="sc-save">Сохранить</button>
+          </div>
+          <p id="sc-error" class="error hidden"></p>
+        </form>
+      </section>
+      <section id="view-visit-stats" class="view hidden">
+        <p class="muted intro-text">
+          Просмотры HTML-страниц витрины. Учитываются ответы с типом <code>text/html</code>; API, админка и статика не пишутся в журнал. Время — UTC.
+        </p>
+        <div class="toolbar vs-toolbar">
+          <label class="inline vs-days-wrap"
+            >Период, дней
+            <input type="number" id="vs-days" min="1" max="366" value="30" class="vs-days-input" />
+          </label>
+          <button type="button" id="vs-refresh" class="btn btn-primary">Обновить</button>
+        </div>
+        <p id="vs-error" class="error hidden"></p>
+        <div id="vs-summary" class="card vs-summary-card"></div>
+        <div class="vs-grid">
+          <div class="card">
+            <h2 class="card-title">По дням</h2>
+            <div class="table-wrap vs-table-wrap">
+              <table class="data-table" id="vs-table-days">
+                <thead>
+                  <tr>
+                    <th>Дата (UTC)</th>
+                    <th>Просмотры</th>
+                  </tr>
+                </thead>
+                <tbody id="vs-tbody-days"></tbody>
+              </table>
+            </div>
+            <p id="vs-empty-days" class="muted hidden">Нет данных за выбранный период</p>
+          </div>
+          <div class="card">
+            <h2 class="card-title">Популярные пути</h2>
+            <div class="table-wrap vs-table-wrap">
+              <table class="data-table" id="vs-table-paths">
+                <thead>
+                  <tr>
+                    <th>Путь</th>
+                    <th>Просмотры</th>
+                  </tr>
+                </thead>
+                <tbody id="vs-tbody-paths"></tbody>
+              </table>
+            </div>
+            <p id="vs-empty-paths" class="muted hidden">Нет данных за выбранный период</p>
+          </div>
+        </div>
+      </section>
       <section id="view-login" class="view">
         <form id="form-login" class="card form-narrow">
           <label>Логин <input name="username" type="text" autocomplete="username" required /></label>
           <label>Пароль <input name="password" type="password" autocomplete="current-password" required /></label>
-          <p class="hint muted">Учётные данные см. <code>api/API_TESTING.md</code> (по умолчанию <code>admin</code> / <code>admin123</code>).</p>
           <button type="submit" class="btn btn-primary">Войти</button>
           <p id="login-error" class="error hidden"></p>
         </form>

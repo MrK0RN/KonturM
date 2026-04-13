@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Service\SiteContactsService;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -23,6 +24,7 @@ final class DesignCatalogController
     public function __construct(
         #[Autowire('%kernel.project_dir%')]
         private readonly string $projectDir,
+        private readonly SiteContactsService $siteContacts,
     ) {
     }
 
@@ -76,16 +78,17 @@ final class DesignCatalogController
 
         $GLOBALS['KONTURM_DESIGN_BASE'] = rtrim($this->designUrlPrefix($request), '/');
         $GLOBALS['KONTURM_REQUEST_BASE_PATH'] = rtrim($request->getBasePath(), '/');
+        $GLOBALS['KONTURM_SITE_CONTACTS'] = $this->siteContacts->getContacts();
         ob_start();
         try {
             include $file;
         } catch (\Throwable $e) {
             ob_end_clean();
-            unset($GLOBALS['KONTURM_DESIGN_BASE'], $GLOBALS['KONTURM_REQUEST_BASE_PATH']);
+            unset($GLOBALS['KONTURM_DESIGN_BASE'], $GLOBALS['KONTURM_REQUEST_BASE_PATH'], $GLOBALS['KONTURM_SITE_CONTACTS']);
             throw $e;
         }
         $html = ob_get_clean();
-        unset($GLOBALS['KONTURM_DESIGN_BASE'], $GLOBALS['KONTURM_REQUEST_BASE_PATH']);
+        unset($GLOBALS['KONTURM_DESIGN_BASE'], $GLOBALS['KONTURM_REQUEST_BASE_PATH'], $GLOBALS['KONTURM_SITE_CONTACTS']);
         $html = $this->rewriteDesignStaticUrls($request, $html);
 
         return new Response($html, Response::HTTP_OK, [

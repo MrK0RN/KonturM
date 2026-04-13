@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require __DIR__ . '/includes/design-base.php';
+$c = konturm_site_contacts();
 ?>
 <!DOCTYPE html>
 <html lang="ru">
@@ -10,7 +11,7 @@ require __DIR__ . '/includes/design-base.php';
     <title>Контур-М — оборудование для АЗС</title>
     <meta
       name="description"
-      content="Контур-М: оборудование для автозаправочных станций. Каталог, прайс-лист, акции. Связь: kontur_m16@mail.ru, +7 978 565-49-97."
+      content="Контур-М: оборудование для автозаправочных станций. Каталог, прайс-лист, акции. Связь: <?= htmlspecialchars($c['email_sales'] . ', ' . $c['phone_main_label'], ENT_QUOTES, 'UTF-8') ?>."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

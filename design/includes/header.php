@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/design-base.php';
+$c = konturm_site_contacts();
 ?>
 <header class="site-header">
   <div class="site-header__shell">
@@ -39,7 +40,7 @@ require_once __DIR__ . '/design-base.php';
         </form>
 
         <address class="site-header__contacts">
-          <a class="site-header__contact-link" href="mailto:kontur_m16@mail.ru">
+          <a class="site-header__contact-link" href="mailto:<?= htmlspecialchars($c['email_sales'], ENT_QUOTES, 'UTF-8') ?>">
             <img
               class="site-header__contact-icon"
               src="<?= htmlspecialchars(konturm_design_url('assets/icon-mail.png'), ENT_QUOTES, 'UTF-8') ?>"
@@ -48,9 +49,9 @@ require_once __DIR__ . '/design-base.php';
               alt=""
               decoding="async"
             />
-            <span>kontur_m16@mail.ru</span>
+            <span><?= htmlspecialchars($c['email_sales'], ENT_QUOTES, 'UTF-8') ?></span>
           </a>
-          <a class="site-header__contact-link" href="tel:+78432023170">
+          <a class="site-header__contact-link" href="<?= htmlspecialchars($c['phone_main_href'], ENT_QUOTES, 'UTF-8') ?>">
             <img
               class="site-header__contact-icon"
               src="<?= htmlspecialchars(konturm_design_url('assets/icon-phone.png'), ENT_QUOTES, 'UTF-8') ?>"
@@ -59,11 +60,11 @@ require_once __DIR__ . '/design-base.php';
               alt=""
               decoding="async"
             />
-            <span>+7 (843) 202-31-70</span>
+            <span><?= htmlspecialchars($c['phone_main_label'], ENT_QUOTES, 'UTF-8') ?></span>
           </a>
         </address>
 
-        <a class="site-header__cta" href="/price-list.pdf" download>
+        <a class="site-header__cta" href="/price-list.xlsx" download="прайс Контур-М апрель 2026.xlsx">
           Скачать прайс-лист
         </a>
 
@@ -187,22 +188,22 @@ require_once __DIR__ . '/design-base.php';
       </ul>
 
       <address class="site-header__drawer-contacts">
-        <a class="site-header__drawer-contact-link" href="tel:+78432023170">
+        <a class="site-header__drawer-contact-link" href="<?= htmlspecialchars($c['phone_main_href'], ENT_QUOTES, 'UTF-8') ?>">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" width="20" height="20">
             <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.58.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1C10.29 21 3 13.71 3 4.82c0-.55.45-1 1-1H7.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.58.11.35.03.74-.24 1.02L6.6 10.8z" fill="currentColor"/>
           </svg>
-          +7 (843) 202-31-70
+          <?= htmlspecialchars($c['phone_main_label'], ENT_QUOTES, 'UTF-8') ?>
         </a>
-        <a class="site-header__drawer-contact-link" href="mailto:kontur_m16@mail.ru">
+        <a class="site-header__drawer-contact-link" href="mailto:<?= htmlspecialchars($c['email_sales'], ENT_QUOTES, 'UTF-8') ?>">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" width="20" height="20">
             <rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/>
             <path d="M2 7l10 7 10-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
           </svg>
-          kontur_m16@mail.ru
+          <?= htmlspecialchars($c['email_sales'], ENT_QUOTES, 'UTF-8') ?>
         </a>
       </address>
 
-      <a class="site-header__drawer-cta" href="/price-list.pdf" download>
+      <a class="site-header__drawer-cta" href="/price-list.xlsx" download="прайс Контур-М апрель 2026.xlsx">
         Скачать прайс-лист
       </a>
       <a class="site-header__drawer-cart" href="/cart">

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Service\SiteContactsService;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,6 +21,7 @@ final class DesignStorefrontController
     public function __construct(
         #[Autowire('%kernel.project_dir%')]
         private readonly string $projectDir,
+        private readonly SiteContactsService $siteContacts,
     ) {
     }
 
@@ -51,16 +53,17 @@ final class DesignStorefrontController
 
         $GLOBALS['KONTURM_DESIGN_BASE'] = rtrim($this->designUrlPrefix($request), '/');
         $GLOBALS['KONTURM_REQUEST_BASE_PATH'] = rtrim($request->getBasePath(), '/');
+        $GLOBALS['KONTURM_SITE_CONTACTS'] = $this->siteContacts->getContacts();
         ob_start();
         try {
             include $real;
         } catch (\Throwable $e) {
             ob_end_clean();
-            unset($GLOBALS['KONTURM_DESIGN_BASE'], $GLOBALS['KONTURM_REQUEST_BASE_PATH']);
+            unset($GLOBALS['KONTURM_DESIGN_BASE'], $GLOBALS['KONTURM_REQUEST_BASE_PATH'], $GLOBALS['KONTURM_SITE_CONTACTS']);
             throw $e;
         }
         $html = ob_get_clean();
-        unset($GLOBALS['KONTURM_DESIGN_BASE'], $GLOBALS['KONTURM_REQUEST_BASE_PATH']);
+        unset($GLOBALS['KONTURM_DESIGN_BASE'], $GLOBALS['KONTURM_REQUEST_BASE_PATH'], $GLOBALS['KONTURM_SITE_CONTACTS']);
 
         return new Response($html, Response::HTTP_OK, [
             'Content-Type' => 'text/html; charset=UTF-8',

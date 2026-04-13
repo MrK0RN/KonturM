@@ -19,7 +19,7 @@ Environment overrides:
 
 - `API_BASE_URL` (default `http://127.0.0.1:8000`)
 - `API_ADMIN_USER` (default `admin`)
-- `API_ADMIN_PASSWORD` (default `admin123`)
+- `API_ADMIN_PASSWORD` (по умолчанию — пароль, соответствующий `API_ADMIN_PASSWORD_HASH` в `api/.env`; переопределите при смене хеша)
 
 ## Usage
 

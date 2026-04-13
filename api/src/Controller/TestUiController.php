@@ -18,7 +18,6 @@ use Symfony\Component\Routing\Attribute\Route;
 final class TestUiController
 {
     private const ALLOWED = [
-        'demo-shop.html',
         'api-tester.html',
         'test-pages.html',
     ];
@@ -27,12 +26,6 @@ final class TestUiController
         #[Autowire('%kernel.project_dir%')]
         private readonly string $projectDir,
     ) {
-    }
-
-    #[Route('/demo-shop.html', name: 'test_ui_demo_shop', methods: ['GET'])]
-    public function demoShop(): Response
-    {
-        return $this->serve('demo-shop.html');
     }
 
     #[Route('/api-tester.html', name: 'test_ui_api_tester', methods: ['GET'])]

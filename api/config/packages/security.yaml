@@ -8,7 +8,7 @@ security:
             memory:
                 users:
                     admin:
-                        password: '$2y$12$ebVubmM.Wi0GT/u7q5QJGe8WHnxuzU2M4oGffGXSrGmjwkvOmryDC'
+                        password: '%env(string:API_ADMIN_PASSWORD_HASH)%'
                         roles: [ 'ROLE_ADMIN' ]
     firewalls:
         dev:
@@ -28,6 +28,9 @@ security:
             security: false
         storefront_pages:
             pattern: ^/(category2|cart|search|product|about|contacts|promo|price-list)$
+            security: false
+        price_list_download:
+            pattern: ^/price-list\.(pdf|xlsx)$
             security: false
         login:
             pattern: ^/api/auth
@@ -57,6 +60,7 @@ security:
         - { path: ^/api/cart, roles: PUBLIC_ACCESS }
         - { path: ^/api/search, roles: PUBLIC_ACCESS }
         - { path: ^/api/seo, roles: PUBLIC_ACCESS }
+        - { path: ^/api/site-contacts$, roles: PUBLIC_ACCESS, methods: [GET] }
         - { path: ^/api/admin, roles: ROLE_ADMIN }
         - { path: ^/api/orders, roles: ROLE_ADMIN }
 

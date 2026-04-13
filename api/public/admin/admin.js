@@ -258,6 +258,8 @@ function updateAuthUi() {
 /* ——— Navigation ——— */
 
 const SECTIONS = [
+  { id: "site_contacts", title: "Контакты сайта", type: "site_contacts", admin: true, group: "Витрина" },
+  { id: "visit_stats", title: "Статистика посещений", type: "visit_stats", admin: true, group: "Витрина" },
   { id: "categories", title: "Категории", type: "crud", resource: "/categories", admin: true, group: "Каталог" },
   { id: "products", title: "Товары", type: "crud", resource: "/products", admin: true, group: "Каталог" },
   { id: "photos", title: "Фотографии", type: "photos", admin: true, group: "Каталог" },
@@ -313,6 +315,8 @@ function goSection(id) {
   document.getElementById("view-favorites").classList.add("hidden");
   document.getElementById("view-category-filters").classList.add("hidden");
   document.getElementById("view-photos").classList.add("hidden");
+  document.getElementById("view-site-contacts").classList.add("hidden");
+  document.getElementById("view-visit-stats").classList.add("hidden");
 
   if (id === "login") {
     document.getElementById("view-login").classList.remove("hidden");
@@ -336,6 +340,18 @@ function goSection(id) {
   if (id === "photos") {
     document.getElementById("view-photos").classList.remove("hidden");
     void initPhotosSection();
+    return;
+  }
+  if (id === "site_contacts") {
+    state.orderDetailId = null;
+    document.getElementById("view-site-contacts").classList.remove("hidden");
+    void loadSiteContactsForm();
+    return;
+  }
+  if (id === "visit_stats") {
+    state.orderDetailId = null;
+    document.getElementById("view-visit-stats").classList.remove("hidden");
+    void loadVisitStats();
     return;
   }
   state.orderDetailId = null;
@@ -1208,6 +1224,138 @@ function cfBindFilterEditorEvents() {
       }
       cfSyncTextareaFromState();
     });
+  }
+}
+
+const SITE_CONTACTS_FIELDS = [
+  { key: "phone_main_href", label: "Телефон основной (ссылка tel:)", placeholder: "tel:+78432023170" },
+  { key: "phone_main_label", label: "Телефон основной (как показать)", placeholder: "+7 (843) 202-31-70" },
+  { key: "phone_extra_href", label: "Телефон дополнительный (tel:)", placeholder: "tel:+79272495218" },
+  { key: "phone_extra_label", label: "Телефон дополнительный (текст)", placeholder: "+7 927-249-52-18" },
+  { key: "email_sales", label: "E-mail отдела продаж", placeholder: "sales@example.com" },
+  { key: "email_metrology", label: "E-mail отдела метрологии", placeholder: "metrology@example.com" },
+  { key: "messenger_vk", label: "ВКонтакте (URL)", placeholder: "https://vk.com/..." },
+  { key: "messenger_telegram", label: "Telegram (URL)", placeholder: "https://t.me/..." },
+  { key: "messenger_whatsapp", label: "WhatsApp (URL)", placeholder: "https://wa.me/..." },
+  { key: "messenger_max", label: "Max (URL)", placeholder: "https://max.ru/..." },
+  { key: "map_iframe_src", label: "Карта: URL для iframe", placeholder: "https://yandex.ru/map-widget/..." },
+  { key: "map_yandex_link", label: "Карта: ссылка «Открыть в Яндекс»", placeholder: "https://yandex.ru/maps/..." },
+];
+
+function ensureSiteContactsFormBuilt() {
+  const wrap = document.getElementById("sc-fields");
+  if (!wrap || wrap.dataset.built) {
+    return;
+  }
+  wrap.dataset.built = "1";
+  wrap.innerHTML = SITE_CONTACTS_FIELDS.map((f) => {
+    const ph = f.placeholder ? ` placeholder="${escapeHtml(f.placeholder)}"` : "";
+    return `<label class="sc-label">${escapeHtml(f.label)}
+        <input type="text" name="${escapeHtml(f.key)}" autocomplete="off"${ph} class="sc-input" />
+      </label>`;
+  }).join("");
+}
+
+function formatVisitInt(n) {
+  return new Intl.NumberFormat("ru-RU").format(Number(n) || 0);
+}
+
+async function loadVisitStats() {
+  const errEl = document.getElementById("vs-error");
+  const summary = document.getElementById("vs-summary");
+  const tbodyDays = document.getElementById("vs-tbody-days");
+  const tbodyPaths = document.getElementById("vs-tbody-paths");
+  const emptyDays = document.getElementById("vs-empty-days");
+  const emptyPaths = document.getElementById("vs-empty-paths");
+  const daysInput = document.getElementById("vs-days");
+  if (
+    !errEl ||
+    !summary ||
+    !tbodyDays ||
+    !tbodyPaths ||
+    !emptyDays ||
+    !emptyPaths ||
+    !(daysInput instanceof HTMLInputElement)
+  ) {
+    return;
+  }
+  errEl.classList.add("hidden");
+  let days = parseInt(String(daysInput.value), 10);
+  if (Number.isNaN(days) || days < 1) {
+    days = 30;
+  }
+  if (days > 366) {
+    days = 366;
+  }
+  daysInput.value = String(days);
+  tbodyDays.innerHTML = "";
+  tbodyPaths.innerHTML = "";
+  summary.innerHTML = "<p class=\"muted\">Загрузка…</p>";
+  try {
+    const data = await apiFetch(`/admin/visit-stats?days=${encodeURIComponent(String(days))}&top=25`);
+    const total = formatVisitInt(data.total_in_period ?? 0);
+    const period = data.period_days ?? days;
+    const first = data.first_record_at
+      ? `<br />Первая запись в журнале: <code>${escapeHtml(String(data.first_record_at))}</code> (UTC)`
+      : "";
+    summary.innerHTML = `<p><strong>Всего просмотров за ${period} дн.:</strong> ${total}</p>${first}`;
+
+    const byDay = Array.isArray(data.by_day) ? data.by_day : [];
+    const topPaths = Array.isArray(data.top_paths) ? data.top_paths : [];
+
+    if (byDay.length === 0) {
+      emptyDays.classList.remove("hidden");
+    } else {
+      emptyDays.classList.add("hidden");
+      for (const row of byDay) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td><code>${escapeHtml(String(row.date))}</code></td><td>${formatVisitInt(row.count)}</td>`;
+        tbodyDays.appendChild(tr);
+      }
+    }
+
+    if (topPaths.length === 0) {
+      emptyPaths.classList.remove("hidden");
+    } else {
+      emptyPaths.classList.add("hidden");
+      for (const row of topPaths) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td><code>${escapeHtml(String(row.path))}</code></td><td>${formatVisitInt(row.count)}</td>`;
+        tbodyPaths.appendChild(tr);
+      }
+    }
+  } catch (e) {
+    if (e.sessionEnded) {
+      return;
+    }
+    summary.innerHTML = "";
+    errEl.textContent = e.message || String(e);
+    errEl.classList.remove("hidden");
+  }
+}
+
+async function loadSiteContactsForm() {
+  ensureSiteContactsFormBuilt();
+  const form = document.getElementById("form-site-contacts");
+  if (!(form instanceof HTMLFormElement)) {
+    return;
+  }
+  const err = document.getElementById("sc-error");
+  err.classList.add("hidden");
+  try {
+    const data = await apiFetch("/admin/site-contacts");
+    for (const f of SITE_CONTACTS_FIELDS) {
+      const el = form.elements.namedItem(f.key);
+      if (el instanceof HTMLInputElement) {
+        el.value = data[f.key] ?? "";
+      }
+    }
+  } catch (e) {
+    if (e.sessionEnded) {
+      return;
+    }
+    err.textContent = e.message || String(e);
+    err.classList.remove("hidden");
   }
 }
 
@@ -2132,6 +2280,34 @@ document.getElementById("btn-logout").addEventListener("click", () => {
   state.orderDetailId = null;
   goSection("login");
   document.getElementById("view-login").classList.remove("hidden");
+});
+
+document.getElementById("vs-refresh")?.addEventListener("click", () => {
+  void loadVisitStats();
+});
+
+document.getElementById("form-site-contacts").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const form = ev.target;
+  if (!(form instanceof HTMLFormElement)) {
+    return;
+  }
+  const err = document.getElementById("sc-error");
+  err.classList.add("hidden");
+  const body = {};
+  for (const f of SITE_CONTACTS_FIELDS) {
+    body[f.key] = String(form.elements.namedItem(f.key)?.value ?? "").trim();
+  }
+  try {
+    await apiFetch("/admin/site-contacts", { method: "PUT", body: JSON.stringify(body) });
+    alert("Сохранено");
+  } catch (e) {
+    if (e.sessionEnded) {
+      return;
+    }
+    err.textContent = e.message || String(e);
+    err.classList.remove("hidden");
+  }
 });
 
 document.getElementById("btn-refresh").addEventListener("click", () => loadCrudTable());

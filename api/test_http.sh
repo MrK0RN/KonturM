@@ -26,7 +26,6 @@ check "$BASE/api/categories/tree" 200
 check "$BASE/design/catalog.php" 200
 check "$BASE/design/css/header.css" 200
 check "$BASE/design/assets/logo-mark.svg" 200
-check "$BASE/demo-shop.html" 200
 check "$BASE/api-tester.html" 200
 check "$BASE/api/docs.jsonopenapi" 200
 code=$(curl -sS -o /dev/null -w "%{http_code}" "$BASE/catalog" || echo "000")

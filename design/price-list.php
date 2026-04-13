@@ -34,10 +34,10 @@ function price(int|float|null $v): string {
       <div class="pl-hero">
         <div class="pl-hero__left">
           <h1 class="pl-hero__title">Прайс-лист</h1>
-          <p class="pl-hero__sub">Цены действительны с января 2026 г. Для оформления заявки воспользуйтесь корзиной или свяжитесь с менеджером. НДС не включён.</p>
+          <p class="pl-hero__sub">Цены действительны с апреля 2026 г. Для оформления заявки воспользуйтесь корзиной или свяжитесь с менеджером. НДС не включён.</p>
         </div>
         <div class="pl-hero__actions">
-          <a class="pl-btn pl-btn--primary" href="/price-list.pdf" download>
+          <a class="pl-btn pl-btn--primary" href="/price-list.xlsx" download="прайс Контур-М апрель 2026.xlsx">
             <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><path d="M8 1v9m0 0-3-3m3 3 3-3M3 14h10" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
             Скачать прайс
           </a>

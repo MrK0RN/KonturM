@@ -65,6 +65,9 @@ def env_client() -> SmokeClient:
     return SmokeClient(
         base_url=os.getenv("API_BASE_URL", "http://127.0.0.1:8000"),
         admin_user=os.getenv("API_ADMIN_USER", "admin"),
-        admin_password=os.getenv("API_ADMIN_PASSWORD", "admin123"),
+        admin_password=os.getenv(
+            "API_ADMIN_PASSWORD",
+            "mDHkUILPzTyOhOd9oUklIxeUJQuaqZ6T#7",
+        ),
     )
 

@@ -52,17 +52,15 @@ Open docs:
 
 ## 4) Admin Auth (JWT)
 
-Dev credentials:
-
 - username: `admin`
-- password: `admin123`
+- password: значение, соответствующее `API_ADMIN_PASSWORD_HASH` в `.env` / `.env.local` (см. комментарий в `.env`). Сменить пароль: `php bin/console security:hash-password 'новый_пароль'`, затем обновить `API_ADMIN_PASSWORD_HASH`.
 
 Token:
 
 ```bash
 curl -s -X POST "http://127.0.0.1:8000/api/auth/login" \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}'
+  -d '{"username":"admin","password":"YOUR_PASSWORD"}'
 ```
 
 ## 5) Seed Test Data (20 products)
