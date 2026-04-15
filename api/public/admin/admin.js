@@ -5,6 +5,9 @@
 const STORAGE_KEY = "konturm_admin_jwt";
 const API_BASE = "/api";
 
+/** Коллекции API Platform: при application/json часто приходит «голый» массив без totalItems — ломается пагинация в админке */
+const API_ACCEPT_JSONLD = { Accept: "application/ld+json" };
+
 const state = {
   token: localStorage.getItem(STORAGE_KEY) || "",
   section: "login",
@@ -115,13 +118,23 @@ function notifyApiError(e) {
 }
 
 function unwrapCollection(data) {
-  if (Array.isArray(data)) return { items: data, total: data.length, next: null };
-  if (data && Array.isArray(data["hydra:member"]))
+  if (Array.isArray(data)) {
+    return { items: data, total: data.length, next: null };
+  }
+  if (data && Array.isArray(data["hydra:member"])) {
+    const ti = data["hydra:totalItems"];
+    const total =
+      typeof ti === "number" && !Number.isNaN(ti)
+        ? ti
+        : ti != null && ti !== ""
+          ? Number(ti)
+          : data["hydra:member"].length;
     return {
       items: data["hydra:member"],
-      total: data["hydra:totalItems"] ?? data["hydra:member"].length,
+      total: Number.isFinite(total) ? total : data["hydra:member"].length,
       next: data["hydra:view"]?.["hydra:next"] || null,
     };
+  }
   if (data && Array.isArray(data.member))
     return { items: data.member, total: data.totalItems ?? data.member.length, next: data.view?.next || null };
   return { items: [], total: 0, next: null };
@@ -235,6 +248,17 @@ function readProductsFiltersFromForm() {
   }
 }
 
+/** id → «Название (slug)» для колонки «Категория» в списке товаров */
+async function fetchCategoryIdLabelMap() {
+  const data = await apiFetch("/categories?itemsPerPage=500", { headers: API_ACCEPT_JSONLD });
+  const { items } = unwrapCollection(data);
+  const map = {};
+  for (const c of items) {
+    map[c.id] = `${c.name || "—"} (${c.slug || "—"})`;
+  }
+  return map;
+}
+
 async function populateProductsFilterCategoryOptions() {
   const sel = document.getElementById("pf-category");
   if (!(sel instanceof HTMLSelectElement)) {
@@ -242,13 +266,13 @@ async function populateProductsFilterCategoryOptions() {
   }
   const keep = state.productsList.categoryId;
   try {
-    const data = await apiFetch("/categories?itemsPerPage=500");
+    const data = await apiFetch("/categories?itemsPerPage=500", { headers: API_ACCEPT_JSONLD });
     const { items } = unwrapCollection(data);
-    const rows = flattenCategoriesForProductAssignment(items);
+    const rows = flattenCategoriesHierarchicalLabels(items);
     sel.innerHTML = "";
     const all = document.createElement("option");
     all.value = "";
-    all.textContent = "Все";
+    all.textContent = "Все категории";
     sel.appendChild(all);
     for (const row of rows) {
       const o = document.createElement("option");
@@ -623,6 +647,7 @@ const CRUD_SCHEMA = {
   products: {
     listColumns: [
       { key: "name", label: "Название" },
+      { key: "category_id", label: "Категория" },
       { key: "slug", label: "Slug" },
       { key: "article", label: "Артикул" },
       { key: "price", label: "Цена" },
@@ -730,6 +755,211 @@ const CRUD_SCHEMA = {
   },
 };
 
+function buildCategoryChildrenMap(items) {
+  const children = new Map();
+  for (const c of items) {
+    const p = c.parent_id != null && c.parent_id !== "" ? c.parent_id : "__root__";
+    if (!children.has(p)) {
+      children.set(p, []);
+    }
+    children.get(p).push(c);
+  }
+  for (const [, arr] of children) {
+    arr.sort(
+      (a, b) =>
+        (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0) ||
+        String(a.name || "").localeCompare(String(b.name || ""), "ru"),
+    );
+  }
+  return children;
+}
+
+function buildCategoryTreeHead() {
+  const head = document.getElementById("category-tree-head");
+  if (!head) {
+    return;
+  }
+  const schema = CRUD_SCHEMA.categories;
+  head.innerHTML = `<div class="category-tree-grid category-tree-head-row">
+    <span class="category-tree-hcell" aria-hidden="true"></span>
+    ${schema.listColumns.map((c) => `<span class="category-tree-hcell">${escapeHtml(c.label)}</span>`).join("")}
+    <span class="category-tree-hcell category-tree-hcell--actions">Действия</span>
+  </div>`;
+}
+
+function categoryWritablePayloadFromEntity(entity) {
+  const payload = {};
+  for (const f of CRUD_SCHEMA.categories.fields) {
+    const k = f.key;
+    let v = entity[k];
+    if (v === undefined) {
+      if (k === "parent_id") {
+        payload[k] = null;
+      } else if (f.type === "checkbox") {
+        payload[k] = false;
+      }
+      continue;
+    }
+    if (k === "parent_id" && (v === "" || v === null)) {
+      payload[k] = null;
+    } else {
+      payload[k] = v;
+    }
+  }
+  return payload;
+}
+
+async function persistCategorySiblingOrderFromUl(ul) {
+  const lis = [...ul.children].filter((n) => n.matches("li.category-tree-node"));
+  for (let i = 0; i < lis.length; i++) {
+    const id = lis[i].dataset.categoryId;
+    if (!id) {
+      continue;
+    }
+    const entity = await apiFetch(`/categories/${id}`);
+    const payload = categoryWritablePayloadFromEntity(entity);
+    payload.sort_order = i;
+    await apiFetch(`/categories/${id}`, { method: "PUT", body: JSON.stringify(payload) });
+  }
+}
+
+function renderCategoryTreeUl(parentKey, childrenMap) {
+  const ul = document.createElement("ul");
+  ul.className = "category-tree-list";
+  ul.dataset.parentKey = parentKey;
+  const kids = childrenMap.get(parentKey) || [];
+  const schema = CRUD_SCHEMA.categories;
+  for (const row of kids) {
+    const li = document.createElement("li");
+    li.className = "category-tree-node";
+    if (row.is_favorite_main || row.is_favorite_sidebar) {
+      li.classList.add("category-tree-node--favorite");
+    }
+    li.dataset.categoryId = row.id;
+    const rowEl = document.createElement("div");
+    rowEl.className = "category-tree-grid category-tree-row";
+    const phBtn = `<button type="button" class="btn btn-ghost btn-ph" data-id="${escapeHtml(row.id)}" data-ph-label="${escapeHtml(row.name || "")}">Фотографии</button>`;
+    rowEl.innerHTML = `
+      <span class="category-drag-handle" draggable="true" title="Тяните, чтобы поменять порядок среди соседей">⋮⋮</span>
+      ${schema.listColumns.map((c) => `<span class="category-tree-cell">${escapeHtml(formatCell(row[c.key]))}</span>`).join("")}
+      <div class="actions">
+        <button type="button" class="btn btn-edit" data-id="${escapeHtml(row.id)}">Изменить</button>
+        ${phBtn}
+        <button type="button" class="btn btn-danger btn-del" data-id="${escapeHtml(row.id)}">Удалить</button>
+      </div>`;
+    li.appendChild(rowEl);
+    const nested = renderCategoryTreeUl(row.id, childrenMap);
+    if (nested.children.length > 0) {
+      li.appendChild(nested);
+    }
+    ul.appendChild(li);
+  }
+  return ul;
+}
+
+function renderCategoriesAdminTree(items, rootEl) {
+  if (!rootEl) {
+    return;
+  }
+  const childrenMap = buildCategoryChildrenMap(items);
+  const ul = renderCategoryTreeUl("__root__", childrenMap);
+  rootEl.innerHTML = "";
+  rootEl.appendChild(ul);
+}
+
+function bindCategoryTreeRowActions(sec, rootEl) {
+  if (!rootEl) {
+    return;
+  }
+  rootEl.querySelectorAll(".btn-edit").forEach((b) => {
+    b.addEventListener("click", () => openModal(sec.id, b.dataset.id));
+  });
+  rootEl.querySelectorAll(".btn-ph").forEach((b) => {
+    b.addEventListener("click", () => {
+      openPhotosForEntity("category", b.dataset.id, b.dataset.phLabel || "");
+    });
+  });
+  rootEl.querySelectorAll(".btn-del").forEach((b) => {
+    b.addEventListener("click", () => deleteRow(sec.resource, b.dataset.id));
+  });
+}
+
+function initCategoryTreeDnD() {
+  const rootEl = document.getElementById("category-tree-root");
+  if (!rootEl || rootEl.dataset.dndWired === "1") {
+    return;
+  }
+  rootEl.dataset.dndWired = "1";
+  let draggedLi = null;
+
+  rootEl.addEventListener("dragstart", (e) => {
+    const h = e.target.closest(".category-drag-handle");
+    if (!h || !rootEl.contains(h)) {
+      return;
+    }
+    draggedLi = h.closest("li.category-tree-node");
+    if (!draggedLi) {
+      return;
+    }
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", draggedLi.dataset.categoryId);
+    draggedLi.classList.add("category-row-dragging");
+  });
+
+  rootEl.addEventListener("dragend", () => {
+    if (draggedLi) {
+      draggedLi.classList.remove("category-row-dragging");
+    }
+    draggedLi = null;
+  });
+
+  rootEl.addEventListener("dragover", (e) => {
+    if (!draggedLi) {
+      return;
+    }
+    const targetLi = e.target.closest("li.category-tree-node");
+    if (!targetLi || targetLi === draggedLi) {
+      return;
+    }
+    if (targetLi.parentElement !== draggedLi.parentElement) {
+      return;
+    }
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  });
+
+  rootEl.addEventListener("drop", async (e) => {
+    if (!draggedLi) {
+      return;
+    }
+    const targetLi = e.target.closest("li.category-tree-node");
+    if (!targetLi || targetLi === draggedLi) {
+      return;
+    }
+    if (targetLi.parentElement !== draggedLi.parentElement) {
+      return;
+    }
+    e.preventDefault();
+    const ul = draggedLi.parentElement;
+    const rect = targetLi.getBoundingClientRect();
+    const before = e.clientY < rect.top + rect.height / 2;
+    if (before) {
+      ul.insertBefore(draggedLi, targetLi);
+    } else {
+      ul.insertBefore(draggedLi, targetLi.nextSibling);
+    }
+    try {
+      rootEl.classList.add("category-tree--saving");
+      await persistCategorySiblingOrderFromUl(ul);
+    } catch (err) {
+      notifyApiError(err);
+      await loadCrudTable();
+    } finally {
+      rootEl.classList.remove("category-tree--saving");
+    }
+  });
+}
+
 async function loadCrudTable(url = null) {
   const sec = SECTIONS.find((s) => s.id === state.section);
   if (!sec || sec.type !== "crud") return;
@@ -741,7 +971,9 @@ async function loadCrudTable(url = null) {
   document.getElementById("btn-new").classList.toggle("hidden", Boolean(sec.hideNew));
 
   let fetchUrl;
-  if (url) {
+  if (sec.id === "categories") {
+    fetchUrl = sec.resource.includes("?") ? `${sec.resource}&itemsPerPage=500` : `${sec.resource}?itemsPerPage=500`;
+  } else if (url) {
     fetchUrl = url;
   } else if (sec.id === "products") {
     fetchUrl = buildProductsListUrl();
@@ -751,7 +983,7 @@ async function loadCrudTable(url = null) {
   state.collectionUrl = sec.resource;
 
   try {
-    const data = await apiFetch(fetchUrl);
+    const data = await apiFetch(fetchUrl, { headers: API_ACCEPT_JSONLD });
     empty.textContent = "Нет записей";
     let { items, total, next } = unwrapCollection(data);
     state.nextPageUrl = next;
@@ -768,67 +1000,130 @@ async function loadCrudTable(url = null) {
       }
     }
 
-    thead.innerHTML = `<tr>${schema.listColumns.map((c) => `<th>${escapeHtml(c.label)}</th>`).join("")}<th class="actions">Действия</th></tr>`;
-    tbody.innerHTML = "";
-    if (items.length === 0) {
-      empty.classList.remove("hidden");
-    } else {
-      empty.classList.add("hidden");
-      for (const row of items) {
-        const tr = document.createElement("tr");
-        if (sec.id === "categories" && (row.is_favorite_main || row.is_favorite_sidebar)) {
-          tr.classList.add("row-favorite");
+    const crudTable = document.getElementById("crud-table");
+    const categoryTreeWrap = document.getElementById("category-tree-wrap");
+    const categoryTreeHead = document.getElementById("category-tree-head");
+    const categoryTreeRoot = document.getElementById("category-tree-root");
+
+    if (sec.id === "categories" && crudTable && categoryTreeWrap) {
+      crudTable.classList.add("hidden");
+      categoryTreeWrap.classList.remove("hidden");
+    } else if (crudTable && categoryTreeWrap) {
+      crudTable.classList.remove("hidden");
+      categoryTreeWrap.classList.add("hidden");
+    }
+
+    let categoryLabels = {};
+    if (sec.id === "products") {
+      try {
+        categoryLabels = await fetchCategoryIdLabelMap();
+      } catch {
+        categoryLabels = {};
+      }
+    }
+
+    if (sec.id === "categories") {
+      thead.innerHTML = "";
+      tbody.innerHTML = "";
+      buildCategoryTreeHead();
+      if (items.length === 0) {
+        if (categoryTreeHead) {
+          categoryTreeHead.classList.add("hidden");
         }
-        const phBtn =
-          sec.id === "products" || sec.id === "categories"
-            ? `<button type="button" class="btn btn-ghost btn-ph" data-id="${escapeHtml(row.id)}" data-ph-label="${escapeHtml(row.name || "")}">Фотографии</button>`
-            : "";
-        tr.innerHTML =
-          schema.listColumns
-            .map((c) => `<td>${escapeHtml(formatCell(row[c.key]))}</td>`)
-            .join("") +
-          `<td class="actions">
+        if (categoryTreeRoot) {
+          categoryTreeRoot.innerHTML = "";
+        }
+        empty.classList.remove("hidden");
+      } else {
+        empty.classList.add("hidden");
+        if (categoryTreeHead) {
+          categoryTreeHead.classList.remove("hidden");
+        }
+        renderCategoriesAdminTree(items, categoryTreeRoot);
+        bindCategoryTreeRowActions(sec, categoryTreeRoot);
+      }
+      pager.classList.add("hidden");
+    } else {
+      thead.innerHTML = `<tr>${schema.listColumns.map((c) => `<th>${escapeHtml(c.label)}</th>`).join("")}<th class="actions">Действия</th></tr>`;
+      tbody.innerHTML = "";
+      if (items.length === 0) {
+        empty.classList.remove("hidden");
+      } else {
+        empty.classList.add("hidden");
+        for (const row of items) {
+          const tr = document.createElement("tr");
+          const phBtn =
+            sec.id === "products"
+              ? `<button type="button" class="btn btn-ghost btn-ph" data-id="${escapeHtml(row.id)}" data-ph-label="${escapeHtml(row.name || "")}">Фотографии</button>`
+              : "";
+          tr.innerHTML =
+            schema.listColumns
+              .map((c) => {
+                if (sec.id === "products" && c.key === "category_id") {
+                  const cid = row.category_id;
+                  const text =
+                    cid && Object.prototype.hasOwnProperty.call(categoryLabels, cid)
+                      ? categoryLabels[cid]
+                      : cid
+                        ? String(cid)
+                        : "—";
+                  return `<td>${escapeHtml(text)}</td>`;
+                }
+                return `<td>${escapeHtml(formatCell(row[c.key]))}</td>`;
+              })
+              .join("") +
+            `<td class="actions">
             <button type="button" class="btn btn-edit" data-id="${escapeHtml(row.id)}">Изменить</button>
             ${phBtn}
             <button type="button" class="btn btn-danger btn-del" data-id="${escapeHtml(row.id)}">Удалить</button>
           </td>`;
-        tbody.appendChild(tr);
-      }
-      tbody.querySelectorAll(".btn-edit").forEach((b) => {
-        b.addEventListener("click", () => openModal(sec.id, b.dataset.id));
-      });
-      tbody.querySelectorAll(".btn-ph").forEach((b) => {
-        b.addEventListener("click", () => {
-          const ot = sec.id === "categories" ? "category" : "product";
-          openPhotosForEntity(ot, b.dataset.id, b.dataset.phLabel || "");
+          tbody.appendChild(tr);
+        }
+        tbody.querySelectorAll(".btn-edit").forEach((b) => {
+          b.addEventListener("click", () => openModal(sec.id, b.dataset.id));
         });
-      });
-      tbody.querySelectorAll(".btn-del").forEach((b) => {
-        b.addEventListener("click", () => deleteRow(sec.resource, b.dataset.id));
-      });
-      if (sec.id === "orders") {
-        tbody.querySelectorAll("tr").forEach((tr, i) => {
-          const id = items[i].id;
-          const num = items[i].order_number;
-          tr.style.cursor = "pointer";
-          tr.addEventListener("click", (ev) => {
-            if (ev.target.closest(".btn")) return;
-            showOrderDetail(id, num);
+        tbody.querySelectorAll(".btn-ph").forEach((b) => {
+          b.addEventListener("click", () => {
+            openPhotosForEntity("product", b.dataset.id, b.dataset.phLabel || "");
           });
         });
+        tbody.querySelectorAll(".btn-del").forEach((b) => {
+          b.addEventListener("click", () => deleteRow(sec.resource, b.dataset.id));
+        });
+        if (sec.id === "orders") {
+          tbody.querySelectorAll("tr").forEach((tr, i) => {
+            const id = items[i].id;
+            const num = items[i].order_number;
+            tr.style.cursor = "pointer";
+            tr.addEventListener("click", (ev) => {
+              if (ev.target.closest(".btn")) return;
+              showOrderDetail(id, num);
+            });
+          });
+        }
       }
-    }
 
-    if (sec.id === "products") {
-      renderProductsPager(pager, typeof total === "number" ? total : 0);
-    } else {
-      renderLegacyCrudPager(pager, next, Boolean(url));
+      if (sec.id === "products") {
+        renderProductsPager(pager, typeof total === "number" ? total : 0);
+      } else {
+        renderLegacyCrudPager(pager, next, Boolean(url));
+      }
     }
   } catch (e) {
     if (e.sessionEnded) {
       return;
     }
     tbody.innerHTML = "";
+    const crudTable = document.getElementById("crud-table");
+    const treeWrap = document.getElementById("category-tree-wrap");
+    const treeRoot = document.getElementById("category-tree-root");
+    if (crudTable && treeWrap) {
+      treeWrap.classList.add("hidden");
+      crudTable.classList.remove("hidden");
+    }
+    if (treeRoot) {
+      treeRoot.innerHTML = "";
+    }
     empty.textContent = e.message || String(e);
     empty.classList.remove("hidden");
     pager.classList.add("hidden");
@@ -1064,7 +1359,7 @@ async function populateProductCategorySelect(form, entity) {
     return;
   }
   try {
-    const data = await apiFetch("/categories?itemsPerPage=500");
+    const data = await apiFetch("/categories?itemsPerPage=500", { headers: API_ACCEPT_JSONLD });
     const { items } = unwrapCollection(data);
     const rows = flattenCategoriesForProductAssignment(items);
     sel.innerHTML = "";
@@ -1104,7 +1399,7 @@ async function populateCategoryParentSelect(form, entity) {
     return;
   }
   try {
-    const data = await apiFetch("/categories?itemsPerPage=500");
+    const data = await apiFetch("/categories?itemsPerPage=500", { headers: API_ACCEPT_JSONLD });
     const { items } = unwrapCollection(data);
     const excludeIds = entity?.id ? getSelfAndDescendantIds(items, entity.id) : new Set();
     const choices = items
@@ -1672,7 +1967,7 @@ async function loadFavoritesTable() {
   errEl.classList.add("hidden");
   tbody.innerHTML = "";
   try {
-    const data = await apiFetch("/categories?itemsPerPage=500");
+    const data = await apiFetch("/categories?itemsPerPage=500", { headers: API_ACCEPT_JSONLD });
     const { items } = unwrapCollection(data);
     if (items.length === 0) {
       empty.classList.remove("hidden");
@@ -2188,7 +2483,7 @@ async function initCategoryFiltersSection() {
   if (!cfSelectPopulated) {
     try {
       sel.innerHTML = "";
-      const data = await apiFetch("/categories?itemsPerPage=500");
+      const data = await apiFetch("/categories?itemsPerPage=500", { headers: API_ACCEPT_JSONLD });
       const { items } = unwrapCollection(data);
       const sorted = [...items].sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "ru"));
       for (const c of sorted) {
@@ -2706,6 +3001,7 @@ document.querySelectorAll(".modal [data-close]").forEach((el) => {
 
 buildNav();
 initProductsFiltersUi();
+initCategoryTreeDnD();
 initApiPlayground();
 updateAuthUi();
 

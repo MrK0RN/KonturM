@@ -121,9 +121,9 @@
             <label>Slug
               <input type="search" id="pf-slug" class="pf-input" placeholder="Подстрока" autocomplete="off" />
             </label>
-            <label>Категория
+            <label title="Товары с точным совпадением category_id">Категория товара
               <select id="pf-category" class="pf-select">
-                <option value="">Все</option>
+                <option value="">Все категории</option>
               </select>
             </label>
             <label>Склад
@@ -166,6 +166,13 @@
             <thead id="crud-thead"></thead>
             <tbody id="crud-tbody"></tbody>
           </table>
+          <div id="category-tree-wrap" class="category-tree-wrap hidden" aria-label="Категории">
+            <p class="muted category-tree-hint">
+              Порядок сортировки на витрине: перетаскивайте строки за ⋮⋮ только среди соседей (один родитель).
+            </p>
+            <div class="category-tree-head" id="category-tree-head"></div>
+            <div id="category-tree-root"></div>
+          </div>
         </div>
         <p id="crud-empty" class="muted hidden">Нет записей</p>
         <nav class="pager hidden" id="crud-pager"></nav>
