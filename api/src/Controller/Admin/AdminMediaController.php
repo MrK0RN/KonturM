@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\Admin;
 
 use App\Service\MediaGalleryService;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -43,14 +44,22 @@ final class AdminMediaController
     #[Route('', name: 'admin_media_upload', methods: ['POST'])]
     public function upload(Request $request): JsonResponse
     {
-        $ownerType = (string) $request->request->get('owner_type', '');
-        $ownerId = (string) $request->request->get('owner_id', '');
+        $ownerType = (string) ($request->request->get('owner_type') ?: $request->query->get('owner_type', ''));
+        $ownerId = (string) ($request->request->get('owner_id') ?: $request->query->get('owner_id', ''));
         $alt = $request->request->get('alt');
         $altStr = is_string($alt) ? $alt : null;
 
         $file = $request->files->get('file');
-        if ($ownerType === '' || $ownerId === '' || ! $file || ! $file->isValid()) {
-            return new JsonResponse(['detail' => 'Нужны owner_type, owner_id и файл file'], 400);
+        if ($ownerType === '' || $ownerId === '') {
+            return new JsonResponse(['detail' => 'Укажите owner_type и owner_id (в форме или в query).'], 400);
+        }
+
+        if (! $file instanceof UploadedFile) {
+            return new JsonResponse(['detail' => 'Нужен файл в поле file.'], 400);
+        }
+
+        if (! $file->isValid()) {
+            return new JsonResponse(['detail' => $file->getErrorMessage()], 400);
         }
 
         try {

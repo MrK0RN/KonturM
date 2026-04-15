@@ -2376,8 +2376,8 @@ async function initPhotosSection() {
         t.value = "";
         return;
       }
-      const oid = ownerEl.value;
-      const ot = typeEl.value || "product";
+      const ot = typeEl.value || photosState.ownerType || "product";
+      const oid = ownerEl.value || photosState.ownerId;
       if (!oid) {
         alert("Сначала выберите товар или категорию.");
         t.value = "";
@@ -2389,6 +2389,7 @@ async function initPhotosSection() {
       const altVal = altEl instanceof HTMLInputElement ? altEl.value.trim() : "";
       const files = [...t.files];
       t.value = "";
+      const uploadPath = `/admin/media?owner_type=${encodeURIComponent(ot)}&owner_id=${encodeURIComponent(oid)}`;
       for (const f of files) {
         const fd = new FormData();
         fd.append("file", f);
@@ -2396,7 +2397,7 @@ async function initPhotosSection() {
         fd.append("owner_id", oid);
         if (altVal) fd.append("alt", altVal);
         try {
-          await apiUploadFormData("/admin/media", fd);
+          await apiUploadFormData(uploadPath, fd);
         } catch (err) {
           notifyApiError(err);
           break;
