@@ -12,7 +12,7 @@ $c = konturm_site_contacts();
     <title>Контур-М — оборудование для АЗС</title>
     <meta
       name="description"
-      content="Контур-М: оборудование для автозаправочных станций. Каталог, прайс-лист, акции. Связь: <?= htmlspecialchars($c['email_sales'] . ', ' . $c['phone_main_label'], ENT_QUOTES, 'UTF-8') ?>."
+      content="Контур-М: оборудование для автозаправочных станций. Каталог, прайс-лист, сертификаты. Связь: <?= htmlspecialchars($c['email_sales'] . ', ' . $c['phone_main_label'], ENT_QUOTES, 'UTF-8') ?>."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

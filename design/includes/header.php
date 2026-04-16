@@ -97,7 +97,7 @@ $c = konturm_site_contacts();
           <a class="site-header__nav-link" href="/price-list">Прайс-лист</a>
         </li>
         <li class="site-header__nav-item">
-          <a class="site-header__nav-link" href="/promo">Акции</a>
+          <a class="site-header__nav-link" href="/certificates">Сертификаты</a>
         </li>
         <li class="site-header__nav-item">
           <a class="site-header__nav-link" href="/about">О компании</a>
@@ -168,8 +168,8 @@ $c = konturm_site_contacts();
           </a>
         </li>
         <li class="site-header__drawer-nav-item">
-          <a class="site-header__drawer-nav-link" href="/promo">
-            Акции
+          <a class="site-header__drawer-nav-link" href="/certificates">
+            Сертификаты
             <svg viewBox="0 0 8 14" fill="none" aria-hidden="true" width="8" height="14"><path d="M1 1l6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </a>
         </li>

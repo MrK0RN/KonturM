@@ -404,7 +404,13 @@ SQL, ['categoryIds' => $categoryIds], ['categoryIds' => ArrayParameterType::STRI
         }
 
         foreach ($filters as $key => $values) {
-            if (is_array($values) && $values !== [] && is_bool(reset($values))) {
+            // has_verification уже список bool — не превращаем в array_keys.
+            // Карты spec_key => [value => true] тоже дают reset() === true, их нужно конвертировать.
+            if ($key === 'has_verification') {
+                continue;
+            }
+
+            if (! is_array($values) || $values === []) {
                 continue;
             }
 
@@ -759,6 +765,19 @@ SQL;
             $json = json_encode([$key => $value], JSON_UNESCAPED_UNICODE);
         } elseif (is_int($value) || is_float($value)) {
             $json = json_encode([$key => $value], JSON_UNESCAPED_UNICODE);
+        } elseif (is_string($value)) {
+            $trim = trim($value);
+            // В technical_specs числа часто хранятся скаляром (Объем, л: 2; погрешность, %: 0.02),
+            // а из query приходят строки — раньше строился @> {key: ["2"]} и не совпадал с {key: 2}.
+            $normalized = str_replace(',', '.', $trim);
+            if ($trim !== '' && is_numeric($normalized)) {
+                $num = (str_contains($normalized, '.') || stripos($normalized, 'e') !== false)
+                    ? (float) $normalized
+                    : (int) $normalized;
+                $json = json_encode([$key => $num], JSON_UNESCAPED_UNICODE);
+            } else {
+                $json = json_encode([$key => [$value]], JSON_UNESCAPED_UNICODE);
+            }
         } else {
             $json = json_encode([$key => [(string) $value]], JSON_UNESCAPED_UNICODE);
         }

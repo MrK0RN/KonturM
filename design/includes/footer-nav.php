@@ -20,7 +20,7 @@
 
     <ul class="site-footer__nav-col">
       <li>
-        <a class="site-footer__nav-link" href="/price-list">Сертификаты</a>
+        <a class="site-footer__nav-link" href="/certificates">Сертификаты</a>
       </li>
       <li>
         <a class="site-footer__nav-link" href="/contacts">Контакты</a>

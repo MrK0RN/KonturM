@@ -21,12 +21,15 @@ class SmokeClient:
         data: Optional[Dict[str, Any]] = None,
         token: Optional[str] = None,
         content_type: str = "application/json",
+        extra_headers: Optional[Dict[str, str]] = None,
     ) -> Tuple[int, Any]:
         body = None
         headers: Dict[str, str] = {}
         if data is not None:
             body = json.dumps(data, ensure_ascii=False).encode("utf-8")
             headers["Content-Type"] = content_type
+        if extra_headers:
+            headers.update(extra_headers)
         auth_token = token if token is not None else self.token
         if auth_token:
             headers["Authorization"] = f"Bearer {auth_token}"

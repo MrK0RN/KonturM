@@ -27,7 +27,7 @@ security:
             pattern: ^/catalog$
             security: false
         storefront_pages:
-            pattern: ^/(category2|cart|search|product|about|contacts|promo|price-list)$
+            pattern: ^/(category2|cart|search|product|about|contacts|promo|certificates|price-list)$
             security: false
         price_list_download:
             pattern: ^/price-list\.(pdf|xlsx)$
