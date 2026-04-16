@@ -6,6 +6,12 @@ require __DIR__ . '/../includes/design-base.php';
 $slugIn = $_GET['slug'] ?? 'merniki';
 $category2Slug = is_string($slugIn) && preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slugIn) ? $slugIn : 'merniki';
 
+/** JSON из query ?filters=… для предвыбора в JS (надёжнее, чем парсинг location в браузере). */
+$filtersPrefillAttr = '';
+if (isset($_GET['filters']) && is_string($_GET['filters']) && $_GET['filters'] !== '') {
+    $filtersPrefillAttr = ' data-filters-prefill="' . htmlspecialchars($_GET['filters'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '"';
+}
+
 $c2css = static function (string $file): string {
     return htmlspecialchars(
         konturm_design_pages_asset('category2', 'css/' . ltrim($file, '/')),
@@ -54,7 +60,7 @@ $c2css = static function (string $file): string {
       }
     </script>
   </head>
-  <body class="cat2-page" data-category-slug="<?= htmlspecialchars($category2Slug, ENT_QUOTES, 'UTF-8') ?>">
+  <body class="cat2-page" data-category-slug="<?= htmlspecialchars($category2Slug, ENT_QUOTES, 'UTF-8') ?>"<?= $filtersPrefillAttr ?>>
     <?php require __DIR__ . '/../includes/header.php'; ?>
     <?php require __DIR__ . '/category2/includes/page-body.php'; ?>
     <?php require __DIR__ . '/../includes/footer.php'; ?>

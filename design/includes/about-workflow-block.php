@@ -5,13 +5,13 @@ declare(strict_types=1);
       <!-- Figma 1:175 · Как мы работаем -->
       <section class="ab-workflow" aria-labelledby="ab-workflow-title">
         <div class="ab-workflow__shell">
-          <header class="ab-workflow__header">
+          <header class="ab-workflow__header ab-reveal-item">
             <h2 class="ab-workflow__title" id="ab-workflow-title">Как мы работаем</h2>
             <p class="ab-workflow__subtitle">Понятный процесс — от заявки до доставки</p>
           </header>
           <div class="ab-workflow__viewport" tabindex="0" role="region" aria-label="Этапы работы с заказчиком">
           <ol class="ab-workflow__track" role="list">
-            <li class="ab-workflow__card">
+            <li class="ab-workflow__card ab-reveal-item">
               <div class="ab-workflow__card-top">
                 <span class="ab-workflow__badge" aria-hidden="true">01</span>
                 <h3 class="ab-workflow__card-title">Запрос и техническое согласование</h3>
@@ -28,7 +28,7 @@ declare(strict_types=1);
                 <a href="/contacts" class="ab-workflow__cta">Заказать звонок</a>
               </div>
             </li>
-            <li class="ab-workflow__card">
+            <li class="ab-workflow__card ab-reveal-item" tabindex="0">
               <div class="ab-workflow__card-top">
                 <span class="ab-workflow__badge" aria-hidden="true">02</span>
                 <h3 class="ab-workflow__card-title">
@@ -45,7 +45,7 @@ declare(strict_types=1);
                 <p class="ab-workflow__result-text">Согласованное коммерческое предложение</p>
               </div>
             </li>
-            <li class="ab-workflow__card">
+            <li class="ab-workflow__card ab-reveal-item" tabindex="0">
               <div class="ab-workflow__card-top">
                 <span class="ab-workflow__badge" aria-hidden="true">03</span>
                 <h3 class="ab-workflow__card-title">Производство и поверка</h3>
@@ -59,7 +59,7 @@ declare(strict_types=1);
                 <p class="ab-workflow__result-text">Готовое изделие с подтверждёнными характеристиками.</p>
               </div>
             </li>
-            <li class="ab-workflow__card">
+            <li class="ab-workflow__card ab-reveal-item" tabindex="0">
               <div class="ab-workflow__card-top">
                 <span class="ab-workflow__badge" aria-hidden="true">04</span>
                 <h3 class="ab-workflow__card-title">

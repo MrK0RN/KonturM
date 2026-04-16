@@ -1,0 +1,75 @@
+/* Scroll reveal — About page (workflow + why-us)
+   Initial hidden state only when JS runs (html.ab-reveal-js). */
+
+html.ab-reveal-js .ab-reveal-item {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+html.ab-reveal-js .ab-reveal-item.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* «Как мы работаем» — stagger */
+.ab-workflow__header.ab-reveal-item {
+  transition-delay: 0s;
+}
+
+.ab-workflow__track .ab-workflow__card:nth-child(1).ab-reveal-item {
+  transition-delay: 0.08s;
+}
+
+.ab-workflow__track .ab-workflow__card:nth-child(2).ab-reveal-item {
+  transition-delay: 0.16s;
+}
+
+.ab-workflow__track .ab-workflow__card:nth-child(3).ab-reveal-item {
+  transition-delay: 0.24s;
+}
+
+.ab-workflow__track .ab-workflow__card:nth-child(4).ab-reveal-item {
+  transition-delay: 0.32s;
+}
+
+/* «Почему выбирают нас» — stagger */
+.ab-why__title.ab-reveal-item {
+  transition-delay: 0s;
+}
+
+.ab-why__grid > li:nth-child(1) .ab-why__card.ab-reveal-item {
+  transition-delay: 0.06s;
+}
+
+.ab-why__grid > li:nth-child(2) .ab-why__card.ab-reveal-item {
+  transition-delay: 0.12s;
+}
+
+.ab-why__grid > li:nth-child(3) .ab-why__card.ab-reveal-item {
+  transition-delay: 0.18s;
+}
+
+.ab-why__grid > li:nth-child(4) .ab-why__card.ab-reveal-item {
+  transition-delay: 0.24s;
+}
+
+.ab-why__grid > li:nth-child(5) .ab-why__card.ab-reveal-item {
+  transition-delay: 0.3s;
+}
+
+.ab-why__grid > li:nth-child(6) .ab-why__card.ab-reveal-item {
+  transition-delay: 0.36s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.ab-reveal-js .ab-reveal-item {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    will-change: auto;
+  }
+}

@@ -87,12 +87,94 @@
 }
 
 @media (min-width: 1200px) {
+  /* Колода: сначала полностью видна карточка 01; 02–04 — «полоски» справа.
+     При hover карточка выплывает вперёд (z-index + лёгкий подъём/масштаб), без сдвига влево. */
+  .ab-workflow__viewport {
+    overflow-x: visible;
+  }
+
+  .ab-workflow__track {
+    position: relative;
+    isolation: isolate;
+    padding-right: min(280px, 18vw);
+  }
+
   .ab-workflow__track .ab-workflow__card + .ab-workflow__card {
     margin-left: -412px;
   }
 
-  .ab-workflow__track {
-    padding-right: 300px;
+  .ab-workflow__track .ab-workflow__card {
+    position: relative;
+    z-index: 1;
+    transition:
+      transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.42s ease,
+      z-index 0s linear;
+  }
+
+  /* Базовый порядок: первая карточка перекрывает остальные — полностью видна только она */
+  .ab-workflow__track .ab-workflow__card:nth-child(1) {
+    z-index: 5;
+  }
+
+  .ab-workflow__track .ab-workflow__card:nth-child(2) {
+    z-index: 4;
+  }
+
+  .ab-workflow__track .ab-workflow__card:nth-child(3) {
+    z-index: 3;
+  }
+
+  .ab-workflow__track .ab-workflow__card:nth-child(4) {
+    z-index: 2;
+  }
+
+  /* Активная карточка — на переднем плане, визуально «ближе» без смещения по горизонтали */
+  .ab-workflow__track .ab-workflow__card:hover,
+  .ab-workflow__track .ab-workflow__card:focus-within {
+    z-index: 50;
+    box-shadow: 0 32px 64px rgba(14, 15, 15, 0.16);
+    transform: translateY(-10px) scale(1.02);
+  }
+
+  /* Пока наведена 02/03/04 — карточки слева уходят под слой */
+  .ab-workflow__track:has(.ab-workflow__card:nth-child(2):hover) .ab-workflow__card:nth-child(1),
+  .ab-workflow__track:has(.ab-workflow__card:nth-child(2):focus-within) .ab-workflow__card:nth-child(1) {
+    z-index: 1;
+  }
+
+  .ab-workflow__track:has(.ab-workflow__card:nth-child(3):hover) .ab-workflow__card:nth-child(1),
+  .ab-workflow__track:has(.ab-workflow__card:nth-child(3):hover) .ab-workflow__card:nth-child(2),
+  .ab-workflow__track:has(.ab-workflow__card:nth-child(3):focus-within) .ab-workflow__card:nth-child(1),
+  .ab-workflow__track:has(.ab-workflow__card:nth-child(3):focus-within) .ab-workflow__card:nth-child(2) {
+    z-index: 1;
+  }
+
+  .ab-workflow__track:has(.ab-workflow__card:nth-child(4):hover) .ab-workflow__card:nth-child(1),
+  .ab-workflow__track:has(.ab-workflow__card:nth-child(4):hover) .ab-workflow__card:nth-child(2),
+  .ab-workflow__track:has(.ab-workflow__card:nth-child(4):hover) .ab-workflow__card:nth-child(3),
+  .ab-workflow__track:has(.ab-workflow__card:nth-child(4):focus-within) .ab-workflow__card:nth-child(1),
+  .ab-workflow__track:has(.ab-workflow__card:nth-child(4):focus-within) .ab-workflow__card:nth-child(2),
+  .ab-workflow__track:has(.ab-workflow__card:nth-child(4):focus-within) .ab-workflow__card:nth-child(3) {
+    z-index: 1;
+  }
+}
+
+@media (min-width: 1200px) and (prefers-reduced-motion: reduce) {
+  .ab-workflow__track .ab-workflow__card {
+    transition-duration: 0.01ms;
+  }
+
+  .ab-workflow__track .ab-workflow__card:hover,
+  .ab-workflow__track .ab-workflow__card:focus-within {
+    transform: none;
+  }
+}
+
+@media (min-width: 1200px) {
+  .ab-workflow__track .ab-workflow__card[tabindex="0"]:focus-visible {
+    outline: 2px solid #d25e24;
+    outline-offset: 4px;
   }
 }
 

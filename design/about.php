@@ -3,6 +3,19 @@ declare(strict_types=1);
 
 require __DIR__ . '/includes/design-base.php';
 
+/**
+ * Ссылка на витрину категории (category2) с опциональным JSON фильтров по ключам technical_specs.
+ *
+ * @param array<string, mixed> $filters
+ */
+$category2Url = static function (string $slug, array $filters = []): string {
+    $url = '/category2?slug=' . rawurlencode($slug);
+    if ($filters !== []) {
+        $url .= '&filters=' . rawurlencode(json_encode($filters, JSON_UNESCAPED_UNICODE));
+    }
+    return $url;
+};
+
 $figma = static function (string $file): string {
     return htmlspecialchars(konturm_design_url('assets/figma/' . $file), ENT_QUOTES, 'UTF-8');
 };
@@ -33,6 +46,7 @@ $figma = static function (string $file): string {
     <link rel="stylesheet" href="<?= htmlspecialchars(konturm_design_url('css/about-enterprise.css'), ENT_QUOTES, 'UTF-8') ?>" />
     <link rel="stylesheet" href="<?= htmlspecialchars(konturm_design_url('css/about-workflow.css'), ENT_QUOTES, 'UTF-8') ?>" />
     <link rel="stylesheet" href="<?= htmlspecialchars(konturm_design_url('css/about-why-us.css'), ENT_QUOTES, 'UTF-8') ?>" />
+    <link rel="stylesheet" href="<?= htmlspecialchars(konturm_design_url('css/about-reveal.css'), ENT_QUOTES, 'UTF-8') ?>" />
   </head>
   <body>
     <?php require __DIR__ . '/includes/header.php'; ?>
@@ -75,21 +89,21 @@ $figma = static function (string $file): string {
             <div class="ab-hero__links-grid">
 
               <!-- Row 1 -->
-              <a href="/catalog/merniki-uglerodnaya" class="ab-link-cell">
+              <a href="<?= htmlspecialchars($category2Url('merniki-etalonnye-2-go-razryada', ['тип стали' => 'углеродистая']), ENT_QUOTES, 'UTF-8') ?>" class="ab-link-cell">
                 <span class="ab-link-cell__name">Мерники 2-го разряда из углеродистой стали</span>
                 <svg class="ab-link-cell__arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M7 17L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                   <path d="M7 7H17V17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </a>
-              <a href="/catalog/merniki-nerzhaveyushchaya" class="ab-link-cell">
+              <a href="<?= htmlspecialchars($category2Url('merniki-etalonnye-2-go-razryada', ['тип стали' => 'нержавеющая сталь']), ENT_QUOTES, 'UTF-8') ?>" class="ab-link-cell">
                 <span class="ab-link-cell__name">Мерники 2-го разряда из нержавеющей стали</span>
                 <svg class="ab-link-cell__arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M7 17L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                   <path d="M7 7H17V17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </a>
-              <a href="/catalog/merniki-tehnicheskie" class="ab-link-cell">
+              <a href="<?= htmlspecialchars($category2Url('merniki-tehnicheskie-1-go-klassa'), ENT_QUOTES, 'UTF-8') ?>" class="ab-link-cell">
                 <span class="ab-link-cell__name">Мерники технические 1-го класса</span>
                 <svg class="ab-link-cell__arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M7 17L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -98,21 +112,21 @@ $figma = static function (string $file): string {
               </a>
 
               <!-- Row 2 — featured cell (orange) -->
-              <a href="/catalog/merniki-1-razryad" class="ab-link-cell ab-link-cell--featured">
+              <a href="<?= htmlspecialchars($category2Url('merniki-etalonnye-1-go-razryada'), ENT_QUOTES, 'UTF-8') ?>" class="ab-link-cell ab-link-cell--featured">
                 <span class="ab-link-cell__name">Мерники 1-го разряда</span>
                 <svg class="ab-link-cell__arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M7 17L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                   <path d="M7 7H17V17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </a>
-              <a href="/catalog/metroshток-anodirovannyj" class="ab-link-cell">
+              <a href="<?= htmlspecialchars($category2Url('metroshtoki-anodirovannye'), ENT_QUOTES, 'UTF-8') ?>" class="ab-link-cell">
                 <span class="ab-link-cell__name">Метрошток анодированный</span>
                 <svg class="ab-link-cell__arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M7 17L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                   <path d="M7 7H17V17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </a>
-              <a href="/catalog/metroshток-t-obraznyj" class="ab-link-cell">
+              <a href="<?= htmlspecialchars($category2Url('metroshtoki-t-obraznye'), ENT_QUOTES, 'UTF-8') ?>" class="ab-link-cell">
                 <span class="ab-link-cell__name">Метрошток Т-образный</span>
                 <svg class="ab-link-cell__arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M7 17L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -121,21 +135,21 @@ $figma = static function (string $file): string {
               </a>
 
               <!-- Row 3 -->
-              <a href="/catalog/metroshток" class="ab-link-cell">
-                <span class="ab-link-cell__name">Метрошток анодированный</span>
+              <a href="<?= htmlspecialchars($category2Url('metroshtoki-kruglye'), ENT_QUOTES, 'UTF-8') ?>" class="ab-link-cell">
+                <span class="ab-link-cell__name">Метроштоки круглые</span>
                 <svg class="ab-link-cell__arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M7 17L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                   <path d="M7 7H17V17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </a>
-              <a href="/catalog/ruletki-s-lotom" class="ab-link-cell">
+              <a href="<?= htmlspecialchars($category2Url('ruletki-s-lotom'), ENT_QUOTES, 'UTF-8') ?>" class="ab-link-cell">
                 <span class="ab-link-cell__name">Рулетки с лотом</span>
                 <svg class="ab-link-cell__arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M7 17L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                   <path d="M7 7H17V17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </a>
-              <a href="/catalog/ruletki-s-kolcom" class="ab-link-cell">
+              <a href="<?= htmlspecialchars($category2Url('ruletki-s-koltsom'), ENT_QUOTES, 'UTF-8') ?>" class="ab-link-cell">
                 <span class="ab-link-cell__name">Рулетки с кольцом</span>
                 <svg class="ab-link-cell__arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M7 17L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -144,21 +158,21 @@ $figma = static function (string $file): string {
               </a>
 
               <!-- Row 4 -->
-              <a href="/catalog/zabornye-vedra" class="ab-link-cell">
+              <a href="<?= htmlspecialchars($category2Url('zabornye-vedra'), ENT_QUOTES, 'UTF-8') ?>" class="ab-link-cell">
                 <span class="ab-link-cell__name">Заборные ведра</span>
                 <svg class="ab-link-cell__arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M7 17L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                   <path d="M7 7H17V17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </a>
-              <a href="/catalog/pasta-indikatornaya" class="ab-link-cell">
+              <a href="<?= htmlspecialchars($category2Url('pasta'), ENT_QUOTES, 'UTF-8') ?>" class="ab-link-cell">
                 <span class="ab-link-cell__name">Паста индикаторная</span>
                 <svg class="ab-link-cell__arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M7 17L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                   <path d="M7 7H17V17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </a>
-              <a href="/catalog/sovki-skrebki" class="ab-link-cell">
+              <a href="<?= htmlspecialchars($category2Url('sovki-i-skrebki'), ENT_QUOTES, 'UTF-8') ?>" class="ab-link-cell">
                 <span class="ab-link-cell__name">Совки и скребки</span>
                 <svg class="ab-link-cell__arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M7 17L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -356,5 +370,6 @@ $figma = static function (string $file): string {
 
     <?php require __DIR__ . '/includes/footer.php'; ?>
     <?php require __DIR__ . '/includes/scripts-bridge.php'; ?>
+    <script src="<?= htmlspecialchars(konturm_design_url('js/about-reveal.js'), ENT_QUOTES, 'UTF-8') ?>" defer></script>
   </body>
 </html>

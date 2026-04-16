@@ -9,50 +9,29 @@ $docUrl = static function (string $filename) use ($base): string {
     return htmlspecialchars($base . '/documents/' . rawurlencode($filename), ENT_QUOTES, 'UTF-8');
 };
 
+/** Полное наименование документа по имени файла (как на титуле PDF). */
+$certFullTitle = static function (string $filename): string {
+    $base = (string) preg_replace('/\.pdf$/iu', '', $filename);
+
+    return (string) preg_replace('/\s+/u', ' ', trim($base));
+};
+
 $groups = [
     [
         'title' => 'Сертификаты об утверждении типа средств измерений',
         'items' => [
-            [
-                'name'  => 'Мерники нефтяные М1Р',
-                'type'  => 'Сертификат ОТ',
-                'file'  => 'Сертификат   ОТ Мерники М1Р.pdf',
-            ],
-            [
-                'name'  => 'Мерники нефтяные М2Р',
-                'type'  => 'Сертификат ОТ',
-                'file'  => 'Сертификат   ОТ Мерники М2Р.pdf',
-            ],
-            [
-                'name'  => 'Метроштоки МШС',
-                'type'  => 'Сертификат ОТ',
-                'file'  => 'Сертификат   ОТ Метроштоки МШС.pdf',
-            ],
-            [
-                'name'  => 'Технические мерники',
-                'type'  => 'Сертификат ОТ',
-                'file'  => 'Сертификат   ОТ Технические мерники.pdf',
-            ],
-            [
-                'name'  => 'Рулетки нефтяные Р',
-                'type'  => 'Сертификат ОТ',
-                'file'  => 'Сертификат   ОТ на Рулетки Р.pdf',
-            ],
+            ['file' => 'Сертификат   ОТ Мерники М1Р.pdf'],
+            ['file' => 'Сертификат   ОТ Мерники М2Р.pdf'],
+            ['file' => 'Сертификат   ОТ Метроштоки МШС.pdf'],
+            ['file' => 'Сертификат   ОТ Технические мерники.pdf'],
+            ['file' => 'Сертификат   ОТ на Рулетки Р.pdf'],
         ],
     ],
     [
         'title' => 'Пасты-индикаторы',
         'items' => [
-            [
-                'name'  => 'Паста водочувствительная',
-                'type'  => 'Сертификат',
-                'file'  => 'Сертификат Водочувствительная паста.pdf',
-            ],
-            [
-                'name'  => 'Паста Акватест',
-                'type'  => 'Технические условия',
-                'file'  => 'Титульный Лист ТУ на пасту Акватест.pdf',
-            ],
+            ['file' => 'Сертификат Водочувствительная паста.pdf'],
+            ['file' => 'Титульный Лист ТУ на пасту Акватест.pdf'],
         ],
     ],
 ];
@@ -97,6 +76,9 @@ $groups = [
               <h2 class="certs-group__title"><?= htmlspecialchars($group['title'], ENT_QUOTES, 'UTF-8') ?></h2>
               <ul class="certs-grid" role="list">
                 <?php foreach ($group['items'] as $doc): ?>
+                  <?php
+                    $fullTitle = $certFullTitle($doc['file']);
+                  ?>
                   <li>
                     <article class="cert-card">
                       <div class="cert-card__header">
@@ -109,8 +91,7 @@ $groups = [
                           </svg>
                         </div>
                         <div class="cert-card__meta">
-                          <p class="cert-card__name"><?= htmlspecialchars($doc['name'], ENT_QUOTES, 'UTF-8') ?></p>
-                          <span class="cert-card__type"><?= htmlspecialchars($doc['type'], ENT_QUOTES, 'UTF-8') ?></span>
+                          <p class="cert-card__full-title"><?= htmlspecialchars($fullTitle, ENT_QUOTES, 'UTF-8') ?></p>
                         </div>
                       </div>
                       <a
@@ -118,7 +99,7 @@ $groups = [
                         href="<?= $docUrl($doc['file']) ?>"
                         target="_blank"
                         rel="noopener"
-                        aria-label="Открыть PDF — <?= htmlspecialchars($doc['name'], ENT_QUOTES, 'UTF-8') ?>"
+                        aria-label="Открыть PDF — <?= htmlspecialchars($fullTitle, ENT_QUOTES, 'UTF-8') ?>"
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                           <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>

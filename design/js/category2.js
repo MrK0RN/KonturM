@@ -143,6 +143,69 @@
     return obj;
   }
 
+  /** Преобразует объект фильтров API в формат state.selected (массивы значений на ключ). */
+  function jsonToSelected(o) {
+    if (!o || typeof o !== "object" || Array.isArray(o)) return {};
+    var sel = {};
+    Object.keys(o).forEach(function (k) {
+      var v = o[k];
+      if (v === undefined || v === null) return;
+      if (k === "has_verification") {
+        var b = v === true || v === "true" || v === "1";
+        sel[k] = [b];
+        return;
+      }
+      if (Array.isArray(v)) {
+        sel[k] = v.map(function (x) {
+          if (typeof x === "boolean") return x;
+          return String(x);
+        });
+      } else if (typeof v === "boolean") {
+        sel[k] = [v];
+      } else {
+        sel[k] = [String(v)];
+      }
+    });
+    return sel;
+  }
+
+  /**
+   * Предвыбор фильтров: data-filters-prefill с сервера (из ?filters=) или query string.
+   * Ключи — как в technical_specs / API.
+   */
+  function parseFiltersPrefill() {
+    var raw = "";
+    var body = document.body;
+    if (body) {
+      var fromAttr = body.getAttribute("data-filters-prefill");
+      if (fromAttr && String(fromAttr).trim()) raw = String(fromAttr).trim();
+    }
+    if (!raw) {
+      try {
+        raw = new URLSearchParams(window.location.search).get("filters") || "";
+      } catch (e) {
+        raw = "";
+      }
+    }
+    if (!raw) return {};
+    try {
+      return jsonToSelected(JSON.parse(raw));
+    } catch (e1) {
+      try {
+        return jsonToSelected(JSON.parse(decodeURIComponent(raw)));
+      } catch (e2) {
+        try {
+          var m = /(?:^|[?&])filters=([^&]*)/.exec(window.location.search || "");
+          if (!m || !m[1]) return {};
+          var dec = decodeURIComponent(m[1].replace(/\+/g, " "));
+          return jsonToSelected(JSON.parse(dec));
+        } catch (e3) {
+          return {};
+        }
+      }
+    }
+  }
+
   function renderActiveFilters(mount, formEl, selected, reload, labels) {
     if (!mount) return;
     var keys = Object.keys(selected).filter(function (k) {
@@ -400,7 +463,7 @@
     var state = {
       page: 1,
       aggregate: true,
-      selected: {},
+      selected: parseFiltersPrefill(),
       filterLabels: {},
       filterOrder: null,
     };
@@ -541,6 +604,10 @@
           labels: state.filterLabels,
           order: state.filterOrder,
         });
+        renderActiveFilters(activeMount, form, state.selected, function () {
+          state.page = 1;
+          loadProducts();
+        }, state.filterLabels);
         form.addEventListener("change", function (e) {
           if (e.target && e.target.matches('input[type="checkbox"]')) {
             state.selected = readSelectedFromForm(form);

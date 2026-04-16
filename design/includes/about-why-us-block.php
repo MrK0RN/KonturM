@@ -5,10 +5,10 @@ declare(strict_types=1);
       <!-- Figma 1:219 · Почему выбирают нас -->
       <section class="ab-why" aria-labelledby="ab-why-title">
         <div class="ab-why__shell">
-          <h2 class="ab-why__title" id="ab-why-title">Почему выбирают нас</h2>
+          <h2 class="ab-why__title ab-reveal-item" id="ab-why-title">Почему выбирают нас</h2>
           <ul class="ab-why__grid" role="list">
             <li>
-              <article class="ab-why__card">
+              <article class="ab-why__card ab-reveal-item">
                 <div class="ab-why__card-body">
                   <h3 class="ab-why__card-title">Соответствие ГОСТ</h3>
                   <p class="ab-why__card-text">
@@ -29,11 +29,11 @@ declare(strict_types=1);
               </article>
             </li>
             <li>
-              <article class="ab-why__card">
+              <article class="ab-why__card ab-reveal-item">
                 <div class="ab-why__card-body">
                   <h3 class="ab-why__card-title">Аккредитованная поверка</h3>
                   <p class="ab-why__card-text">
-                    Выполняем поверку СИ&nbsp;в&nbsp;пределах аккредитации
+                    Выполняем поверку СИ&nbsp;в&nbsp;пределах области аккредитации
                   </p>
                 </div>
                 <div class="ab-why__icon-wrap" aria-hidden="true">
@@ -50,7 +50,7 @@ declare(strict_types=1);
               </article>
             </li>
             <li>
-              <article class="ab-why__card ab-why__card--dark">
+              <article class="ab-why__card ab-why__card--dark ab-reveal-item">
                 <div class="ab-why__card-body">
                   <h3 class="ab-why__card-title">Контроль качества</h3>
                   <p class="ab-why__card-text">
@@ -71,7 +71,7 @@ declare(strict_types=1);
               </article>
             </li>
             <li>
-              <article class="ab-why__card">
+              <article class="ab-why__card ab-reveal-item">
                 <div class="ab-why__card-body">
                   <h3 class="ab-why__card-title">Прозрачная цена</h3>
                   <p class="ab-why__card-text">
@@ -92,7 +92,7 @@ declare(strict_types=1);
               </article>
             </li>
             <li>
-              <article class="ab-why__card">
+              <article class="ab-why__card ab-reveal-item">
                 <div class="ab-why__card-body">
                   <h3 class="ab-why__card-title">Производственные сроки</h3>
                   <p class="ab-why__card-text">
@@ -113,7 +113,7 @@ declare(strict_types=1);
               </article>
             </li>
             <li>
-              <article class="ab-why__card">
+              <article class="ab-why__card ab-reveal-item">
                 <div class="ab-why__card-body">
                   <h3 class="ab-why__card-title">Опыт с 1999</h3>
                   <p class="ab-why__card-text">
