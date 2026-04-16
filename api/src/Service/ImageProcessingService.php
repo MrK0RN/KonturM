@@ -6,7 +6,7 @@ namespace App\Service;
 
 /**
  * Decodes raster images, scales down, writes full + thumbnail.
- * Prefers WebP when GD supports it; otherwise JPEG (servers without libwebp).
+ * Prefers WebP when GD supports it; otherwise PNG (alpha preserved; JPEG cannot).
  */
 final class ImageProcessingService
 {
@@ -15,8 +15,6 @@ final class ImageProcessingService
     private const THUMB_MAX = 400;
 
     private const WEBP_QUALITY = 85;
-
-    private const JPEG_QUALITY = 85;
 
     public function __construct(
         private readonly string $projectDir,
@@ -37,8 +35,8 @@ final class ImageProcessingService
         }
 
         $useWebp = \function_exists('imagewebp');
-        $suffix = $useWebp ? '_full.webp' : '_full.jpg';
-        $thumbSuffix = $useWebp ? '_thumb.webp' : '_thumb.jpg';
+        $suffix = $useWebp ? '_full.webp' : '_full.png';
+        $thumbSuffix = $useWebp ? '_thumb.webp' : '_thumb.png';
 
         $img = @\imagecreatefromstring($binary);
         if ($img === false) {
@@ -81,20 +79,20 @@ final class ImageProcessingService
                 throw new \RuntimeException('Не удалось сохранить WebP.');
             }
         } else {
-            if (! \function_exists('imagejpeg')) {
+            if (! \function_exists('imagepng')) {
                 \imagedestroy($full);
                 \imagedestroy($thumb);
-                throw new \RuntimeException('PHP GD must support WebP (imagewebp) or JPEG (imagejpeg) for image output.');
+                throw new \RuntimeException('PHP GD must support WebP (imagewebp) or PNG (imagepng) for image output.');
             }
-            $fullFlat = $this->flattenAlphaToWhite($full);
-            $thumbFlat = $this->flattenAlphaToWhite($thumb);
+            foreach ([$full, $thumb] as $variant) {
+                \imagealphablending($variant, false);
+                \imagesavealpha($variant, true);
+            }
+            $ok = \imagepng($full, $fullAbs, 6) && \imagepng($thumb, $thumbAbs, 6);
             \imagedestroy($full);
             \imagedestroy($thumb);
-            $ok = \imagejpeg($fullFlat, $fullAbs, self::JPEG_QUALITY) && \imagejpeg($thumbFlat, $thumbAbs, self::JPEG_QUALITY);
-            \imagedestroy($fullFlat);
-            \imagedestroy($thumbFlat);
             if (! $ok) {
-                throw new \RuntimeException('Не удалось сохранить JPEG.');
+                throw new \RuntimeException('Не удалось сохранить PNG.');
             }
         }
 
@@ -143,22 +141,6 @@ final class ImageProcessingService
         \imagefilledrectangle($dst, 0, 0, $nw, $nh, $transparent);
         \imagealphablending($dst, true);
         \imagecopyresampled($dst, $src, 0, 0, 0, 0, $nw, $nh, $w, $h);
-
-        return $dst;
-    }
-
-    /**
-     * JPEG has no alpha; composite onto white so transparent PNG/GIF do not turn black.
-     */
-    private function flattenAlphaToWhite(\GdImage $src): \GdImage
-    {
-        $w = \imagesx($src);
-        $h = \imagesy($src);
-        $dst = \imagecreatetruecolor($w, $h);
-        $white = \imagecolorallocate($dst, 255, 255, 255);
-        \imagefilledrectangle($dst, 0, 0, $w, $h, $white);
-        \imagealphablending($dst, true);
-        \imagecopy($dst, $src, 0, 0, 0, 0, $w, $h);
 
         return $dst;
     }

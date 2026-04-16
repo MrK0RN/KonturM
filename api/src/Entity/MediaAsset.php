@@ -27,7 +27,7 @@ class MediaAsset
     #[ORM\Column(type: 'guid', name: 'owner_id')]
     private string $ownerId;
 
-    /** Public URL path, e.g. /media/product/{ownerId}/{id}_full.webp or _full.jpg */
+    /** Public URL path, e.g. /media/product/{ownerId}/{id}_full.webp or _full.png */
     #[ORM\Column(type: 'string', length: 500)]
     private string $path;
 
