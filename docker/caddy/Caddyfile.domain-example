@@ -1,44 +1,12 @@
-# Боевой домен + Let's Encrypt (Caddy запрашивает сертификат сам, по умолчанию ACME / Let's Encrypt).
+# Устарело: домен и Let's Encrypt задаются переменными в корневом `.env`, без ручного копирования.
 #
-# Перед запуском на сервере:
-#   • DNS: A (и при необходимости AAAA) вашего домена → публичный IP этой машины;
-#   • снаружи доступны TCP 80 и 443 (фаервол, security groups);
-#   • в docker-compose том ./docker/caddy/Caddyfile смонтирован как сейчас — сертификаты хранятся в volume caddy_data.
+# 1. DNS: A (и при необходимости AAAA) домена → публичный IP сервера
+# 2. Снаружи доступны TCP 80 и 443 (иначе ACME HTTP-01 не пройдёт)
+# 3. В `.env` в корне репозитория:
+#    CADDY_DOMAIN=example.com
+#    ACME_EMAIL=your-email@example.com
+#    CORS_ALLOW_ORIGIN='^https://(www\.)?example\.com$'
+# 4. `docker compose up -d caddy`
 #
-# Скопируйте содержимое в docker/caddy/Caddyfile (или замените файл), подставьте домен и email, затем:
-#   docker compose up -d caddy
-#
-# Для публичного имени не указывайте tls internal — Caddy включит автоматический HTTPS (Let's Encrypt).
-#
-# --- Раскомментируйте и замените example.com / email на свои: ---
-#
-# {
-# 	email your-email@example.com
-# }
-#
-# example.com, www.example.com {
-# 	encode gzip zstd
-# 	reverse_proxy app:8000 {
-# 		header_up Host {host}
-# 		header_up X-Forwarded-Proto {scheme}
-# 		header_up X-Forwarded-For {remote_host}
-# 		header_up X-Forwarded-Host {host}
-# 	}
-# }
-#
-# Только редирект www → apex (тогда в первом блоке оставьте одно имя example.com):
-# www.example.com {
-# 	redir https://example.com{uri} permanent
-# }
-#
-# Свой PEM вместо Let's Encrypt:
-# example.com {
-# 	tls /etc/certs/fullchain.pem /etc/certs/privkey.pem
-# 	encode gzip zstd
-# 	reverse_proxy app:8000 {
-# 		header_up Host {host}
-# 		header_up X-Forwarded-Proto {scheme}
-# 		header_up X-Forwarded-For {remote_host}
-# 		header_up X-Forwarded-Host {host}
-# 	}
-# }
+# Сертификаты хранятся в volume `caddy_data`. Для www → apex добавьте второе имя в CADDY_DOMAIN
+# или отдельный блок редиректа — см. документацию Caddy (redir).

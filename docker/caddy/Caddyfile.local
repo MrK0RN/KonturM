@@ -1,7 +1,7 @@
 # Обратный прокси к Symfony (встроенный PHP-сервер на :8000 внутри сети compose).
 # Нужны явные имена хостов + tls internal: блок «:443» без имён не выдаёт сертификат под SNI,
 # из-за чего браузер/curl получают TLS alert internal на https://localhost и https://127.0.0.1.
-# Для публичного домена с Let's Encrypt см. Caddyfile.domain-example
+# Для публичного домена с Let's Encrypt задайте CADDY_DOMAIN в .env (см. entrypoint.sh).
 {
 	# Если клиент не присылает SNI (часто при заходе на https://127.0.0.1 в старых стеках)
 	default_sni localhost
