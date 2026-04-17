@@ -598,7 +598,7 @@ function goSection(id) {
   document.getElementById("view-site-contacts").classList.add("hidden");
   document.getElementById("view-price-list").classList.add("hidden");
   document.getElementById("view-visit-stats").classList.add("hidden");
-  document.getElementById("view-certificates-catalog").classList.add("hidden");
+  document.getElementById("view-certificates-catalog")?.classList.add("hidden");
 
   if (id === "login") {
     document.getElementById("view-login").classList.remove("hidden");
@@ -644,7 +644,7 @@ function goSection(id) {
   }
   if (id === "certificates_catalog") {
     state.orderDetailId = null;
-    document.getElementById("view-certificates-catalog").classList.remove("hidden");
+    document.getElementById("view-certificates-catalog")?.classList.remove("hidden");
     void loadCertificatesCatalogSection();
     return;
   }
