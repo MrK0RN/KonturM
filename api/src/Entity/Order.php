@@ -222,7 +222,11 @@ class Order
 
     public function setTotalAmount(?string $totalAmount): self
     {
-        $this->totalAmount = $totalAmount;
+        if ($totalAmount === null || trim($totalAmount) === '') {
+            $this->totalAmount = null;
+        } else {
+            $this->totalAmount = $totalAmount;
+        }
 
         return $this;
     }

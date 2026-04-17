@@ -500,17 +500,27 @@
           } else {
             grid.innerHTML = items.map(productCardHtml).join("");
           }
-          grid.querySelectorAll("[data-add-cart]").forEach(function (btn) {
+          function bindOne(btn) {
             btn.addEventListener("click", function () {
               var id = btn.getAttribute("data-add-cart");
               btn.disabled = true;
               K.addProductToCart(id, 1)
-                .catch(function () {})
-                .then(function () {
+                .then(function (cart) {
+                  if (!btn.parentNode) return;
+                  btn.disabled = false;
+                  if (K.replaceAddButtonWithCartStepper) {
+                    K.replaceAddButtonWithCartStepper(btn, id, cart, bindOne);
+                  }
+                })
+                .catch(function () {
                   btn.disabled = false;
                 });
             });
-          });
+          }
+          grid.querySelectorAll("[data-add-cart]").forEach(bindOne);
+          if (K.syncCartSteppersForContainer) {
+            K.syncCartSteppersForContainer(grid, bindOne);
+          }
           renderPagination(pack.pagination);
         })
         .catch(function () {

@@ -199,6 +199,96 @@
   flex-shrink: 0;
 }
 
+/* Inline cart qty (после «В корзину») — компактный степпер */
+.km-cart-stepper {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: stretch;
+  height: 36px;
+  border: 1.5px solid var(--cat2-border-input);
+  border-radius: var(--cat2-radius-btn);
+  overflow: hidden;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.km-cart-stepper__btn {
+  width: 32px;
+  flex: 0 0 32px;
+  border: none;
+  background: var(--cat2-bg-muted);
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--cat2-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.12s, color 0.12s;
+  user-select: none;
+}
+
+.km-cart-stepper__btn:hover:not(:disabled) {
+  background: rgba(94, 98, 102, 0.14);
+  color: var(--cat2-text);
+}
+
+.km-cart-stepper__btn:focus-visible {
+  outline: 2px solid var(--cat2-accent-orange);
+  outline-offset: -2px;
+}
+
+.km-cart-stepper__btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.km-cart-stepper__input {
+  width: 40px;
+  flex: 0 0 40px;
+  border: none;
+  border-left: 1.5px solid var(--cat2-border-input);
+  border-right: 1.5px solid var(--cat2-border-input);
+  text-align: center;
+  font-family: var(--font-cat2);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cat2-text);
+  background: #fff;
+  -moz-appearance: textfield;
+  appearance: textfield;
+  outline: none;
+  padding: 0 2px;
+}
+
+.km-cart-stepper__input::-webkit-outer-spin-button,
+.km-cart-stepper__input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.pd__actions .km-cart-stepper {
+  flex: 1;
+  min-width: 150px;
+  height: 46px;
+}
+
+.pd__actions .km-cart-stepper__btn {
+  width: 38px;
+  flex-basis: 38px;
+  font-size: 22px;
+  font-weight: 300;
+}
+
+.pd__actions .km-cart-stepper__input {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 44px;
+  font-size: 16px;
+}
+
 @media (max-width: 920px) {
   .cat2-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -663,6 +753,11 @@
   }
 
   .pd__cta {
+    flex: none;
+    width: 100%;
+  }
+
+  .pd__actions .km-cart-stepper {
     flex: none;
     width: 100%;
   }

@@ -1,6 +1,11 @@
 # Обратный прокси к Symfony (встроенный PHP-сервер на :8000 внутри сети compose).
-# HTTP :80 и HTTPS :443. На 443 по умолчанию — встроенный сертификат Caddy (tls internal).
-# Для публичного домена с Let's Encrypt замените блоки :80 / :443 на имя сайта, см. Caddyfile.domain-example
+# Нужны явные имена хостов + tls internal: блок «:443» без имён не выдаёт сертификат под SNI,
+# из-за чего браузер/curl получают TLS alert internal на https://localhost и https://127.0.0.1.
+# Для публичного домена с Let's Encrypt см. Caddyfile.domain-example
+{
+	# Если клиент не присылает SNI (часто при заходе на https://127.0.0.1 в старых стеках)
+	default_sni localhost
+}
 
 (common) {
 	encode gzip zstd
@@ -9,17 +14,11 @@
 		header_up X-Forwarded-Proto {scheme}
 		header_up X-Forwarded-For {remote_host}
 		header_up X-Forwarded-Host {host}
-		header_up X-Forwarded-Port {server_port}
 	}
 }
 
-# HTTP
-:80 {
-	import common
-}
-
-# HTTPS (слушает 443)
-:443 {
+# Один сайт на :80 и :443: автоматический редирект HTTP → HTTPS, сертификаты для перечисленных имён
+localhost, 127.0.0.1, ::1 {
 	tls internal
 	import common
 }

@@ -104,10 +104,20 @@
   }
 
   function updateCartLinkLabel(qty) {
-    var link = document.querySelector(".site-header__cart");
-    if (!link) return;
     var n = qty | 0;
-    link.setAttribute("aria-label", n > 0 ? "Корзина, позиций: " + n : "Корзина");
+    var label = n > 0 ? "Корзина, позиций: " + n : "Корзина";
+    document.querySelectorAll(".site-header__cart, .site-header__drawer-cart").forEach(function (link) {
+      link.setAttribute("aria-label", label);
+    });
+    document.querySelectorAll(".site-header__cart-badge").forEach(function (badge) {
+      if (n > 0) {
+        badge.textContent = n > 99 ? "99+" : String(n);
+        badge.hidden = false;
+      } else {
+        badge.textContent = "";
+        badge.hidden = true;
+      }
+    });
   }
 
   function refreshCartBadge() {
@@ -143,17 +153,183 @@
     return konturmFetchJson("/cart/items/" + encodeURIComponent(itemId), {
       method: "PATCH",
       body: JSON.stringify({ quantity: quantity }),
-    }).then(normalizeCartPayload);
+    })
+      .then(normalizeCartPayload)
+      .then(function (cart) {
+        updateCartLinkLabel(cart.total_quantity);
+        return cart;
+      });
   }
 
   function deleteCartItem(itemId) {
     return konturmFetchJson("/cart/items/" + encodeURIComponent(itemId), {
       method: "DELETE",
-    }).then(normalizeCartPayload);
+    })
+      .then(normalizeCartPayload)
+      .then(function (cart) {
+        updateCartLinkLabel(cart.total_quantity);
+        return cart;
+      });
+  }
+
+  /** Находит строку корзины для товара (после normalizeCartPayload). */
+  function findProductCartLine(cart, productId) {
+    var pid = String(productId);
+    var items = (cart && cart.items) || [];
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      if (!it || it.type !== "product") continue;
+      var eid =
+        it.product_id !== undefined && it.product_id !== null
+          ? String(it.product_id)
+          : it.entity_id !== undefined && it.entity_id !== null
+            ? String(it.entity_id)
+            : "";
+      if (eid === pid) {
+        return { itemId: String(it.id), quantity: it.quantity | 0 };
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Заменяет кнопку «В корзину» на компактный [−] [input] [+].
+   * onRestored(newButton) — перевесить обработчик на восстановленную кнопку.
+   */
+  function replaceAddButtonWithCartStepper(button, productId, cart, onRestored) {
+    var line = findProductCartLine(cart, productId);
+    if (!line || line.quantity < 1) return null;
+    var savedHtml = button.outerHTML;
+    var pid = String(productId);
+
+    var wrap = document.createElement("div");
+    wrap.className = "km-cart-stepper";
+    wrap.setAttribute("role", "group");
+    wrap.setAttribute("aria-label", "Количество в корзине");
+    wrap.innerHTML =
+      '<button type="button" class="km-cart-stepper__btn" data-km-dec="" aria-label="Уменьшить количество">−</button>' +
+      '<input class="km-cart-stepper__input" type="number" min="1" max="9999" step="1" value="' +
+      line.quantity +
+      '" inputmode="numeric" aria-label="Количество" />' +
+      '<button type="button" class="km-cart-stepper__btn" data-km-inc="" aria-label="Увеличить количество">+</button>';
+
+    var inp = wrap.querySelector(".km-cart-stepper__input");
+    var decBtn = wrap.querySelector("[data-km-dec]");
+    var incBtn = wrap.querySelector("[data-km-inc]");
+    var itemId = line.itemId;
+
+    function setBusy(b) {
+      wrap.setAttribute("aria-busy", b ? "true" : "false");
+      if (decBtn) decBtn.disabled = !!b;
+      if (incBtn) incBtn.disabled = !!b;
+      if (inp) inp.disabled = !!b;
+    }
+
+    function restoreButton() {
+      if (!wrap.parentNode) return;
+      var holder = document.createElement("div");
+      holder.innerHTML = savedHtml;
+      var newBtn = holder.firstElementChild;
+      if (!newBtn) return;
+      wrap.parentNode.insertBefore(newBtn, wrap);
+      wrap.parentNode.removeChild(wrap);
+      if (typeof onRestored === "function") onRestored(newBtn);
+    }
+
+    function handleCart(cart) {
+      setBusy(false);
+      var ln = findProductCartLine(cart, pid);
+      if (!ln || ln.quantity < 1) {
+        restoreButton();
+        return;
+      }
+      itemId = ln.itemId;
+      if (inp) inp.value = String(ln.quantity);
+    }
+
+    function runPatch(q) {
+      if (q < 1) return;
+      setBusy(true);
+      patchCartItem(itemId, q)
+        .then(handleCart)
+        .catch(function () {
+          setBusy(false);
+        });
+    }
+
+    decBtn.addEventListener("click", function () {
+      var q = parseInt(inp && inp.value, 10) || 1;
+      if (q > 1) {
+        runPatch(q - 1);
+      } else {
+        setBusy(true);
+        deleteCartItem(itemId)
+          .then(handleCart)
+          .catch(function () {
+            setBusy(false);
+          });
+      }
+    });
+
+    incBtn.addEventListener("click", function () {
+      var q = parseInt(inp && inp.value, 10) || 1;
+      runPatch(q + 1);
+    });
+
+    inp.addEventListener("focus", function () {
+      inp.setAttribute("data-km-prev", inp.value);
+    });
+
+    inp.addEventListener("change", function () {
+      var v = parseInt(inp.value, 10);
+      if (isNaN(v) || v < 1) {
+        inp.value = inp.getAttribute("data-km-prev") || "1";
+        return;
+      }
+      var prev = parseInt(inp.getAttribute("data-km-prev") || "1", 10) || 1;
+      if (v === prev) return;
+      setBusy(true);
+      patchCartItem(itemId, v)
+        .then(handleCart)
+        .catch(function () {
+          inp.value = String(prev);
+          setBusy(false);
+        });
+    });
+
+    button.replaceWith(wrap);
+    return wrap;
+  }
+
+  /**
+   * Для контейнера с кнопками [data-add-cart]: подставляет степпер, если товар уже в корзине.
+   * onRestoredRebind — тот же callback, что и для replaceAddButtonWithCartStepper.
+   */
+  function syncCartSteppersForContainer(root, onRestoredRebind) {
+    if (!root) return Promise.resolve(null);
+    return konturmFetchJson("/cart")
+      .then(normalizeCartPayload)
+      .then(function (cart) {
+        updateCartLinkLabel(cart.total_quantity);
+        root.querySelectorAll("[data-add-cart]").forEach(function (btn) {
+          var id = btn.getAttribute("data-add-cart");
+          if (!id) return;
+          replaceAddButtonWithCartStepper(btn, id, cart, onRestoredRebind);
+        });
+        return cart;
+      })
+      .catch(function () {
+        return null;
+      });
   }
 
   function clearCart() {
-    return konturmFetchJson("/cart", { method: "DELETE" }).then(normalizeCartPayload);
+    return konturmFetchJson("/cart", { method: "DELETE" })
+      .then(normalizeCartPayload)
+      .then(function (cart) {
+        updateCartLinkLabel(cart.total_quantity);
+        return cart;
+      });
   }
 
   var acTimer;
@@ -209,6 +385,9 @@
     setupHeaderSearchAutocomplete: setupHeaderSearchAutocomplete,
     updateCartLinkLabel: updateCartLinkLabel,
     setupMobileNav: setupMobileNav,
+    findProductCartLine: findProductCartLine,
+    replaceAddButtonWithCartStepper: replaceAddButtonWithCartStepper,
+    syncCartSteppersForContainer: syncCartSteppersForContainer,
   };
 
   function setupMobileNav() {

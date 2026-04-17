@@ -108,13 +108,23 @@
 
     mount.innerHTML = '<p class="catalog-home-loading">Загрузка…</p>';
 
-    K.fetchJson("/products/by-slug/" + encodeURIComponent(slug))
-      .then(unwrapProduct)
-      .then(function (p) {
+    Promise.all([
+      K.fetchJson("/products/by-slug/" + encodeURIComponent(slug)).then(unwrapProduct),
+      K.fetchJson("/cart")
+        .then(K.normalizeCartPayload)
+        .catch(function () {
+          return { items: [], total_quantity: 0, total_amount: 0 };
+        }),
+    ])
+      .then(function (pair) {
+        var p = pair[0];
+        var cart = pair[1];
         if (!p) {
           mount.innerHTML = '<p class="catalog-home-loading">Товар не найден</p>';
           return;
         }
+
+        K.updateCartLinkLabel(cart.total_quantity);
 
         document.title = (p.name || "Товар") + " — Контур-М";
 
@@ -254,25 +264,44 @@
           });
         }
 
-        /* Cart button */
-        var cartBtn = document.getElementById("pd-cart-btn");
-        if (cartBtn) {
-          cartBtn.addEventListener("click", function () {
-            var id = cartBtn.getAttribute("data-pid");
+        var qtyWrapEl = mount.querySelector(".pd__qty-wrap");
+
+        function bindPdCartButton(btn) {
+          if (!btn) return;
+          btn.addEventListener("click", function () {
+            var id = btn.getAttribute("data-pid");
             var qty = qtyInput ? Math.max(1, parseInt(qtyInput.value, 10) || 1) : 1;
-            cartBtn.disabled = true;
-            var origHtml = cartBtn.innerHTML;
-            cartBtn.innerHTML = buildCartIcon() + "<span>Добавляем…</span>";
+            btn.disabled = true;
+            btn.innerHTML = buildCartIcon() + "<span>Добавляем…</span>";
             K.addProductToCart(id, qty)
-              .catch(function () {})
-              .then(function () {
-                cartBtn.innerHTML = buildCartIcon() + "<span>Добавлено!</span>";
-                setTimeout(function () {
-                  cartBtn.innerHTML = origHtml;
-                  cartBtn.disabled = false;
-                }, 1800);
+              .then(function (cart) {
+                btn.disabled = false;
+                var step = K.replaceAddButtonWithCartStepper(btn, id, cart, function (newBtn) {
+                  if (qtyWrapEl) qtyWrapEl.style.display = "";
+                  bindPdCartButton(newBtn);
+                });
+                if (step && qtyWrapEl) qtyWrapEl.style.display = "none";
+              })
+              .catch(function () {
+                btn.disabled = false;
+                btn.innerHTML = buildCartIcon() + "<span>В корзину</span>";
               });
           });
+        }
+
+        var cartBtn = document.getElementById("pd-cart-btn");
+        bindPdCartButton(cartBtn);
+
+        var lineInCart = K.findProductCartLine(cart, p.id);
+        if (lineInCart && lineInCart.quantity >= 1) {
+          var b0 = document.getElementById("pd-cart-btn");
+          if (b0) {
+            var step0 = K.replaceAddButtonWithCartStepper(b0, p.id, cart, function (newBtn) {
+              if (qtyWrapEl) qtyWrapEl.style.display = "";
+              bindPdCartButton(newBtn);
+            });
+            if (step0 && qtyWrapEl) qtyWrapEl.style.display = "none";
+          }
         }
       })
       .catch(function () {

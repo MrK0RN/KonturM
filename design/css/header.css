@@ -225,12 +225,43 @@ body {
 }
 
 .site-header__cart {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 4px;
   text-decoration: none;
   outline-offset: 2px;
+}
+
+.site-header__cart-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: #de6814;
+  color: var(--color-white);
+  font-weight: 700;
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.site-header__drawer-cart-icon-wrap {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.site-header__drawer-cart .site-header__cart-badge {
+  top: -4px;
+  right: -6px;
 }
 
 .site-header__cart:focus-visible {

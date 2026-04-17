@@ -577,6 +577,7 @@ function buildNav() {
 }
 
 function goSection(id) {
+  ensureCertificatesCatalogView();
   if (id !== "login" && id !== "api-playground" && !state.token) {
     id = "login";
   }
@@ -598,7 +599,7 @@ function goSection(id) {
   document.getElementById("view-site-contacts").classList.add("hidden");
   document.getElementById("view-price-list").classList.add("hidden");
   document.getElementById("view-visit-stats").classList.add("hidden");
-  document.getElementById("view-certificates-catalog")?.classList.add("hidden");
+  document.getElementById("view-certificates-catalog").classList.add("hidden");
 
   if (id === "login") {
     document.getElementById("view-login").classList.remove("hidden");
@@ -644,7 +645,7 @@ function goSection(id) {
   }
   if (id === "certificates_catalog") {
     state.orderDetailId = null;
-    document.getElementById("view-certificates-catalog")?.classList.remove("hidden");
+    document.getElementById("view-certificates-catalog").classList.remove("hidden");
     void loadCertificatesCatalogSection();
     return;
   }
@@ -1355,6 +1356,12 @@ function readFormPayload(form, schemaKey, isCreate) {
           throw new Error(`Некорректный JSON в поле «${f.label}»`);
         }
       }
+      continue;
+    }
+    // DECIMAL в БД не принимает ""; пустое значение должно быть null
+    if (f.key === "price" || f.key === "total_amount") {
+      const t = String(val).trim();
+      payload[f.key] = t === "" ? null : t;
       continue;
     }
     if (f.key === "parent_id" && val.trim() === "") {
@@ -2107,6 +2114,34 @@ async function loadCertificatesCatalogSection() {
       errEl.classList.remove("hidden");
     }
   }
+}
+
+/**
+ * Если на сервере старый index.html без блока — вставляем разметку, иначе панель не показывается и обработчики не цепляются.
+ */
+function ensureCertificatesCatalogView() {
+  if (document.getElementById("view-certificates-catalog")) {
+    return;
+  }
+  const login = document.getElementById("view-login");
+  const main = login?.parentElement;
+  if (!main) {
+    return;
+  }
+  const section = document.createElement("section");
+  section.id = "view-certificates-catalog";
+  section.className = "view hidden";
+  section.innerHTML = `<p class="muted intro-text">
+          Разделы и PDF на странице <code>/certificates</code>. Файлы сохраняются в каталог <code>documents/</code> рядом с API; ссылки на сайте ведут на <code>/documents/…</code>.
+        </p>
+        <div id="cc-missing" class="card cc-missing-card hidden" aria-live="polite"></div>
+        <div id="cc-groups" class="cc-groups"></div>
+        <div class="toolbar cc-toolbar">
+          <button type="button" id="cc-add-group" class="btn">Добавить раздел</button>
+          <button type="button" id="cc-save" class="btn btn-primary">Сохранить</button>
+        </div>
+        <p id="cc-error" class="error hidden"></p>`;
+  main.insertBefore(section, login);
 }
 
 async function loadPriceListSection() {
@@ -3044,6 +3079,8 @@ async function runApiPreset() {
 
 /* ——— Login & boot ——— */
 
+ensureCertificatesCatalogView();
+
 document.getElementById("form-login").addEventListener("submit", async (ev) => {
   ev.preventDefault();
   const fd = new FormData(ev.target);
@@ -3119,13 +3156,13 @@ document.getElementById("pl-reset")?.addEventListener("click", async () => {
   }
 });
 
-document.getElementById("cc-add-group")?.addEventListener("click", () => {
+document.getElementById("cc-add-group").addEventListener("click", () => {
   const groups = collectCcCatalogFromDom().groups;
   groups.push({ id: newCcId("g"), title: "Новый раздел", items: [] });
   renderCcFromGroups(groups);
 });
 
-document.getElementById("cc-save")?.addEventListener("click", async () => {
+document.getElementById("cc-save").addEventListener("click", async () => {
   const errEl = document.getElementById("cc-error");
   errEl?.classList.add("hidden");
   const body = collectCcCatalogFromDom();
@@ -3138,7 +3175,7 @@ document.getElementById("cc-save")?.addEventListener("click", async () => {
   }
 });
 
-document.getElementById("view-certificates-catalog")?.addEventListener("click", (e) => {
+document.getElementById("view-certificates-catalog").addEventListener("click", (e) => {
   const t = e.target;
   if (!(t instanceof HTMLElement)) return;
   if (t.classList.contains("cc-upload")) {
@@ -3229,7 +3266,7 @@ document.getElementById("view-certificates-catalog")?.addEventListener("click", 
   }
 });
 
-document.getElementById("view-certificates-catalog")?.addEventListener("change", async (e) => {
+document.getElementById("view-certificates-catalog").addEventListener("change", async (e) => {
   const t = e.target;
   if (!(t instanceof HTMLInputElement) || !t.classList.contains("cc-file")) return;
   const gi = parseInt(t.dataset.gi ?? "0", 10);

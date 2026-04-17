@@ -258,7 +258,11 @@ class Product
 
     public function setPrice(?string $price): self
     {
-        $this->price = $price;
+        if ($price === null || trim($price) === '') {
+            $this->price = null;
+        } else {
+            $this->price = $price;
+        }
 
         return $this;
     }

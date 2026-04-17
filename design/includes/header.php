@@ -76,6 +76,7 @@ $c = konturm_site_contacts();
             alt=""
             decoding="async"
           />
+          <span class="site-header__cart-badge" hidden aria-hidden="true"></span>
         </a>
       </div>
 
@@ -206,10 +207,13 @@ $c = konturm_site_contacts();
       <a class="site-header__drawer-cta" href="/price-list.xlsx" download="прайс Контур-М апрель 2026.xlsx">
         Скачать прайс-лист
       </a>
-      <a class="site-header__drawer-cart" href="/cart">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" width="22" height="22">
-          <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+      <a class="site-header__drawer-cart" href="/cart" aria-label="Корзина">
+        <span class="site-header__drawer-cart-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" width="22" height="22">
+            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="site-header__cart-badge" hidden aria-hidden="true"></span>
+        </span>
         Корзина
       </a>
     </div>
