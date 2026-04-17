@@ -1,19 +1,44 @@
-# Пример для боевого домена: положите как Caddyfile и пересоберите Caddy.
-# Caddy сам получит сертификат Let's Encrypt (нужны открытые 80/443 и DNS на этот сервер).
+# Боевой домен + Let's Encrypt (Caddy запрашивает сертификат сам, по умолчанию ACME / Let's Encrypt).
 #
-# www.example.com {
+# Перед запуском на сервере:
+#   • DNS: A (и при необходимости AAAA) вашего домена → публичный IP этой машины;
+#   • снаружи доступны TCP 80 и 443 (фаервол, security groups);
+#   • в docker-compose том ./docker/caddy/Caddyfile смонтирован как сейчас — сертификаты хранятся в volume caddy_data.
+#
+# Скопируйте содержимое в docker/caddy/Caddyfile (или замените файл), подставьте домен и email, затем:
+#   docker compose up -d caddy
+#
+# Для публичного имени не указывайте tls internal — Caddy включит автоматический HTTPS (Let's Encrypt).
+#
+# --- Раскомментируйте и замените example.com / email на свои: ---
+#
+# {
+# 	email your-email@example.com
+# }
+#
+# example.com, www.example.com {
 # 	encode gzip zstd
 # 	reverse_proxy app:8000 {
 # 		header_up Host {host}
 # 		header_up X-Forwarded-Proto {scheme}
 # 		header_up X-Forwarded-For {remote_host}
 # 		header_up X-Forwarded-Host {host}
-# 		header_up X-Forwarded-Port {server_port}
 # 	}
 # }
 #
-# Или свои PEM-файлы:
+# Только редирект www → apex (тогда в первом блоке оставьте одно имя example.com):
 # www.example.com {
+# 	redir https://example.com{uri} permanent
+# }
+#
+# Свой PEM вместо Let's Encrypt:
+# example.com {
 # 	tls /etc/certs/fullchain.pem /etc/certs/privkey.pem
-# 	...
+# 	encode gzip zstd
+# 	reverse_proxy app:8000 {
+# 		header_up Host {host}
+# 		header_up X-Forwarded-Proto {scheme}
+# 		header_up X-Forwarded-For {remote_host}
+# 		header_up X-Forwarded-Host {host}
+# 	}
 # }
