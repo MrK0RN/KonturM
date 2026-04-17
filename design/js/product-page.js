@@ -118,6 +118,10 @@
 
         document.title = (p.name || "Товар") + " — Контур-М";
 
+        var kc = window.__KONTURM_CONTACTS__ || {};
+        var phoneMainHref = String(kc.phone_main_href || "tel:+78432023170");
+        var phoneMainLabel = String(kc.phone_main_label || "+7 (843) 202-31-70");
+
         var PLACEHOLDER = "/design/assets/figma/e7a2477a-3b7f-4aec-ab4f-a7dbf2597787.png";
         var photos = Array.isArray(p.photos) && p.photos.length ? p.photos : null;
         var mainImg = (photos && photos[0] ? K.mediaUrl(photos[0].url) : null)
@@ -176,7 +180,11 @@
         var contactHtml =
           '<div class="pd__contact">' +
           buildPhoneIcon() +
-          '<span>Нужна консультация? <a href="tel:+79785654997">+7 978 565-49-97</a></span>' +
+          '<span>Нужна консультация? <a href="' +
+          esc(phoneMainHref) +
+          '">' +
+          esc(phoneMainLabel) +
+          "</a></span>" +
           "</div>";
 
         var specsHtml = buildSpecsHtml(ts);

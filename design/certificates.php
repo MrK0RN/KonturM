@@ -16,25 +16,33 @@ $certFullTitle = static function (string $filename): string {
     return (string) preg_replace('/\s+/u', ' ', trim($base));
 };
 
-$groups = [
-    [
-        'title' => 'Сертификаты об утверждении типа средств измерений',
-        'items' => [
-            ['file' => 'Сертификат   ОТ Мерники М1Р.pdf'],
-            ['file' => 'Сертификат   ОТ Мерники М2Р.pdf'],
-            ['file' => 'Сертификат   ОТ Метроштоки МШС.pdf'],
-            ['file' => 'Сертификат   ОТ Технические мерники.pdf'],
-            ['file' => 'Сертификат   ОТ на Рулетки Р.pdf'],
+/** @var array{groups?: list<array<string, mixed>>}|null */
+$cc = $GLOBALS['KONTURM_CERTIFICATES_CATALOG'] ?? null;
+$groups = null;
+if (is_array($cc) && isset($cc['groups']) && is_array($cc['groups']) && $cc['groups'] !== []) {
+    $groups = $cc['groups'];
+}
+if ($groups === null) {
+    $groups = [
+        [
+            'title' => 'Сертификаты об утверждении типа средств измерений',
+            'items' => [
+                ['file' => 'Сертификат   ОТ Мерники М1Р.pdf'],
+                ['file' => 'Сертификат   ОТ Мерники М2Р.pdf'],
+                ['file' => 'Сертификат   ОТ Метроштоки МШС.pdf'],
+                ['file' => 'Сертификат   ОТ Технические мерники.pdf'],
+                ['file' => 'Сертификат   ОТ на Рулетки Р.pdf'],
+            ],
         ],
-    ],
-    [
-        'title' => 'Пасты-индикаторы',
-        'items' => [
-            ['file' => 'Сертификат Водочувствительная паста.pdf'],
-            ['file' => 'Титульный Лист ТУ на пасту Акватест.pdf'],
+        [
+            'title' => 'Пасты-индикаторы',
+            'items' => [
+                ['file' => 'Сертификат Водочувствительная паста.pdf'],
+                ['file' => 'Титульный Лист ТУ на пасту Акватест.pdf'],
+            ],
         ],
-    ],
-];
+    ];
+}
 ?>
 <!DOCTYPE html>
 <html lang="ru">
@@ -77,7 +85,11 @@ $groups = [
               <ul class="certs-grid" role="list">
                 <?php foreach ($group['items'] as $doc): ?>
                   <?php
-                    $fullTitle = $certFullTitle($doc['file']);
+                    $file = isset($doc['filename']) && is_string($doc['filename']) && $doc['filename'] !== ''
+                      ? $doc['filename']
+                      : (isset($doc['file']) && is_string($doc['file']) ? $doc['file'] : '');
+                    $customLabel = isset($doc['label']) && is_string($doc['label']) ? trim($doc['label']) : '';
+                    $fullTitle = $customLabel !== '' ? $customLabel : $certFullTitle($file);
                   ?>
                   <li>
                     <article class="cert-card">
@@ -96,7 +108,7 @@ $groups = [
                       </div>
                       <a
                         class="cert-card__download"
-                        href="<?= $docUrl($doc['file']) ?>"
+                        href="<?= $docUrl($file) ?>"
                         target="_blank"
                         rel="noopener"
                         aria-label="Открыть PDF — <?= htmlspecialchars($fullTitle, ENT_QUOTES, 'UTF-8') ?>"

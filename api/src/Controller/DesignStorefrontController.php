@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Service\CertificatesCatalogService;
 use App\Service\SiteContactsService;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,6 +23,7 @@ final class DesignStorefrontController
         #[Autowire('%kernel.project_dir%')]
         private readonly string $projectDir,
         private readonly SiteContactsService $siteContacts,
+        private readonly CertificatesCatalogService $certificatesCatalog,
     ) {
     }
 
@@ -54,16 +56,27 @@ final class DesignStorefrontController
         $GLOBALS['KONTURM_DESIGN_BASE'] = rtrim($this->designUrlPrefix($request), '/');
         $GLOBALS['KONTURM_REQUEST_BASE_PATH'] = rtrim($request->getBasePath(), '/');
         $GLOBALS['KONTURM_SITE_CONTACTS'] = $this->siteContacts->getContacts();
+        $GLOBALS['KONTURM_CERTIFICATES_CATALOG'] = $this->certificatesCatalog->getCatalog();
         ob_start();
         try {
             include $real;
         } catch (\Throwable $e) {
             ob_end_clean();
-            unset($GLOBALS['KONTURM_DESIGN_BASE'], $GLOBALS['KONTURM_REQUEST_BASE_PATH'], $GLOBALS['KONTURM_SITE_CONTACTS']);
+            unset(
+                $GLOBALS['KONTURM_DESIGN_BASE'],
+                $GLOBALS['KONTURM_REQUEST_BASE_PATH'],
+                $GLOBALS['KONTURM_SITE_CONTACTS'],
+                $GLOBALS['KONTURM_CERTIFICATES_CATALOG'],
+            );
             throw $e;
         }
         $html = ob_get_clean();
-        unset($GLOBALS['KONTURM_DESIGN_BASE'], $GLOBALS['KONTURM_REQUEST_BASE_PATH'], $GLOBALS['KONTURM_SITE_CONTACTS']);
+        unset(
+            $GLOBALS['KONTURM_DESIGN_BASE'],
+            $GLOBALS['KONTURM_REQUEST_BASE_PATH'],
+            $GLOBALS['KONTURM_SITE_CONTACTS'],
+            $GLOBALS['KONTURM_CERTIFICATES_CATALOG'],
+        );
 
         return new Response($html, Response::HTTP_OK, [
             'Content-Type' => 'text/html; charset=UTF-8',

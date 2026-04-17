@@ -61,6 +61,7 @@ security:
         - { path: ^/api/search, roles: PUBLIC_ACCESS }
         - { path: ^/api/seo, roles: PUBLIC_ACCESS }
         - { path: ^/api/site-contacts$, roles: PUBLIC_ACCESS, methods: [GET] }
+        - { path: ^/api/certificates-catalog$, roles: PUBLIC_ACCESS, methods: [GET] }
         - { path: ^/api/admin, roles: ROLE_ADMIN }
         - { path: ^/api/orders, roles: ROLE_ADMIN }
 

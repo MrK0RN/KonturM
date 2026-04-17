@@ -45,6 +45,15 @@ final class SearchController
         $minPrice = $request->query->get('min_price');
         $maxPrice = $request->query->get('max_price');
 
+        $sort = strtolower(trim((string) $request->query->get('sort', 'relevance')));
+        $order = strtolower(trim((string) $request->query->get('order', 'desc')));
+        if (!in_array($sort, ['relevance', 'price', 'name', 'created_at'], true)) {
+            throw new BadRequestHttpException('Invalid "sort".');
+        }
+        if (!in_array($order, ['asc', 'desc'], true)) {
+            throw new BadRequestHttpException('Invalid "order".');
+        }
+
         return $this->searchService->search(
             q: $q,
             type: $type,
@@ -53,6 +62,8 @@ final class SearchController
             filters: $filters,
             minPrice: $minPrice !== null ? (string) $minPrice : null,
             maxPrice: $maxPrice !== null ? (string) $maxPrice : null,
+            sort: $sort,
+            order: $order,
         );
     }
 }

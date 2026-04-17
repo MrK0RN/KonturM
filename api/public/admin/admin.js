@@ -531,6 +531,13 @@ function updateAuthUi() {
 
 const SECTIONS = [
   { id: "site_contacts", title: "Контакты сайта", type: "site_contacts", admin: true, group: "Витрина" },
+  {
+    id: "certificates_catalog",
+    title: "Сертификаты и документы",
+    type: "certificates_catalog",
+    admin: true,
+    group: "Витрина",
+  },
   { id: "price_list", title: "Прайс-лист", type: "price_list", admin: true, group: "Витрина" },
   { id: "visit_stats", title: "Статистика посещений", type: "visit_stats", admin: true, group: "Витрина" },
   { id: "categories", title: "Категории", type: "crud", resource: "/categories", admin: true, group: "Каталог" },
@@ -591,6 +598,7 @@ function goSection(id) {
   document.getElementById("view-site-contacts").classList.add("hidden");
   document.getElementById("view-price-list").classList.add("hidden");
   document.getElementById("view-visit-stats").classList.add("hidden");
+  document.getElementById("view-certificates-catalog").classList.add("hidden");
 
   if (id === "login") {
     document.getElementById("view-login").classList.remove("hidden");
@@ -632,6 +640,12 @@ function goSection(id) {
     state.orderDetailId = null;
     document.getElementById("view-visit-stats").classList.remove("hidden");
     void loadVisitStats();
+    return;
+  }
+  if (id === "certificates_catalog") {
+    state.orderDetailId = null;
+    document.getElementById("view-certificates-catalog").classList.remove("hidden");
+    void loadCertificatesCatalogSection();
     return;
   }
   state.orderDetailId = null;
@@ -1914,6 +1928,187 @@ function formatBytes(n) {
   return `${(v / (1024 * 1024)).toFixed(1)} МБ`;
 }
 
+/** Сертификаты: разделы и PDF на /certificates */
+let ccCatalogSnapshot = { groups: [], serverFiles: [] };
+
+function newCcId(prefix) {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return `${prefix}-${crypto.randomUUID()}`;
+  }
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+}
+
+function ccDocHref(filename) {
+  return `/documents/${encodeURIComponent(filename)}`;
+}
+
+function collectCcCatalogFromDom() {
+  const root = document.getElementById("cc-groups");
+  if (!root) {
+    return { groups: [] };
+  }
+  const groups = [];
+  root.querySelectorAll(".cc-group").forEach((card) => {
+    const gidEl = card.querySelector(".cc-group-id");
+    const gid = gidEl instanceof HTMLInputElement ? gidEl.value.trim() : "";
+    const titleInp = card.querySelector(".cc-group-title");
+    const title = titleInp instanceof HTMLInputElement ? titleInp.value : "";
+    const items = [];
+    card.querySelectorAll(".cc-item").forEach((row) => {
+      const iidEl = row.querySelector(".cc-item-id");
+      const iid = iidEl instanceof HTMLInputElement ? iidEl.value.trim() : "";
+      const fnEl = row.querySelector(".cc-item-filename");
+      const fn = fnEl ? fnEl.textContent.trim() : "";
+      const labelInp = row.querySelector(".cc-item-label");
+      let label = null;
+      if (labelInp instanceof HTMLInputElement) {
+        const t = labelInp.value.trim();
+        label = t === "" ? null : t;
+      }
+      if (fn) {
+        items.push({ id: iid || newCcId("i"), filename: fn, label });
+      }
+    });
+    groups.push({ id: gid || newCcId("g"), title, items });
+  });
+  return { groups };
+}
+
+function computeCcMissing(groups, files) {
+  const set = new Set(files);
+  const m = [];
+  for (const g of groups) {
+    for (const it of g.items || []) {
+      if (it.filename && !set.has(it.filename)) {
+        m.push(it.filename);
+      }
+    }
+  }
+  return [...new Set(m)];
+}
+
+function renderCcPickOptions(serverFiles, usedInGroup) {
+  const used = new Set(usedInGroup);
+  const opts = ['<option value="">— выберите PDF —</option>'];
+  for (const f of serverFiles) {
+    if (!used.has(f)) {
+      opts.push(`<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`);
+    }
+  }
+  return opts.join("");
+}
+
+function renderCertificatesCatalogEditor(data) {
+  const root = document.getElementById("cc-groups");
+  const miss = document.getElementById("cc-missing");
+  const serverFiles = Array.isArray(data.files) ? data.files : [];
+  const missing = Array.isArray(data.missing_files) ? data.missing_files : [];
+  if (!root || !miss) {
+    return;
+  }
+  const groups = Array.isArray(data.groups) ? data.groups : [];
+  ccCatalogSnapshot = {
+    groups: JSON.parse(JSON.stringify(groups)),
+    serverFiles: [...serverFiles],
+  };
+
+  if (missing.length === 0) {
+    miss.classList.add("hidden");
+    miss.innerHTML = "";
+  } else {
+    miss.classList.remove("hidden");
+    miss.innerHTML = `<p class="card-title">Файлы не найдены на сервере</p><p class="muted small">Имена есть в каталоге, но в папке <code>documents/</code> таких PDF нет. Загрузите файлы или удалите пункты.</p><ul class="cc-miss-list">${missing.map((f) => `<li><code>${escapeHtml(f)}</code></li>`).join("")}</ul>`;
+  }
+
+  root.innerHTML = groups
+    .map((g, gi) => {
+      const items = Array.isArray(g.items) ? g.items : [];
+      const usedInGroup = items.map((it) => it.filename).filter(Boolean);
+      const itemRows = items
+        .map((it, ii) => {
+          const fn = it.filename || "";
+          const iid = it.id || newCcId("i");
+          const label = it.label == null ? "" : String(it.label);
+          return `<li class="cc-item">
+            <input type="hidden" class="cc-item-id" value="${escapeHtml(iid)}" />
+            <div class="cc-item-main">
+              <label class="cc-item-label-wrap">Подпись на карточке
+                <input type="text" class="cc-item-label" placeholder="По умолчанию из имени файла" value="${escapeHtml(label)}" />
+              </label>
+              <div class="cc-item-fileline">
+                <code class="cc-item-filename">${escapeHtml(fn)}</code>
+                <a class="btn btn-ghost" href="${escapeHtml(ccDocHref(fn))}" target="_blank" rel="noopener">Открыть</a>
+                <button type="button" class="btn btn-ghost cc-item-up" data-gi="${gi}" data-ii="${ii}">↑</button>
+                <button type="button" class="btn btn-ghost cc-item-down" data-gi="${gi}" data-ii="${ii}">↓</button>
+                <button type="button" class="btn btn-ghost cc-item-del" data-gi="${gi}" data-ii="${ii}">Удалить</button>
+              </div>
+            </div>
+          </li>`;
+        })
+        .join("");
+      const gid = g.id || newCcId("g");
+      const pickOpts = renderCcPickOptions(serverFiles, usedInGroup);
+      return `<div class="cc-group card" data-gi="${gi}">
+        <input type="hidden" class="cc-group-id" value="${escapeHtml(gid)}" />
+        <div class="cc-group-head">
+          <label class="cc-group-title-wrap">Название раздела
+            <input type="text" class="cc-group-title" value="${escapeHtml(g.title || "")}" />
+          </label>
+          <div class="cc-group-actions">
+            <button type="button" class="btn btn-ghost cc-g-up" data-gi="${gi}">Раздел ↑</button>
+            <button type="button" class="btn btn-ghost cc-g-down" data-gi="${gi}">Раздел ↓</button>
+            <button type="button" class="btn btn-ghost cc-g-del" data-gi="${gi}">Удалить раздел</button>
+          </div>
+        </div>
+        <ul class="cc-items">${itemRows}</ul>
+        <div class="cc-group-foot">
+          <button type="button" class="btn cc-upload" data-gi="${gi}">Загрузить PDF…</button>
+          <input type="file" accept="application/pdf,.pdf" class="hidden cc-file" data-gi="${gi}" />
+          <label class="cc-pick-wrap">Добавить с сервера
+            <select class="cc-pick" data-gi="${gi}">${pickOpts}</select>
+          </label>
+          <button type="button" class="btn cc-add-pick" data-gi="${gi}">Добавить</button>
+        </div>
+      </div>`;
+    })
+    .join("");
+}
+
+function renderCcFromGroups(groups) {
+  renderCertificatesCatalogEditor({
+    groups,
+    files: ccCatalogSnapshot.serverFiles || [],
+    missing_files: computeCcMissing(groups, ccCatalogSnapshot.serverFiles || []),
+  });
+}
+
+async function loadCertificatesCatalogSection() {
+  const errEl = document.getElementById("cc-error");
+  if (errEl) {
+    errEl.classList.add("hidden");
+    errEl.textContent = "";
+  }
+  const root = document.getElementById("cc-groups");
+  if (root) {
+    root.innerHTML = "<p class=\"muted\">Загрузка…</p>";
+  }
+  try {
+    const data = await apiFetch("/admin/certificates-catalog");
+    renderCertificatesCatalogEditor(data);
+  } catch (e) {
+    if (e.sessionEnded) {
+      return;
+    }
+    if (root) {
+      root.innerHTML = "";
+    }
+    if (errEl) {
+      errEl.textContent = e.message || String(e);
+      errEl.classList.remove("hidden");
+    }
+  }
+}
+
 async function loadPriceListSection() {
   const box = document.getElementById("pl-status");
   const errEl = document.getElementById("pl-error");
@@ -2921,6 +3116,140 @@ document.getElementById("pl-reset")?.addEventListener("click", async () => {
     await loadPriceListSection();
   } catch (e) {
     notifyApiError(e);
+  }
+});
+
+document.getElementById("cc-add-group")?.addEventListener("click", () => {
+  const groups = collectCcCatalogFromDom().groups;
+  groups.push({ id: newCcId("g"), title: "Новый раздел", items: [] });
+  renderCcFromGroups(groups);
+});
+
+document.getElementById("cc-save")?.addEventListener("click", async () => {
+  const errEl = document.getElementById("cc-error");
+  errEl?.classList.add("hidden");
+  const body = collectCcCatalogFromDom();
+  try {
+    await apiFetch("/admin/certificates-catalog", { method: "PUT", body: JSON.stringify(body) });
+    alert("Сохранено");
+    await loadCertificatesCatalogSection();
+  } catch (e) {
+    notifyApiError(e);
+  }
+});
+
+document.getElementById("view-certificates-catalog")?.addEventListener("click", (e) => {
+  const t = e.target;
+  if (!(t instanceof HTMLElement)) return;
+  if (t.classList.contains("cc-upload")) {
+    const gi = t.dataset.gi;
+    const inp = document.querySelector(`#cc-groups input.cc-file[data-gi="${gi}"]`);
+    inp?.click();
+    return;
+  }
+  if (t.classList.contains("cc-g-up")) {
+    const gi = parseInt(t.dataset.gi ?? "0", 10);
+    const groups = collectCcCatalogFromDom().groups;
+    if (gi > 0 && gi < groups.length) {
+      const a = groups[gi - 1];
+      groups[gi - 1] = groups[gi];
+      groups[gi] = a;
+      renderCcFromGroups(groups);
+    }
+    return;
+  }
+  if (t.classList.contains("cc-g-down")) {
+    const gi = parseInt(t.dataset.gi ?? "0", 10);
+    const groups = collectCcCatalogFromDom().groups;
+    if (gi >= 0 && gi < groups.length - 1) {
+      const a = groups[gi];
+      groups[gi] = groups[gi + 1];
+      groups[gi + 1] = a;
+      renderCcFromGroups(groups);
+    }
+    return;
+  }
+  if (t.classList.contains("cc-g-del")) {
+    if (!window.confirm("Удалить этот раздел и все документы в нём из каталога? Файлы на диске не удаляются.")) {
+      return;
+    }
+    const gi = parseInt(t.dataset.gi ?? "0", 10);
+    const groups = collectCcCatalogFromDom().groups;
+    groups.splice(gi, 1);
+    renderCcFromGroups(groups);
+    return;
+  }
+  if (t.classList.contains("cc-item-up")) {
+    const gi = parseInt(t.dataset.gi ?? "0", 10);
+    const ii = parseInt(t.dataset.ii ?? "0", 10);
+    const groups = collectCcCatalogFromDom().groups;
+    const items = groups[gi]?.items;
+    if (!items || ii <= 0 || ii >= items.length) return;
+    const a = items[ii - 1];
+    items[ii - 1] = items[ii];
+    items[ii] = a;
+    renderCcFromGroups(groups);
+    return;
+  }
+  if (t.classList.contains("cc-item-down")) {
+    const gi = parseInt(t.dataset.gi ?? "0", 10);
+    const ii = parseInt(t.dataset.ii ?? "0", 10);
+    const groups = collectCcCatalogFromDom().groups;
+    const items = groups[gi]?.items;
+    if (!items || ii < 0 || ii >= items.length - 1) return;
+    const a = items[ii];
+    items[ii] = items[ii + 1];
+    items[ii + 1] = a;
+    renderCcFromGroups(groups);
+    return;
+  }
+  if (t.classList.contains("cc-item-del")) {
+    const gi = parseInt(t.dataset.gi ?? "0", 10);
+    const ii = parseInt(t.dataset.ii ?? "0", 10);
+    const groups = collectCcCatalogFromDom().groups;
+    const items = groups[gi]?.items;
+    if (!items) return;
+    items.splice(ii, 1);
+    renderCcFromGroups(groups);
+    return;
+  }
+  if (t.classList.contains("cc-add-pick")) {
+    const gi = parseInt(t.dataset.gi ?? "0", 10);
+    const sel = document.querySelector(`#cc-groups select.cc-pick[data-gi="${gi}"]`);
+    if (!(sel instanceof HTMLSelectElement)) return;
+    const fn = sel.value.trim();
+    if (!fn) {
+      alert("Выберите PDF из списка.");
+      return;
+    }
+    const groups = collectCcCatalogFromDom().groups;
+    if (!groups[gi]) return;
+    groups[gi].items.push({ id: newCcId("i"), filename: fn, label: null });
+    renderCcFromGroups(groups);
+  }
+});
+
+document.getElementById("view-certificates-catalog")?.addEventListener("change", async (e) => {
+  const t = e.target;
+  if (!(t instanceof HTMLInputElement) || !t.classList.contains("cc-file")) return;
+  const gi = parseInt(t.dataset.gi ?? "0", 10);
+  if (!t.files?.length) return;
+  const fd = new FormData();
+  fd.append("file", t.files[0]);
+  t.value = "";
+  try {
+    const info = await apiUploadFormData("/admin/certificates-catalog/upload", fd);
+    const fn = info.filename;
+    if (!fn) throw new Error("Нет имени файла в ответе");
+    const groups = collectCcCatalogFromDom().groups;
+    if (!groups[gi]) return;
+    groups[gi].items.push({ id: newCcId("i"), filename: fn, label: null });
+    ccCatalogSnapshot.serverFiles = [...new Set([...(ccCatalogSnapshot.serverFiles || []), fn])].sort((a, b) =>
+      a.localeCompare(b, "ru"),
+    );
+    renderCcFromGroups(groups);
+  } catch (err) {
+    notifyApiError(err);
   }
 });
 

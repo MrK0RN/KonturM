@@ -9,6 +9,15 @@
   justify-content: start;
 }
 
+/* Поиск: четыре карточки в ряд (ширина ячеек делится поровну) */
+.cat2-grid--4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.cat2-grid--4 .cat2-card {
+  max-width: none;
+}
+
 /* ── Card ────────────────────────────────────────────────────────── */
 
 .cat2-card {

@@ -97,6 +97,18 @@
           </div>
         </div>
       </section>
+      <section id="view-certificates-catalog" class="view hidden">
+        <p class="muted intro-text">
+          Разделы и PDF на странице <code>/certificates</code>. Файлы сохраняются в каталог <code>documents/</code> рядом с API; ссылки на сайте ведут на <code>/documents/…</code>.
+        </p>
+        <div id="cc-missing" class="card cc-missing-card hidden" aria-live="polite"></div>
+        <div id="cc-groups" class="cc-groups"></div>
+        <div class="toolbar cc-toolbar">
+          <button type="button" id="cc-add-group" class="btn">Добавить раздел</button>
+          <button type="button" id="cc-save" class="btn btn-primary">Сохранить</button>
+        </div>
+        <p id="cc-error" class="error hidden"></p>
+      </section>
       <section id="view-login" class="view">
         <form id="form-login" class="card form-narrow">
           <label>Логин <input name="username" type="text" autocomplete="username" required /></label>
