@@ -530,6 +530,7 @@ function updateAuthUi() {
 /* ——— Navigation ——— */
 
 const SECTIONS = [
+  { id: "dashboard", title: "Дашборд", type: "dashboard", admin: true, group: "Обзор" },
   { id: "site_contacts", title: "Контакты сайта", type: "site_contacts", admin: true, group: "Витрина" },
   {
     id: "certificates_catalog",
@@ -600,6 +601,7 @@ function goSection(id) {
   document.getElementById("view-price-list").classList.add("hidden");
   document.getElementById("view-visit-stats").classList.add("hidden");
   document.getElementById("view-certificates-catalog").classList.add("hidden");
+  document.getElementById("view-dashboard").classList.add("hidden");
 
   if (id === "login") {
     document.getElementById("view-login").classList.remove("hidden");
@@ -608,6 +610,12 @@ function goSection(id) {
   }
   if (id === "api-playground") {
     document.getElementById("view-api").classList.remove("hidden");
+    return;
+  }
+  if (id === "dashboard") {
+    state.orderDetailId = null;
+    document.getElementById("view-dashboard").classList.remove("hidden");
+    void loadDashboard();
     return;
   }
   if (id === "favorites") {
@@ -750,7 +758,7 @@ const CRUD_SCHEMA = {
       { key: "customer_company", label: "Компания", type: "text" },
       { key: "customer_phone", label: "Телефон", type: "text", required: true },
       { key: "customer_email", label: "Email", type: "text", required: true },
-      { key: "items", label: "Позиции (JSON)", type: "json", required: true },
+      { key: "items", label: "Позиции", type: "order_items", required: true },
       { key: "attachments", label: "Вложения (JSON)", type: "json" },
       { key: "comment", label: "Комментарий", type: "textarea" },
       { key: "total_amount", label: "Сумма", type: "text" },
@@ -1297,6 +1305,21 @@ function buildFormFields(schemaKey, entity, isCreate) {
       input.type = "number";
       input.name = f.key;
       if (entity && entity[f.key] !== undefined) input.value = entity[f.key];
+    } else if (f.type === "order_items") {
+      const preview = document.createElement("div");
+      preview.innerHTML = renderOrderItemsTableHtml(entity?.[f.key]);
+      const hint = document.createElement("p");
+      hint.className = "muted small order-items-json-hint";
+      hint.textContent = "JSON позиций (для точного редактирования):";
+      input = document.createElement("textarea");
+      input.rows = 6;
+      input.name = f.key;
+      input.className = "order-items-json";
+      input.spellcheck = false;
+      const v = entity?.[f.key];
+      input.value = v === undefined || v === null ? "" : typeof v === "string" ? v : JSON.stringify(v, null, 2);
+      wrap.appendChild(preview);
+      wrap.appendChild(hint);
     } else if (f.type === "json") {
       input = document.createElement("textarea");
       input.rows = 5;
@@ -1345,7 +1368,7 @@ function readFormPayload(form, schemaKey, isCreate) {
       payload[f.key] = val.trim();
       continue;
     }
-    if (f.type === "json") {
+    if (f.type === "json" || f.type === "order_items") {
       const t = val.trim();
       if (t === "") {
         payload[f.key] = null;
@@ -1826,6 +1849,338 @@ function ensureSiteContactsFormBuilt() {
 
 function formatVisitInt(n) {
   return new Intl.NumberFormat("ru-RU").format(Number(n) || 0);
+}
+
+const dashMoneyFmt = new Intl.NumberFormat("ru-RU", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+function formatDashMoneyRu(s) {
+  const n = parseFloat(String(s ?? "").replace(",", "."));
+  if (Number.isNaN(n)) {
+    return "—";
+  }
+  return `${dashMoneyFmt.format(n)} ₽`;
+}
+
+function orderItemTypeRu(type) {
+  if (type === "service") return "Услуга";
+  if (type === "product") return "Товар";
+  return type ? String(type) : "—";
+}
+
+function parseOrderMoneyNumber(v) {
+  if (v === null || v === undefined || v === "") return null;
+  const n = typeof v === "number" ? v : parseFloat(String(v).replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * Таблица позиций заявки (товары/услуги, кол-во, суммы).
+ * @param {unknown} items
+ */
+function renderOrderItemsTableHtml(items) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return '<p class="muted">Нет позиций</p>';
+  }
+  let sumLines = 0;
+  const rows = items
+    .map((raw) => {
+      const it = raw && typeof raw === "object" ? raw : {};
+      const name = it.name != null ? String(it.name) : "—";
+      const articleRaw = it.article != null && String(it.article).trim() !== "" ? String(it.article) : "";
+      const article = articleRaw || "—";
+      const typeLabel = orderItemTypeRu(it.type);
+      const qty = Math.max(0, parseInt(String(it.quantity ?? 0), 10) || 0);
+      const priceNum = parseOrderMoneyNumber(it.price);
+      const unitStr = priceNum != null ? `${dashMoneyFmt.format(priceNum)} ₽` : "—";
+      const line = (priceNum ?? 0) * qty;
+      sumLines += line;
+      const lineStr = `${dashMoneyFmt.format(line)} ₽`;
+      return `<tr>
+        <td>${escapeHtml(name)}</td>
+        <td>${articleRaw ? `<code>${escapeHtml(articleRaw)}</code>` : escapeHtml(article)}</td>
+        <td>${escapeHtml(typeLabel)}</td>
+        <td class="num">${unitStr}</td>
+        <td class="num">${new Intl.NumberFormat("ru-RU").format(qty)}</td>
+        <td class="num">${lineStr}</td>
+      </tr>`;
+    })
+    .join("");
+  return `<div class="table-wrap order-items-preview">
+    <table class="data-table order-items-table">
+      <thead>
+        <tr>
+          <th>Наименование</th>
+          <th>Артикул</th>
+          <th>Тип</th>
+          <th class="num">Цена за ед.</th>
+          <th class="num">Кол-во</th>
+          <th class="num">Сумма</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+      <tfoot>
+        <tr>
+          <td colspan="5"><strong>Итого по позициям</strong></td>
+          <td class="num"><strong>${dashMoneyFmt.format(sumLines)} ₽</strong></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>`;
+}
+
+function formatDashInt(n) {
+  return new Intl.NumberFormat("ru-RU").format(Number(n) || 0);
+}
+
+/**
+ * @param {HTMLElement} container
+ * @param {Array<{ label: string, shortLabel?: string, value: number, display?: string }>} values
+ */
+function renderDashBarChart(container, values, options = {}) {
+  const { color = "var(--accent)", emptyHint = "Нет данных" } = options;
+  if (!values.length) {
+    container.innerHTML = `<p class="muted small">${emptyHint}</p>`;
+    return;
+  }
+  const max = Math.max(1, ...values.map((v) => v.value));
+  const bars = values
+    .map((v) => {
+      const h = Math.round((v.value / max) * 100);
+      const title = `${v.label}: ${v.display ?? v.value}`;
+      return `<div class="dash-bar-col">
+        <div class="dash-bar-track" title="${escapeHtml(title)}">
+          <div class="dash-bar-fill" style="height:${h}%;background:${color}"></div>
+        </div>
+        <span class="dash-bar-x">${escapeHtml(v.shortLabel ?? v.label)}</span>
+      </div>`;
+    })
+    .join("");
+  container.innerHTML = `<div class="dash-bar-chart">${bars}</div>`;
+}
+
+const DASH_DONUT_COLORS = [
+  "rgba(61, 139, 253, 0.92)",
+  "rgba(139, 192, 142, 0.92)",
+  "rgba(232, 176, 108, 0.95)",
+  "rgba(186, 120, 220, 0.9)",
+  "rgba(94, 200, 214, 0.92)",
+  "rgba(232, 130, 130, 0.9)",
+  "rgba(200, 200, 100, 0.95)",
+  "rgba(160, 165, 230, 0.92)",
+];
+
+function dashDonutSegmentPath(cx, cy, rOuter, rInner, startDeg, endDeg) {
+  const rad = (deg) => ((deg - 90) * Math.PI) / 180;
+  const x0o = cx + rOuter * Math.cos(rad(startDeg));
+  const y0o = cy + rOuter * Math.sin(rad(startDeg));
+  const x1o = cx + rOuter * Math.cos(rad(endDeg));
+  const y1o = cy + rOuter * Math.sin(rad(endDeg));
+  const x1i = cx + rInner * Math.cos(rad(endDeg));
+  const y1i = cy + rInner * Math.sin(rad(endDeg));
+  const x0i = cx + rInner * Math.cos(rad(startDeg));
+  const y0i = cy + rInner * Math.sin(rad(startDeg));
+  const delta = endDeg - startDeg;
+  const large = delta > 180 ? 1 : 0;
+  return `M ${x0o} ${y0o} A ${rOuter} ${rOuter} 0 ${large} 1 ${x1o} ${y1o} L ${x1i} ${y1i} A ${rInner} ${rInner} 0 ${large} 0 ${x0i} ${y0i} Z`;
+}
+
+/**
+ * @param {HTMLElement} container
+ * @param {{ total_visits?: number, segments?: Array<{ path: string, label?: string, count: number, percent?: number }> }} pathShare
+ */
+function renderDashDonutChart(container, pathShare) {
+  const total = Number(pathShare?.total_visits ?? 0);
+  const raw = Array.isArray(pathShare?.segments) ? pathShare.segments : [];
+  const segments = raw.filter((s) => s && Number(s.count) > 0);
+  if (!total || !segments.length) {
+    container.innerHTML = '<p class="muted small">Нет данных о просмотрах за период</p>';
+    return;
+  }
+
+  const cx = 100;
+  const cy = 100;
+  const rOuter = 88;
+  const rInner = 52;
+
+  const displayLabel = (s) => {
+    if (s.path === "__other__") {
+      return s.label || "Прочее";
+    }
+    const p = String(s.path || "/");
+    return p.length > 42 ? `${p.slice(0, 40)}…` : p;
+  };
+
+  const colorAt = (i, s) => {
+    if (s.path === "__other__") {
+      return "rgba(139, 156, 176, 0.85)";
+    }
+    return DASH_DONUT_COLORS[i % DASH_DONUT_COLORS.length];
+  };
+
+  let angle = 0;
+  const paths = [];
+  for (let i = 0; i < segments.length; i += 1) {
+    const s = segments[i];
+    const cnt = Number(s.count) || 0;
+    const sweep = (cnt / total) * 360;
+    const start = angle;
+    const end = angle + sweep;
+    angle = end;
+    if (sweep < 0.02) {
+      continue;
+    }
+    const col = colorAt(paths.length, s);
+    const d =
+      segments.length === 1 && sweep >= 359.5
+        ? null
+        : dashDonutSegmentPath(cx, cy, rOuter, rInner, start, end);
+    paths.push({ d, col, s, sweep });
+  }
+
+  let svgInner;
+  if (segments.length === 1 && paths.length === 1 && paths[0].sweep >= 359.5) {
+    const rMid = (rOuter + rInner) / 2;
+    const sw = rOuter - rInner;
+    const col = colorAt(0, segments[0]);
+    const full = `${displayLabel(segments[0])} — ${formatDashInt(segments[0].count)} (${segments[0].percent ?? "—"}%)`;
+    svgInner = `<circle cx="${cx}" cy="${cy}" r="${rMid}" fill="none" stroke="${col}" stroke-width="${sw}"><title>${escapeHtml(full)}</title></circle>`;
+  } else {
+    svgInner = paths
+      .filter((p) => p.d)
+      .map((p) => {
+        const full = `${displayLabel(p.s)} — ${formatDashInt(p.s.count)} (${p.s.percent ?? "—"}%)`;
+        return `<path fill="${p.col}" d="${p.d}" stroke="#0f1419" stroke-width="0.5"><title>${escapeHtml(full)}</title></path>`;
+      })
+      .join("");
+  }
+
+  const legend = segments
+    .map((s, i) => {
+      const fullPath = s.path === "__other__" ? (s.label || "Прочее") : String(s.path || "/");
+      const lab = fullPath.length > 42 ? `${fullPath.slice(0, 40)}…` : fullPath;
+      const pct = s.percent != null ? String(s.percent) : "—";
+      const col = colorAt(i, s);
+      return `<li class="dash-path-legend-item" title="${escapeHtml(fullPath)}">
+        <span class="dash-path-swatch" style="background:${col}"></span>
+        <span class="dash-path-legend-text"><code>${escapeHtml(lab)}</code> — ${formatDashInt(s.count)} (${pct}%)</span>
+      </li>`;
+    })
+    .join("");
+
+  container.innerHTML = `<div class="dash-donut-layout" role="img" aria-label="Доля просмотров по страницам">
+    <svg class="dash-donut-svg" viewBox="0 0 200 200" width="220" height="220" aria-hidden="true">${svgInner}</svg>
+    <ul class="dash-path-legend">${legend}</ul>
+  </div>`;
+}
+
+async function loadDashboard() {
+  const errEl = document.getElementById("dash-error");
+  const kpi = document.getElementById("dash-kpi");
+  const chartV = document.getElementById("dash-chart-visits");
+  const chartO = document.getElementById("dash-chart-orders");
+  const chartP = document.getElementById("dash-chart-paths");
+  const updated = document.getElementById("dash-updated");
+  if (!errEl || !kpi || !chartV || !chartO || !chartP) {
+    return;
+  }
+  errEl.classList.add("hidden");
+  kpi.innerHTML = '<p class="muted">Загрузка…</p>';
+  chartV.innerHTML = "";
+  chartO.innerHTML = "";
+  chartP.innerHTML = "";
+  if (updated) {
+    updated.textContent = "";
+  }
+  try {
+    const data = await apiFetch("/admin/dashboard");
+    const dateUtc = data.date_utc ?? "";
+    const monthUtc = data.month_utc ?? "";
+
+    kpi.innerHTML = `<div class="dash-kpi">
+        <div class="dash-kpi-label">Просмотры за сегодня</div>
+        <div class="dash-kpi-value">${formatDashInt(data.visits_today)}</div>
+        <div class="dash-kpi-hint">${escapeHtml(dateUtc)} UTC</div>
+      </div>
+      <div class="dash-kpi">
+        <div class="dash-kpi-label">Заявок за сегодня</div>
+        <div class="dash-kpi-value">${formatDashInt(data.orders_today)}</div>
+        <div class="dash-kpi-hint">новые заказы</div>
+      </div>
+      <div class="dash-kpi">
+        <div class="dash-kpi-label">Сумма за сегодня</div>
+        <div class="dash-kpi-value">${formatDashMoneyRu(data.revenue_today)}</div>
+        <div class="dash-kpi-hint">по полю «Сумма» в заказе</div>
+      </div>
+      <div class="dash-kpi">
+        <div class="dash-kpi-label">Средний чек (месяц)</div>
+        <div class="dash-kpi-value">${data.avg_order_amount_month != null ? formatDashMoneyRu(data.avg_order_amount_month) : "—"}</div>
+        <div class="dash-kpi-hint">${formatDashInt(data.orders_month_with_amount ?? 0)} с суммой · ${escapeHtml(monthUtc)}</div>
+      </div>
+      <div class="dash-kpi">
+        <div class="dash-kpi-label">Сумма заказов за месяц</div>
+        <div class="dash-kpi-value">${formatDashMoneyRu(data.revenue_month)}</div>
+        <div class="dash-kpi-hint">${formatDashInt(data.orders_month)} заявок всего</div>
+      </div>`;
+
+    const series = Array.isArray(data.series) ? data.series : [];
+    const visitVals = series.map((row) => ({
+      label: row.date,
+      shortLabel: String(row.date).slice(5),
+      value: row.visits,
+      display: formatDashInt(row.visits),
+    }));
+    renderDashBarChart(chartV, visitVals, { color: "rgba(61, 139, 253, 0.88)" });
+
+    const orderVals = series.map((row) => ({
+      label: row.date,
+      shortLabel: String(row.date).slice(5),
+      value: row.orders,
+      display: formatDashInt(row.orders),
+    }));
+    const revVals = series.map((row) => ({
+      label: row.date,
+      shortLabel: String(row.date).slice(5),
+      value: parseFloat(String(row.revenue).replace(",", ".")) || 0,
+      display: formatDashMoneyRu(row.revenue),
+    }));
+    const wrap = document.createElement("div");
+    wrap.className = "dash-dual-charts";
+    const o1 = document.createElement("div");
+    o1.className = "dash-dual-block";
+    o1.innerHTML = '<p class="dash-dual-title muted small">Заявки (шт.)</p>';
+    const c1 = document.createElement("div");
+    o1.appendChild(c1);
+    const o2 = document.createElement("div");
+    o2.className = "dash-dual-block";
+    o2.innerHTML = '<p class="dash-dual-title muted small">Выручка (₽)</p>';
+    const c2 = document.createElement("div");
+    o2.appendChild(c2);
+    wrap.appendChild(o1);
+    wrap.appendChild(o2);
+    chartO.appendChild(wrap);
+    renderDashBarChart(c1, orderVals, { color: "rgba(139, 192, 142, 0.92)" });
+    renderDashBarChart(c2, revVals, { color: "rgba(232, 176, 108, 0.95)" });
+
+    renderDashDonutChart(chartP, data.path_share);
+
+    if (updated) {
+      const t = new Date();
+      updated.textContent = `Обновлено ${t.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}`;
+    }
+  } catch (e) {
+    if (e.sessionEnded) {
+      return;
+    }
+    kpi.innerHTML = "";
+    chartV.innerHTML = "";
+    chartO.innerHTML = "";
+    chartP.innerHTML = "";
+    errEl.textContent = e.message || String(e);
+    errEl.classList.remove("hidden");
+  }
 }
 
 async function loadVisitStats() {
@@ -2801,14 +3156,14 @@ async function showOrderDetail(id, orderNumberLabel) {
         <dt>Компания</dt><dd>${escapeHtml(o.customer_company || "—")}</dd>
         <dt>Телефон</dt><dd>${escapeHtml(o.customer_phone)}</dd>
         <dt>Email</dt><dd>${escapeHtml(o.customer_email)}</dd>
-        <dt>Сумма</dt><dd>${escapeHtml(o.total_amount ?? "—")}</dd>
+        <dt>Сумма</dt><dd>${escapeHtml(formatDashMoneyRu(o.total_amount))}</dd>
         <dt>Создан</dt><dd>${escapeHtml(o.created_at)}</dd>
         <dt>Обновлён</dt><dd>${escapeHtml(o.updated_at)}</dd>
       </dl>
       <h3>Комментарий</h3>
       <p>${escapeHtml(o.comment || "—")}</p>
       <h3>Позиции</h3>
-      <pre>${escapeHtml(JSON.stringify(o.items, null, 2))}</pre>
+      ${renderOrderItemsTableHtml(o.items)}
       <h3>Вложения</h3>
       <pre>${escapeHtml(JSON.stringify(o.attachments ?? [], null, 2))}</pre>
       <p class="muted">Полное редактирование — кнопка «Изменить» в списке заказов (PUT /api/orders/{id}).</p>
@@ -2819,7 +3174,6 @@ async function showOrderDetail(id, orderNumberLabel) {
         await apiFetch(`/orders/${id}/status`, {
           method: "PATCH",
           body: JSON.stringify({ status: sel.value }),
-          skipAuth: true,
         });
         alert("Статус обновлён");
         showOrderDetail(id, o.order_number);
@@ -3102,7 +3456,7 @@ document.getElementById("form-login").addEventListener("submit", async (ev) => {
     if (!data.token) throw new Error("Нет token в ответе");
     setToken(data.token);
     document.getElementById("view-login").classList.add("hidden");
-    goSection("categories");
+    goSection("dashboard");
   } catch (e) {
     err.textContent = e.message;
     err.classList.remove("hidden");
@@ -3118,6 +3472,10 @@ document.getElementById("btn-logout").addEventListener("click", () => {
 
 document.getElementById("vs-refresh")?.addEventListener("click", () => {
   void loadVisitStats();
+});
+
+document.getElementById("dash-refresh")?.addEventListener("click", () => {
+  void loadDashboard();
 });
 
 document.getElementById("pl-upload")?.addEventListener("click", async () => {
@@ -3383,7 +3741,7 @@ document.getElementById("cf-save").addEventListener("click", () => saveCategoryF
 
 if (state.token) {
   document.getElementById("view-login").classList.add("hidden");
-  goSection("categories");
+  goSection("dashboard");
 } else {
   goSection("login");
 }

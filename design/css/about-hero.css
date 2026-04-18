@@ -137,18 +137,6 @@
     background 0.2s ease;
 }
 
-.ab-link-cell::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: var(--ab-link-bg);
-  background-size: cover;
-  background-position: center;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
 .ab-link-cell__name {
   font-family: var(--font-sans, "Inter", system-ui, sans-serif);
   font-size: 16px;
@@ -183,11 +171,6 @@
 .ab-link-cell:focus-visible {
   outline: 2px solid rgba(255, 255, 255, 0.95);
   outline-offset: 2px;
-}
-
-.ab-link-cell:hover::before,
-.ab-link-cell:focus-visible::before {
-  opacity: 0.35;
 }
 
 .ab-link-cell:hover .ab-link-cell__name,

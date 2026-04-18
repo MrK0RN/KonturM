@@ -32,11 +32,6 @@ $figma = static function (string $file): string {
       content="ООО «Контур-М» — производитель мерников, метроштоков и пробоотборников для АЗС и нефтебаз. Работаем с 1999 года. Поверка СИ, соответствие ГОСТ, собственное производство."
     />
     <?php require __DIR__ . '/includes/head-fonts.php'; ?>
-    <style>
-      :root {
-        --ab-link-bg: url("<?= htmlspecialchars(konturm_design_url('assets/figma/80e08696-8d13-4c05-8b70-8f6ebf0aa209.png'), ENT_QUOTES, 'UTF-8') ?>");
-      }
-    </style>
     <link rel="stylesheet" href="<?= htmlspecialchars(konturm_design_url('css/header.css'), ENT_QUOTES, 'UTF-8') ?>" />
     <link rel="stylesheet" href="<?= htmlspecialchars(konturm_design_url('css/catalog-shared.css'), ENT_QUOTES, 'UTF-8') ?>" />
     <link rel="stylesheet" href="<?= htmlspecialchars(konturm_design_url('css/footer.css'), ENT_QUOTES, 'UTF-8') ?>" />

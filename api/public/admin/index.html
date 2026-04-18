@@ -22,6 +22,32 @@
       <header class="topbar">
         <h1 id="page-title">Вход</h1>
       </header>
+      <section id="view-dashboard" class="view hidden">
+        <p class="muted intro-text dash-intro">
+          Сводка за текущие сутки и месяц. Время и даты — <strong>UTC</strong> (как в статистике посещений).
+        </p>
+        <div class="toolbar dash-toolbar">
+          <button type="button" id="dash-refresh" class="btn btn-primary">Обновить</button>
+          <span id="dash-updated" class="muted small dash-updated" aria-live="polite"></span>
+        </div>
+        <p id="dash-error" class="error hidden"></p>
+        <div id="dash-kpi" class="dash-kpi-grid"></div>
+        <div class="dash-charts">
+          <div class="card dash-chart-card">
+            <h2 class="card-title">Посещения за 14 дней</h2>
+            <div id="dash-chart-visits" class="dash-chart" aria-hidden="false"></div>
+          </div>
+          <div class="card dash-chart-card">
+            <h2 class="card-title">Заявки и сумма по дням (14 дней)</h2>
+            <div id="dash-chart-orders" class="dash-chart" aria-hidden="false"></div>
+          </div>
+          <div class="card dash-chart-card dash-path-card">
+            <h2 class="card-title">Популярные страницы (кольцевая диаграмма)</h2>
+            <p class="muted small dash-path-sub">Доля просмотров по пути URL за последние 30 дней (UTC). «Прочее» — остальные адреса.</p>
+            <div id="dash-chart-paths" class="dash-donut-root"></div>
+          </div>
+        </div>
+      </section>
       <section id="view-site-contacts" class="view hidden">
         <p class="muted intro-text">
           Телефоны, e-mail, ссылки на мессенджеры и карту: эти данные подставляются в шапку, подвал и страницу «Контакты».

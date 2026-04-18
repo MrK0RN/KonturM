@@ -24,8 +24,8 @@ final class SiteContactsService
         'messenger_telegram' => 'https://t.me/konturm',
         'messenger_whatsapp' => 'https://wa.me/79785654997',
         'messenger_max' => 'https://max.ru/konturm',
-        'map_iframe_src' => 'https://yandex.ru/map-widget/v1/?oid=92963604301&ll=49.275773%2C55.911633&z=17',
-        'map_yandex_link' => 'https://yandex.ru/maps/org/kontur_m/92963604301/?ll=49.275773%2C55.911633&z=17',
+        'map_iframe_src' => 'https://yandex.ru/map-widget/v1/?ll=49.276146%2C55.912513&z=18&pt=49.275821%2C55.912601%2Cpm2rdm',
+        'map_yandex_link' => 'https://yandex.ru/maps/?from=mapframe&ll=49.276146%2C55.912513&mode=poi&poi%5Bpoint%5D=49.275821%2C55.912601&poi%5Buri%5D=ymapsbm1%3A%2F%2Forg%3Foid%3D92963604301&source=mapframe&utm_source=mapframe&z=17.59',
     ];
 
     public function __construct(
