@@ -30,6 +30,7 @@ final class OrderService
         $order->setCustomerCompany($input->customer_company);
         $order->setCustomerPhone((string) $input->customer_phone);
         $order->setCustomerEmail((string) $input->customer_email);
+        $order->setCustomerInn($input->customer_inn);
         $order->setComment($input->comment);
         $order->setAttachments($input->attachments);
         $order->setStatus('new');
@@ -81,12 +82,14 @@ final class OrderService
 
     private function sendNotifications(Order $order): void
     {
+        $innLine = $order->getCustomerInn() !== null ? sprintf("\nИНН: %s", $order->getCustomerInn()) : '';
         $body = sprintf(
-            "Новый заказ: %s\nКлиент: %s\nТелефон: %s\nEmail: %s\nСтатус: %s",
+            "Новый заказ: %s\nКлиент: %s\nТелефон: %s\nEmail: %s%s\nСтатус: %s",
             $order->getOrderNumber(),
             $order->getCustomerName(),
             $order->getCustomerPhone(),
             $order->getCustomerEmail(),
+            $innLine,
             $order->getStatus()
         );
 

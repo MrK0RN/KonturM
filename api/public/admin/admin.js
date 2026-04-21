@@ -749,6 +749,7 @@ const CRUD_SCHEMA = {
       { key: "order_number", label: "№" },
       { key: "customer_name", label: "Клиент" },
       { key: "customer_email", label: "Email" },
+      { key: "customer_inn", label: "ИНН" },
       { key: "status", label: "Статус" },
       { key: "created_at", label: "Создан" },
     ],
@@ -756,6 +757,7 @@ const CRUD_SCHEMA = {
       { key: "order_number", label: "Номер заказа", type: "text", required: true, editOnly: true },
       { key: "customer_name", label: "Имя", type: "text", required: true },
       { key: "customer_company", label: "Компания", type: "text" },
+      { key: "customer_inn", label: "ИНН", type: "text" },
       { key: "customer_phone", label: "Телефон", type: "text", required: true },
       { key: "customer_email", label: "Email", type: "text", required: true },
       { key: "items", label: "Позиции", type: "order_items", required: true },
@@ -1274,6 +1276,9 @@ function buildFormFields(schemaKey, entity, isCreate) {
     if (f.type === "textarea") {
       input = document.createElement("textarea");
       input.rows = 4;
+      if (entity && entity[f.key] !== undefined && entity[f.key] !== null) {
+        input.value = String(entity[f.key]);
+      }
     } else if (f.type === "checkbox") {
       input = document.createElement("input");
       input.type = "checkbox";
@@ -3154,6 +3159,7 @@ async function showOrderDetail(id, orderNumberLabel) {
         <dt>Номер</dt><dd>${escapeHtml(o.order_number)}</dd>
         <dt>Клиент</dt><dd>${escapeHtml(o.customer_name)}</dd>
         <dt>Компания</dt><dd>${escapeHtml(o.customer_company || "—")}</dd>
+        <dt>ИНН</dt><dd>${escapeHtml(o.customer_inn || "—")}</dd>
         <dt>Телефон</dt><dd>${escapeHtml(o.customer_phone)}</dd>
         <dt>Email</dt><dd>${escapeHtml(o.customer_email)}</dd>
         <dt>Сумма</dt><dd>${escapeHtml(formatDashMoneyRu(o.total_amount))}</dd>

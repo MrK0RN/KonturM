@@ -95,6 +95,8 @@ final class CartService
         $input->customer_company = $checkoutPayload['customer_company'] ?? null;
         $input->customer_phone = $checkoutPayload['customer_phone'] ?? null;
         $input->customer_email = $checkoutPayload['customer_email'] ?? null;
+        $inn = isset($checkoutPayload['customer_inn']) ? preg_replace('/\D+/', '', (string) $checkoutPayload['customer_inn']) : '';
+        $input->customer_inn = $inn !== '' ? $inn : null;
         $input->comment = $checkoutPayload['comment'] ?? null;
         $input->attachments = $checkoutPayload['attachments'] ?? null;
         $input->items = array_map(static function (array $item): array {

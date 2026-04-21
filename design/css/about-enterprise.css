@@ -3,6 +3,9 @@
 .ab-enterprise {
   background: #fff;
   padding: 48px 0 64px;
+  position: relative;
+  overflow: hidden;
+  overflow: clip;
 }
 
 .ab-enterprise__shell {
@@ -13,6 +16,7 @@
   flex-wrap: wrap;
   align-items: stretch;
   gap: 20px;
+  min-height: 0;
 }
 
 .ab-enterprise__content {
@@ -101,11 +105,18 @@
 }
 
 @media (max-width: 900px) {
+  .ab-enterprise {
+    padding-bottom: clamp(40px, 10vw, 56px);
+  }
+
   .ab-enterprise__content {
     min-height: 0;
     max-width: none;
     padding-right: 0;
     gap: 24px;
+    justify-content: flex-start;
+    flex: 0 1 auto;
+    width: 100%;
   }
 
   .ab-enterprise__shell {
@@ -116,12 +127,15 @@
 
   .ab-enterprise__media {
     order: -1;
+    flex: 0 0 auto;
+    width: 100%;
     min-height: 200px;
     max-height: 320px;
     border-radius: 16px;
   }
 
   .ab-enterprise__img {
+    height: auto;
     min-height: 200px;
     max-height: 320px;
   }

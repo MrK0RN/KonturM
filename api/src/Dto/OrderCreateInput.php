@@ -21,6 +21,10 @@ final class OrderCreateInput
     #[Assert\Email]
     public ?string $customer_email = null;
 
+    /** Пусто или ровно 10/12 цифр (юр./физ. лицо РФ). */
+    #[Assert\Regex(pattern: '/^(?:\d{10}|\d{12})?$/')]
+    public ?string $customer_inn = null;
+
     #[Assert\NotNull]
     #[Assert\Count(min: 1)]
     #[Assert\Valid]

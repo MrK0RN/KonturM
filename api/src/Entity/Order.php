@@ -60,6 +60,10 @@ class Order
     #[SerializedName('customer_email')]
     private string $customerEmail;
 
+    #[ORM\Column(type: 'string', length: 12, name: 'customer_inn', nullable: true)]
+    #[SerializedName('customer_inn')]
+    private ?string $customerInn = null;
+
     /**
      * Array of {type, id, name, article, quantity, price}.
      */
@@ -175,6 +179,22 @@ class Order
     public function setCustomerEmail(string $customerEmail): self
     {
         $this->customerEmail = $customerEmail;
+
+        return $this;
+    }
+
+    public function getCustomerInn(): ?string
+    {
+        return $this->customerInn;
+    }
+
+    public function setCustomerInn(?string $customerInn): self
+    {
+        if ($customerInn === null || trim($customerInn) === '') {
+            $this->customerInn = null;
+        } else {
+            $this->customerInn = $customerInn;
+        }
 
         return $this;
     }
