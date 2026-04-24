@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use App\Service\DocumentsPathService;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -18,16 +18,14 @@ use Symfony\Component\Routing\Attribute\Route;
 final class DocumentsController
 {
     public function __construct(
-        #[Autowire('%kernel.project_dir%')]
-        private readonly string $projectDir,
+        private readonly DocumentsPathService $documentsPath,
     ) {
     }
 
     private function documentsDir(): string
     {
-        $dir = dirname($this->projectDir) . '/documents';
-        $real = realpath($dir);
-        if ($real === false || !is_dir($real)) {
+        $real = $this->documentsPath->resolveDirectory();
+        if ($real === null) {
             throw new NotFoundHttpException();
         }
 

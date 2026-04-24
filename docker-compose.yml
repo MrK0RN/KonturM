@@ -47,6 +47,8 @@ services:
       database:
         condition: service_healthy
     volumes:
+      # PDF из репозитория …/documents → в контейнере /documents (DocumentsController: dirname(/app) . '/documents')
+      - ./documents:/documents
       # Витрина design/ лежит рядом с api/ — в контейнере путь /design (см. DesignStorefrontController)
       - ./design:/design:ro
       # Опционально: правки кода без пересборки (vendor из образа)

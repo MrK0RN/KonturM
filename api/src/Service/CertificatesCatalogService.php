@@ -48,6 +48,7 @@ final class CertificatesCatalogService
     public function __construct(
         #[Autowire('%kernel.project_dir%')]
         private readonly string $projectDir,
+        private readonly DocumentsPathService $documentsPath,
     ) {
     }
 
@@ -58,14 +59,7 @@ final class CertificatesCatalogService
 
     private function documentsDir(): ?string
     {
-        $dir = dirname($this->projectDir) . '/documents';
-        $real = realpath($dir);
-
-        if ($real === false || !is_dir($real)) {
-            return null;
-        }
-
-        return $real;
+        return $this->documentsPath->resolveDirectory();
     }
 
     /**
@@ -153,7 +147,8 @@ final class CertificatesCatalogService
 
         $base = $this->documentsDir();
         if ($base === null) {
-            if (!@mkdir(dirname($this->projectDir) . '/documents', 0775, true) && !is_dir(dirname($this->projectDir) . '/documents')) {
+            $preferred = $this->documentsPath->preferredDirectoryForMkdir();
+            if (!@mkdir($preferred, 0775, true) && !is_dir($preferred)) {
                 throw new \RuntimeException('Не удалось создать каталог documents рядом с api.');
             }
             $base = $this->documentsDir();
@@ -169,6 +164,7 @@ final class CertificatesCatalogService
             throw new BadRequestHttpException('Не удалось сохранить файл: ' . $e->getMessage());
         }
 
+        $target = $base . DIRECTORY_SEPARATOR . $filename;
         $bytes = is_readable($target) ? (int) filesize($target) : 0;
 
         return ['filename' => $filename, 'bytes' => $bytes];
