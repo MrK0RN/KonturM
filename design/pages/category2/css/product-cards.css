@@ -364,6 +364,14 @@
   align-items: start;
 }
 
+.pd__gallery-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+  align-self: start;
+}
+
 /* Gallery */
 .pd__gallery {
   display: flex;
@@ -496,6 +504,11 @@
   color: var(--cat2-text-muted);
   white-space: pre-wrap;
   max-width: 100%;
+}
+
+.pd__gallery-col .pd__description {
+  width: 100%;
+  padding-top: 4px;
 }
 
 /* Divider */
@@ -721,6 +734,10 @@
   .pd__body {
     grid-template-columns: 1fr;
     gap: 24px;
+  }
+
+  .pd__gallery-col {
+    max-width: 500px;
   }
 
   .pd__gallery {

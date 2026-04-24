@@ -255,14 +255,16 @@
 
         var descPlain = normalizeProductDescription(p.description);
         var descriptionHtml = descPlain
-          ? '<div class="pd__description">' + esc(descPlain) + "</div>"
+          ? '<div class="pd__description" aria-label="Описание товара">' + esc(descPlain) + "</div>"
           : "";
+
+        var galleryColHtml =
+          '<div class="pd__gallery-col">' + galleryHtml + descriptionHtml + "</div>";
 
         var infoHtml =
           '<div class="pd__info">' +
           metaHtml +
           '<h1 class="pd__name">' + esc(p.name || "") + "</h1>" +
-          descriptionHtml +
           '<hr class="pd__divider"/>' +
           priceHtml +
           actionsHtml +
@@ -274,7 +276,7 @@
           '<div class="pd">' +
           breadcrumbHtml +
           '<div class="pd__body">' +
-          galleryHtml +
+          galleryColHtml +
           infoHtml +
           "</div>" +
           "</div>";
