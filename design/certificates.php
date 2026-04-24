@@ -12,6 +12,7 @@ $docUrl = static function (string $filename) use ($base): string {
 /** Полное наименование документа по имени файла (как на титуле PDF). */
 $certFullTitle = static function (string $filename): string {
     $base = (string) preg_replace('/\.pdf$/iu', '', $filename);
+    $base = str_replace('_', ' ', $base);
 
     return (string) preg_replace('/\s+/u', ' ', trim($base));
 };
