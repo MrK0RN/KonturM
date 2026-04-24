@@ -364,20 +364,12 @@
   align-items: start;
 }
 
-.pd__gallery-col {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  min-width: 0;
-  align-self: start;
-}
-
-/* Gallery */
+/* Gallery (без sticky: иначе при прокрутке к описанию ниже блок наезжает на текст) */
 .pd__gallery {
   display: flex;
   gap: 12px;
-  position: sticky;
-  top: 16px;
+  position: static;
+  align-self: start;
 }
 
 .pd__thumbs {
@@ -506,9 +498,11 @@
   max-width: 100%;
 }
 
-.pd__gallery-col .pd__description {
-  width: 100%;
-  padding-top: 4px;
+.pd__description--full-row {
+  grid-column: 1 / -1;
+  margin-top: 8px;
+  padding-top: 24px;
+  border-top: 1px solid var(--cat2-border-light);
 }
 
 /* Divider */
@@ -734,10 +728,6 @@
   .pd__body {
     grid-template-columns: 1fr;
     gap: 24px;
-  }
-
-  .pd__gallery-col {
-    max-width: 500px;
   }
 
   .pd__gallery {

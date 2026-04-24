@@ -254,12 +254,11 @@
         var specsHtml = buildSpecsHtml(ts);
 
         var descPlain = normalizeProductDescription(p.description);
-        var descriptionHtml = descPlain
-          ? '<div class="pd__description" aria-label="Описание товара">' + esc(descPlain) + "</div>"
+        var descriptionRowHtml = descPlain
+          ? '<div class="pd__description pd__description--full-row" aria-label="Описание товара">' +
+            esc(descPlain) +
+            "</div>"
           : "";
-
-        var galleryColHtml =
-          '<div class="pd__gallery-col">' + galleryHtml + descriptionHtml + "</div>";
 
         var infoHtml =
           '<div class="pd__info">' +
@@ -276,8 +275,9 @@
           '<div class="pd">' +
           breadcrumbHtml +
           '<div class="pd__body">' +
-          galleryColHtml +
+          galleryHtml +
           infoHtml +
+          descriptionRowHtml +
           "</div>" +
           "</div>";
 
