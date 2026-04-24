@@ -15,6 +15,16 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 final class CertificatesCatalogService
 {
     private const MAX_UPLOAD_BYTES = 30 * 1024 * 1024;
+    /** @var array<string, string> */
+    private const RENAMED_FILES = [
+        'Сертификат   ОТ Мерники М1Р.pdf' => 'Сертификат_ОТ_Мерники_М1Р.pdf',
+        'Сертификат   ОТ Мерники М2Р.pdf' => 'Сертификат_ОТ_Мерники_М2Р.pdf',
+        'Сертификат   ОТ Метроштоки МШС.pdf' => 'Сертификат_ОТ_Метроштоки_МШС.pdf',
+        'Сертификат   ОТ Технические мерники.pdf' => 'Сертификат_ОТ_Технические_Мерники.pdf',
+        'Сертификат   ОТ на Рулетки Р.pdf' => 'Сертификат_ОТ_Рулетки_Р.pdf',
+        'Сертификат Водочувствительная паста.pdf' => 'Сертификат_Водочувствительная_Паста.pdf',
+        'Титульный Лист ТУ на пасту Акватест.pdf' => 'Титульный_Лист_ТУ_Паста_Акватест.pdf',
+    ];
 
     /**
      * Совпадает с прежним захардкоженным каталогом в design/certificates.php.
@@ -228,6 +238,7 @@ final class CertificatesCatalogService
                     throw new BadRequestHttpException('У каждого документа должен быть непустой id (раздел «' . $gid . '»).');
                 }
                 $fn = isset($it['filename']) && is_string($it['filename']) ? trim($it['filename']) : '';
+                $fn = self::RENAMED_FILES[$fn] ?? $fn;
                 if ($fn === '' || str_contains($fn, '..') || str_contains($fn, '/') || str_contains($fn, '\\')) {
                     throw new BadRequestHttpException('Некорректное имя файла для документа «' . $iid . '».');
                 }
