@@ -19,6 +19,60 @@
     return K.escapeHtml(String(s || ""));
   }
 
+  /**
+   * Текст описания из API: обычная строка или JSON-объект с текстовыми полями.
+   * Иногда встречается битый/обрезанный JSON — вытаскиваем строку после первого "…": ".
+   */
+  function normalizeProductDescription(raw) {
+    if (raw === null || raw === undefined) return "";
+    var s = String(raw).trim();
+    if (!s) return "";
+    var first = s.charAt(0);
+    if (first === "{" || first === "[") {
+      try {
+        var parsed = JSON.parse(s);
+        if (typeof parsed === "string") return parsed.trim();
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+          var texts = [];
+          Object.keys(parsed).forEach(function (k) {
+            var v = parsed[k];
+            if (typeof v === "string" && v.trim()) texts.push(v.trim());
+          });
+          if (texts.length) return texts.join("\n\n");
+        }
+        if (Array.isArray(parsed)) {
+          return parsed
+            .map(function (x) {
+              return typeof x === "string" ? x.trim() : "";
+            })
+            .filter(Boolean)
+            .join("\n\n");
+        }
+      } catch (e1) {
+        var m = /^\{\s*"[^"]*"\s*:\s*"/.exec(s);
+        if (m) {
+          var rest = s.slice(m[0].length);
+          var out = "";
+          for (var i = 0; i < rest.length; i++) {
+            var ch = rest.charAt(i);
+            if (ch === "\\") {
+              if (i + 1 < rest.length) {
+                out += rest.charAt(i + 1);
+                i++;
+              }
+              continue;
+            }
+            if (ch === '"') break;
+            out += ch;
+          }
+          var t = out.replace(/\s+/g, " ").trim();
+          if (t) return t;
+        }
+      }
+    }
+    return s.replace(/\s+/g, " ");
+  }
+
   function buildSpecsHtml(ts) {
     if (!ts || typeof ts !== "object") return "";
     var keys = Object.keys(ts);
@@ -199,10 +253,16 @@
 
         var specsHtml = buildSpecsHtml(ts);
 
+        var descPlain = normalizeProductDescription(p.description);
+        var descriptionHtml = descPlain
+          ? '<div class="pd__description">' + esc(descPlain) + "</div>"
+          : "";
+
         var infoHtml =
           '<div class="pd__info">' +
           metaHtml +
           '<h1 class="pd__name">' + esc(p.name || "") + "</h1>" +
+          descriptionHtml +
           '<hr class="pd__divider"/>' +
           priceHtml +
           actionsHtml +

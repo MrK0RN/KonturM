@@ -96,17 +96,6 @@
   color: var(--cat2-accent-orange);
 }
 
-.cat2-card__description {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.45;
-  color: var(--cat2-text-muted);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
 /* Specs */
 .cat2-card__specs {
   margin: 0;
@@ -498,6 +487,15 @@
   font-weight: 700;
   line-height: 1.3;
   color: var(--cat2-text-heading);
+}
+
+.pd__description {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--cat2-text-muted);
+  white-space: pre-wrap;
+  max-width: 100%;
 }
 
 /* Divider */
