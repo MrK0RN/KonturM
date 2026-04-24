@@ -639,6 +639,7 @@ SELECT
     p.id,
     p.name,
     p.slug,
+    p.description,
     p.photo,
     p.article,
     p.price,

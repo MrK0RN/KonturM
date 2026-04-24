@@ -78,12 +78,21 @@
     );
   }
 
+  function shortDescriptionHtml(text) {
+    if (text === null || text === undefined) return "";
+    var normalized = String(text).replace(/\s+/g, " ").trim();
+    if (!normalized) return "";
+    if (normalized.length > 140) normalized = normalized.slice(0, 137).trimEnd() + "...";
+    return '<p class="cat2-card__description">' + K.escapeHtml(normalized) + "</p>";
+  }
+
   function productCardHtml(p) {
     var img = K.mediaUrl(p.photo) || PLACEHOLDER_IMG;
     var href = "/product?slug=" + encodeURIComponent(p.slug || "");
     var title = p.name || "Товар";
     var price = K.fmtPriceRu(p.price);
     var specs = specRowsHtml(p.technical_specs);
+    var description = shortDescriptionHtml(p.description);
 
     return (
       "<li>" +
@@ -101,6 +110,7 @@
       '">' +
       K.escapeHtml(title) +
       "</a></h3>" +
+      description +
       '<dl class="cat2-card__specs">' +
       specs +
       "</dl>" +
