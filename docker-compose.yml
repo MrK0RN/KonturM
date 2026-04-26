@@ -3,6 +3,7 @@
 # HTTPS: https://localhost:${CADDY_HTTPS_PORT:-443}
 #   • без CADDY_DOMAIN — сертификат Caddy «internal» (localhost), браузер может запросить доверие
 #   • с CADDY_DOMAIN — Let's Encrypt (нужны DNS на сервер и открытые 80/443), см. .env
+#   • редирект 308 HTTP→HTTPS отключён (auto_https disable_redirects) — ответ и по http, и по https
 # Прямой доступ к PHP без прокси: задайте APP_PORT (например 8000) — см. сервис app
 # Mailpit UI: http://localhost:8025
 

@@ -5,6 +5,8 @@
 {
 	# Если клиент не присылает SNI (часто при заходе на https://127.0.0.1 в старых стеках)
 	default_sni localhost
+	# Как на проде: http и https без редиректа 308 (см. entrypoint.sh для CADDY_DOMAIN)
+	auto_https disable_redirects
 }
 
 (common) {
@@ -17,7 +19,7 @@
 	}
 }
 
-# Один сайт на :80 и :443: автоматический редирект HTTP → HTTPS, сертификаты для перечисленных имён
+# Один сайт на :80 и :443: сертификаты internal; редирект HTTP→HTTPS отключён (auto_https)
 localhost, 127.0.0.1, ::1 {
 	tls internal
 	import common
