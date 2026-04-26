@@ -490,19 +490,12 @@
 }
 
 .pd__description {
-  margin: 0;
+  margin: 0 0 12px;
   font-size: 15px;
   line-height: 1.55;
   color: var(--cat2-text-muted);
   white-space: pre-wrap;
   max-width: 100%;
-}
-
-.pd__description--full-row {
-  grid-column: 1 / -1;
-  margin-top: 8px;
-  padding-top: 24px;
-  border-top: 1px solid var(--cat2-border-light);
 }
 
 /* Divider */

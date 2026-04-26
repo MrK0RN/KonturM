@@ -19,6 +19,11 @@
     return K.escapeHtml(String(s || ""));
   }
 
+  /** Как в catalog-home.js: витрина категории — /category2, не /catalog/{slug}. */
+  function category2Url(slug) {
+    return "/category2?slug=" + encodeURIComponent(String(slug || ""));
+  }
+
   /**
    * Текст описания из API: обычная строка или JSON-объект с текстовыми полями.
    * Иногда встречается битый/обрезанный JSON — вытаскиваем строку после первого "…": ".
@@ -208,7 +213,7 @@
           '<a href="/catalog">Каталог</a>' +
           '<span class="pd__breadcrumb-sep" aria-hidden="true">›</span>' +
           (categoryName && categorySlug
-            ? '<a href="/catalog/' + esc(categorySlug) + '">' + esc(categoryName) + '</a>' +
+            ? '<a href="' + esc(category2Url(categorySlug)) + '">' + esc(categoryName) + '</a>' +
               '<span class="pd__breadcrumb-sep" aria-hidden="true">›</span>'
             : "") +
           '<span class="pd__breadcrumb-current" aria-current="page">' + esc(p.name || "Товар") + "</span>" +
@@ -254,10 +259,8 @@
         var specsHtml = buildSpecsHtml(ts);
 
         var descPlain = normalizeProductDescription(p.description);
-        var descriptionRowHtml = descPlain
-          ? '<div class="pd__description pd__description--full-row" aria-label="Описание товара">' +
-            esc(descPlain) +
-            "</div>"
+        var descriptionHtml = descPlain
+          ? '<div class="pd__description" aria-label="Описание товара">' + esc(descPlain) + "</div>"
           : "";
 
         var infoHtml =
@@ -265,6 +268,7 @@
           metaHtml +
           '<h1 class="pd__name">' + esc(p.name || "") + "</h1>" +
           '<hr class="pd__divider"/>' +
+          descriptionHtml +
           priceHtml +
           actionsHtml +
           contactHtml +
@@ -277,7 +281,6 @@
           '<div class="pd__body">' +
           galleryHtml +
           infoHtml +
-          descriptionRowHtml +
           "</div>" +
           "</div>";
 
