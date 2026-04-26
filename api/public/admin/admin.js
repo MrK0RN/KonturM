@@ -1834,8 +1834,18 @@ const SITE_CONTACTS_FIELDS = [
   { key: "messenger_telegram", label: "Telegram (URL)", placeholder: "https://t.me/..." },
   { key: "messenger_whatsapp", label: "WhatsApp (URL)", placeholder: "https://wa.me/..." },
   { key: "messenger_max", label: "Max (URL)", placeholder: "https://max.ru/..." },
-  { key: "map_iframe_src", label: "Карта: URL для iframe", placeholder: "https://yandex.ru/map-widget/..." },
-  { key: "map_yandex_link", label: "Карта: ссылка «Открыть в Яндекс»", placeholder: "https://yandex.ru/maps/..." },
+  {
+    key: "map_iframe_src",
+    label: "Карта: URL для iframe",
+    placeholder:
+      "https://yandex.ru/map-widget/v1/?ll=49.276146%2C55.912513&z=18&pt=49.275821%2C55.912601%2Cpm2rdm",
+  },
+  {
+    key: "map_yandex_link",
+    label: "Карта: ссылка «Открыть в Яндекс»",
+    placeholder:
+      "https://yandex.ru/maps/?from=mapframe&ll=49.276146%2C55.912513&mode=poi&poi%5Bpoint%5D=49.275821%2C55.912601&poi%5Buri%5D=ymapsbm1%3A%2F%2Forg%3Foid%3D92963604301&source=mapframe&utm_source=mapframe&z=17.59",
+  },
 ];
 
 function ensureSiteContactsFormBuilt() {
