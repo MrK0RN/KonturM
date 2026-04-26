@@ -6,14 +6,10 @@ OUT="/etc/caddy/Caddyfile"
 if [ -n "$CADDY_DOMAIN" ]; then
 	# Публичное имя: Caddy запрашивает Let's Encrypt (ACME HTTP-01 на :80).
 	# Не используем tls internal — нужен DNS A/AAAA на этот сервер и открытые 80/443.
-	# auto_https disable_redirects — без редиректа 308 HTTP→HTTPS: и http, и https отдают сайт
-	# (важно для проверок вебмастера и индексации по обоим схемам).
 	: >"$OUT"
-	printf '{\n' >>"$OUT"
 	if [ -n "$ACME_EMAIL" ]; then
-		printf '\temail %s\n' "$ACME_EMAIL" >>"$OUT"
+		printf '{\n\temail %s\n}\n\n' "$ACME_EMAIL" >>"$OUT"
 	fi
-	printf '\tauto_https disable_redirects\n}\n\n' >>"$OUT"
 	{
 		printf '%s {\n' "$CADDY_DOMAIN"
 		printf '\tencode gzip zstd\n'

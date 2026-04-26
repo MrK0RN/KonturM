@@ -7,6 +7,7 @@ require __DIR__ . '/includes/design-base.php';
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="yandex-verification" content="f994fcc8d6c02b85" />
     <?php require __DIR__ . '/includes/head-favicon.php'; ?>
     <title>Каталог — Контур-М | Оборудование для АЗС</title>
     <meta
