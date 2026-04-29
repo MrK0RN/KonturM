@@ -76,6 +76,35 @@
           </div>
           <p id="pl-error" class="error hidden"></p>
         </div>
+        <div class="card pl-editor-card">
+          <div class="pl-editor-head">
+            <h2 class="card-title">Редактирование цен</h2>
+            <div class="toolbar pl-editor-toolbar">
+              <button type="button" id="pl-editor-refresh" class="btn">Обновить список</button>
+              <button type="button" id="pl-editor-save" class="btn btn-primary">Сохранить цены</button>
+            </div>
+          </div>
+          <p class="muted small">Изменения применяются к товарам на сайте и в API. Сохранение выполняется только для изменённых строк.</p>
+          <div class="table-wrap pl-editor-wrap">
+            <table class="data-table" id="pl-editor-table">
+              <thead>
+                <tr>
+                  <th>Товар</th>
+                  <th>Артикул</th>
+                  <th>Цена</th>
+                </tr>
+              </thead>
+              <tbody id="pl-editor-tbody"></tbody>
+            </table>
+          </div>
+          <p id="pl-editor-empty" class="muted hidden">Товары не найдены.</p>
+          <div class="pl-editor-foot">
+            <button type="button" id="pl-editor-prev" class="btn btn-ghost">← Назад</button>
+            <span id="pl-editor-page" class="muted small"></span>
+            <button type="button" id="pl-editor-next" class="btn btn-ghost">Вперёд →</button>
+          </div>
+          <p id="pl-editor-error" class="error hidden"></p>
+        </div>
       </section>
       <section id="view-visit-stats" class="view hidden">
         <p class="muted intro-text">

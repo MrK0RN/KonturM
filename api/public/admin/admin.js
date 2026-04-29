@@ -26,6 +26,13 @@ const state = {
     orderField: "name",
     orderDir: "asc",
   },
+  priceListEditor: {
+    page: 1,
+    itemsPerPage: 50,
+    total: 0,
+    /** @type {Record<string, string>} */
+    dirtyPrices: {},
+  },
 };
 
 function authHeaders(withAuth = true) {
@@ -830,6 +837,26 @@ function categoryWritablePayloadFromEntity(entity) {
     } else {
       payload[k] = v;
     }
+  }
+  return payload;
+}
+
+function productWritablePayloadFromEntity(entity) {
+  const payload = {};
+  for (const f of CRUD_SCHEMA.products.fields) {
+    const k = f.key;
+    let v = entity[k];
+    if (v === undefined) {
+      if (f.type === "checkbox") {
+        payload[k] = false;
+      }
+      continue;
+    }
+    if (k === "category_id" && (v === "" || v == null)) {
+      payload[k] = null;
+      continue;
+    }
+    payload[k] = v;
   }
   return payload;
 }
@@ -2558,6 +2585,136 @@ async function loadPriceListSection() {
     errEl.textContent = e.message || String(e);
     errEl.classList.remove("hidden");
   }
+  await loadPriceListEditorTable();
+}
+
+function renderPriceListEditorPager() {
+  const prev = document.getElementById("pl-editor-prev");
+  const next = document.getElementById("pl-editor-next");
+  const pageEl = document.getElementById("pl-editor-page");
+  const st = state.priceListEditor;
+  const totalPages = Math.max(1, Math.ceil(st.total / st.itemsPerPage));
+  if (prev instanceof HTMLButtonElement) {
+    prev.disabled = st.page <= 1;
+  }
+  if (next instanceof HTMLButtonElement) {
+    next.disabled = st.page >= totalPages;
+  }
+  if (pageEl) {
+    pageEl.textContent = `Страница ${st.page} из ${totalPages} (${st.total} поз.)`;
+  }
+}
+
+function clearPriceListEditorError() {
+  const err = document.getElementById("pl-editor-error");
+  if (err) {
+    err.classList.add("hidden");
+    err.textContent = "";
+  }
+}
+
+function showPriceListEditorError(msg) {
+  const err = document.getElementById("pl-editor-error");
+  if (err) {
+    err.textContent = msg;
+    err.classList.remove("hidden");
+  }
+}
+
+async function loadPriceListEditorTable() {
+  const tbody = document.getElementById("pl-editor-tbody");
+  const empty = document.getElementById("pl-editor-empty");
+  if (!tbody || !empty) {
+    return;
+  }
+  clearPriceListEditorError();
+  tbody.innerHTML = "<tr><td colspan=\"3\" class=\"muted\">Загрузка…</td></tr>";
+  const st = state.priceListEditor;
+  try {
+    const params = new URLSearchParams();
+    params.set("page", String(st.page));
+    params.set("itemsPerPage", String(st.itemsPerPage));
+    params.set("order[name]", "asc");
+    const data = await apiFetch(`/products?${params.toString()}`, { headers: API_ACCEPT_JSONLD });
+    const { items, total } = unwrapCollection(data);
+    st.total = typeof total === "number" ? total : items.length;
+    tbody.innerHTML = "";
+    if (items.length === 0) {
+      empty.classList.remove("hidden");
+    } else {
+      empty.classList.add("hidden");
+      for (const row of items) {
+        const tr = document.createElement("tr");
+        const dirty = Object.prototype.hasOwnProperty.call(st.dirtyPrices, row.id);
+        const rawPrice = dirty ? st.dirtyPrices[row.id] : row.price ?? "";
+        const sourcePrice = row.price ?? "";
+        tr.innerHTML = `<td>${escapeHtml(row.name || "—")}</td>
+          <td><code>${escapeHtml(row.article || "—")}</code></td>
+          <td>
+            <input
+              type="text"
+              class="pl-editor-price-input ${dirty ? "is-dirty" : ""}"
+              data-product-id="${escapeHtml(row.id)}"
+              data-source-price="${escapeHtml(String(sourcePrice))}"
+              value="${escapeHtml(String(rawPrice))}"
+              placeholder="Введите цену"
+            />
+          </td>`;
+        tbody.appendChild(tr);
+      }
+    }
+    renderPriceListEditorPager();
+  } catch (e) {
+    if (e.sessionEnded) {
+      return;
+    }
+    tbody.innerHTML = "";
+    empty.classList.add("hidden");
+    showPriceListEditorError(e.message || String(e));
+  }
+}
+
+function updatePriceListEditorDirtyState(productId, value, sourceValue) {
+  const st = state.priceListEditor;
+  const current = String(value ?? "").trim();
+  const initial = String(sourceValue ?? "").trim();
+  if (current === initial) {
+    delete st.dirtyPrices[productId];
+    return false;
+  }
+  st.dirtyPrices[productId] = value;
+  return true;
+}
+
+async function savePriceListEditorChanges() {
+  const st = state.priceListEditor;
+  const dirtyIds = Object.keys(st.dirtyPrices);
+  if (dirtyIds.length === 0) {
+    alert("Нет изменений для сохранения.");
+    return;
+  }
+  clearPriceListEditorError();
+  const saveBtn = document.getElementById("pl-editor-save");
+  if (saveBtn instanceof HTMLButtonElement) {
+    saveBtn.disabled = true;
+  }
+  try {
+    for (const id of dirtyIds) {
+      const entity = await apiFetch(`/products/${id}`);
+      const payload = productWritablePayloadFromEntity(entity);
+      payload.price = String(st.dirtyPrices[id] ?? "").trim();
+      await apiFetch(`/products/${id}`, { method: "PUT", body: JSON.stringify(payload) });
+      delete st.dirtyPrices[id];
+    }
+    await loadPriceListEditorTable();
+    alert("Изменения прайс-листа сохранены.");
+  } catch (e) {
+    notifyApiError(e);
+  } finally {
+    if (saveBtn instanceof HTMLButtonElement) {
+      saveBtn.disabled = false;
+    }
+  }
 }
 
 async function loadFavoritesTable() {
@@ -3528,6 +3685,47 @@ document.getElementById("pl-reset")?.addEventListener("click", async () => {
   } catch (e) {
     notifyApiError(e);
   }
+});
+
+document.getElementById("pl-editor-refresh")?.addEventListener("click", async () => {
+  await loadPriceListEditorTable();
+});
+
+document.getElementById("pl-editor-save")?.addEventListener("click", async () => {
+  await savePriceListEditorChanges();
+});
+
+document.getElementById("pl-editor-prev")?.addEventListener("click", async () => {
+  const st = state.priceListEditor;
+  if (st.page <= 1) {
+    return;
+  }
+  st.page -= 1;
+  await loadPriceListEditorTable();
+});
+
+document.getElementById("pl-editor-next")?.addEventListener("click", async () => {
+  const st = state.priceListEditor;
+  const totalPages = Math.max(1, Math.ceil(st.total / st.itemsPerPage));
+  if (st.page >= totalPages) {
+    return;
+  }
+  st.page += 1;
+  await loadPriceListEditorTable();
+});
+
+document.getElementById("pl-editor-tbody")?.addEventListener("input", (ev) => {
+  const t = ev.target;
+  if (!(t instanceof HTMLInputElement) || !t.classList.contains("pl-editor-price-input")) {
+    return;
+  }
+  const id = t.dataset.productId;
+  if (!id) {
+    return;
+  }
+  const source = t.dataset.sourcePrice ?? "";
+  const isDirty = updatePriceListEditorDirtyState(id, t.value, source);
+  t.classList.toggle("is-dirty", isDirty);
 });
 
 document.getElementById("cc-add-group").addEventListener("click", () => {

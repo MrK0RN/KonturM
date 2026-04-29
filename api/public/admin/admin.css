@@ -1201,6 +1201,39 @@ code {
   gap: 0.75rem;
   flex-wrap: wrap;
 }
+.pl-editor-card {
+  margin-top: 1rem;
+}
+.pl-editor-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.pl-editor-toolbar {
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.pl-editor-wrap {
+  margin-top: 0.75rem;
+  max-height: 520px;
+  overflow: auto;
+}
+.pl-editor-price-input {
+  min-width: 9rem;
+}
+.pl-editor-price-input.is-dirty {
+  border-color: var(--accent, #2f5bea);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--accent, #2f5bea) 35%, transparent);
+}
+.pl-editor-foot {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
 
 /* Certificates catalog admin */
 .cc-groups {

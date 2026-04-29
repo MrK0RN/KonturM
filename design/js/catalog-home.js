@@ -10,13 +10,20 @@
     return "/category2?slug=" + encodeURIComponent(slug);
   }
 
+  function categorySlugForHref(slug) {
+    if (slug === "sovki-i-skrebki") {
+      return "prochee";
+    }
+    return slug;
+  }
+
   function cardVariantClass(i) {
     return "catalog-card--c" + ((i % 9) + 1);
   }
 
   function renderCard(slug, name, photo, index) {
     var img = K.mediaUrl(photo) || PLACEHOLDER_IMG;
-    var href = category2Url(slug);
+    var href = category2Url(categorySlugForHref(slug));
     var cls = "catalog-card " + cardVariantClass(index);
     return (
       '<li>' +
@@ -45,7 +52,7 @@
     return (
       '<li class="catalog-sidebar__item">' +
       '<a class="catalog-sidebar__link" style="padding-left:16px" href="' +
-      K.escapeHtml(category2Url(slug)) +
+      K.escapeHtml(category2Url(categorySlugForHref(slug))) +
       '">' +
       K.escapeHtml(name) +
       "</a></li>"

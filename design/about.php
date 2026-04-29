@@ -167,7 +167,7 @@ $figma = static function (string $file): string {
                   <path d="M7 7H17V17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </a>
-              <a href="<?= htmlspecialchars($category2Url('sovki-i-skrebki'), ENT_QUOTES, 'UTF-8') ?>" class="ab-link-cell">
+              <a href="<?= htmlspecialchars($category2Url('prochee'), ENT_QUOTES, 'UTF-8') ?>" class="ab-link-cell">
                 <span class="ab-link-cell__name">Совки и скребки</span>
                 <svg class="ab-link-cell__arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M7 17L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
