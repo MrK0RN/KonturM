@@ -315,6 +315,219 @@
   }
 }
 
+/* ── List view ───────────────────────────────────────────────── */
+
+.cat2-grid--list {
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.cat2-grid--list .cat2-card {
+  flex-direction: row;
+  max-width: none;
+  min-height: 0;
+}
+
+.cat2-grid--list .cat2-card__media {
+  width: 180px;
+  min-width: 180px;
+  aspect-ratio: 1;
+  border-radius: 0;
+  border-right: 1px solid rgba(14, 15, 15, 0.07);
+}
+
+.cat2-grid--list .cat2-card__body {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto 1fr;
+  flex: 1;
+  padding: 18px 20px 18px 22px;
+  gap: 4px 20px;
+}
+
+.cat2-grid--list .cat2-card__title {
+  grid-column: 1;
+  grid-row: 1;
+  -webkit-line-clamp: 3;
+  font-size: 15px;
+}
+
+.cat2-grid--list .cat2-card__specs {
+  grid-column: 1;
+  grid-row: 2;
+  align-self: start;
+  margin-top: 4px;
+}
+
+.cat2-grid--list .cat2-card__row {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  border-top: none;
+  border-left: 1px solid rgba(14, 15, 15, 0.07);
+  padding-top: 0;
+  padding-left: 20px;
+  margin-top: 0;
+  gap: 12px;
+  min-width: 144px;
+}
+
+.cat2-grid--list .cat2-card__price {
+  font-size: 22px;
+  text-align: center;
+}
+
+.cat2-grid--list .cat2-card__btn {
+  width: 100%;
+  justify-content: center;
+  height: 38px;
+  font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .cat2-grid--list .cat2-card__media {
+    width: 120px;
+    min-width: 120px;
+  }
+
+  .cat2-grid--list .cat2-card__row {
+    min-width: 120px;
+    padding-left: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cat2-grid--list .cat2-card {
+    flex-direction: column;
+  }
+
+  .cat2-grid--list .cat2-card__media {
+    width: 100%;
+    min-width: 0;
+    aspect-ratio: 3 / 2;
+    border-right: none;
+    border-bottom: 1px solid rgba(14, 15, 15, 0.07);
+  }
+
+  .cat2-grid--list .cat2-card__body {
+    display: flex;
+    flex-direction: column;
+    padding: 14px 16px 16px;
+    gap: 8px;
+  }
+
+  .cat2-grid--list .cat2-card__row {
+    flex-direction: row;
+    border-left: none;
+    border-top: 1px solid rgba(14, 15, 15, 0.07);
+    padding-left: 0;
+    padding-top: 12px;
+    min-width: 0;
+  }
+
+  .cat2-grid--list .cat2-card__btn {
+    width: auto;
+  }
+}
+
+/* ── Compact list view ───────────────────────────────────────── */
+
+.cat2-grid--compact {
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.cat2-grid--compact .cat2-card {
+  flex-direction: row;
+  align-items: center;
+  max-width: none;
+  border-radius: 10px;
+  min-height: 64px;
+}
+
+.cat2-grid--compact .cat2-card__media {
+  width: 64px;
+  min-width: 64px;
+  height: 64px;
+  aspect-ratio: 1;
+  border-radius: 0;
+  border-right: 1px solid rgba(14, 15, 15, 0.07);
+  flex-shrink: 0;
+}
+
+.cat2-grid--compact .cat2-card__media img {
+  padding: 8px;
+}
+
+.cat2-grid--compact .cat2-card:hover .cat2-card__media img {
+  transform: scale(1.08);
+}
+
+.cat2-grid--compact .cat2-card__body {
+  flex: 1;
+  flex-direction: row;
+  align-items: center;
+  padding: 10px 14px 10px 16px;
+  gap: 14px;
+  min-height: 0;
+}
+
+.cat2-grid--compact .cat2-card__title {
+  flex: 1;
+  -webkit-line-clamp: 1;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.cat2-grid--compact .cat2-card__specs {
+  display: none;
+}
+
+.cat2-grid--compact .cat2-card__row {
+  flex-shrink: 0;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding-top: 0;
+  border-top: none;
+  margin-top: 0;
+}
+
+.cat2-grid--compact .cat2-card__price {
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+.cat2-grid--compact .cat2-card__btn {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 12px;
+  gap: 4px;
+}
+
+.cat2-grid--compact .cat2-card__btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+@media (max-width: 480px) {
+  .cat2-grid--compact .cat2-card__btn span {
+    display: none;
+  }
+
+  .cat2-grid--compact .cat2-card__btn {
+    width: 32px;
+    padding: 0;
+  }
+
+  .cat2-grid--compact .cat2-card__btn svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
 /* ── Product Detail Page ─────────────────────────────────────── */
 
 .pd {

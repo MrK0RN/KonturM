@@ -30,6 +30,7 @@ const state = {
     page: 1,
     itemsPerPage: 50,
     total: 0,
+    query: "",
     /** @type {Record<string, string>} */
     dirtyPrices: {},
   },
@@ -2631,12 +2632,26 @@ async function loadPriceListEditorTable() {
   tbody.innerHTML = "<tr><td colspan=\"3\" class=\"muted\">Загрузка…</td></tr>";
   const st = state.priceListEditor;
   try {
-    const params = new URLSearchParams();
-    params.set("page", String(st.page));
-    params.set("itemsPerPage", String(st.itemsPerPage));
-    params.set("order[name]", "asc");
-    const data = await apiFetch(`/products?${params.toString()}`, { headers: API_ACCEPT_JSONLD });
-    const { items, total } = unwrapCollection(data);
+    const q = st.query.trim();
+    const buildParams = () => {
+      const params = new URLSearchParams();
+      params.set("page", String(st.page));
+      params.set("itemsPerPage", String(st.itemsPerPage));
+      params.set("order[name]", "asc");
+      return params;
+    };
+    let params = buildParams();
+    if (q) {
+      params.set("name", q);
+    }
+    let data = await apiFetch(`/products?${params.toString()}`, { headers: API_ACCEPT_JSONLD });
+    let { items, total } = unwrapCollection(data);
+    if (q && (!Array.isArray(items) || items.length === 0)) {
+      params = buildParams();
+      params.set("article", q);
+      data = await apiFetch(`/products?${params.toString()}`, { headers: API_ACCEPT_JSONLD });
+      ({ items, total } = unwrapCollection(data));
+    }
     st.total = typeof total === "number" ? total : items.length;
     tbody.innerHTML = "";
     if (items.length === 0) {
@@ -3688,6 +3703,7 @@ document.getElementById("pl-reset")?.addEventListener("click", async () => {
 });
 
 document.getElementById("pl-editor-refresh")?.addEventListener("click", async () => {
+  state.priceListEditor.page = 1;
   await loadPriceListEditorTable();
 });
 
@@ -3726,6 +3742,16 @@ document.getElementById("pl-editor-tbody")?.addEventListener("input", (ev) => {
   const source = t.dataset.sourcePrice ?? "";
   const isDirty = updatePriceListEditorDirtyState(id, t.value, source);
   t.classList.toggle("is-dirty", isDirty);
+});
+
+document.getElementById("pl-editor-search")?.addEventListener("input", async (ev) => {
+  const t = ev.target;
+  if (!(t instanceof HTMLInputElement)) {
+    return;
+  }
+  state.priceListEditor.query = t.value;
+  state.priceListEditor.page = 1;
+  await loadPriceListEditorTable();
 });
 
 document.getElementById("cc-add-group").addEventListener("click", () => {

@@ -7,47 +7,49 @@
   margin-bottom: 24px;
 }
 
+/* ── View toggle: segmented pill control ─────────────────────── */
 .cat2-toolbar__views {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   height: 36px;
-  border-radius: var(--cat2-radius-control);
-  overflow: hidden;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  padding: 3px;
+  gap: 2px;
+  background: var(--cat2-bg-muted);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
 }
 
 .cat2-toolbar__view {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  min-width: 33.89px;
+  width: 30px;
+  height: 28px;
   border: 0;
   padding: 0;
-  background: var(--cat2-bg-muted);
-  color: var(--cat2-accent-red);
+  background: transparent;
+  color: var(--cat2-text-muted);
+  border-radius: 8px;
   cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.cat2-toolbar__view:first-child {
-  border-radius: 12px 0 0 12px;
-  width: 34px;
-}
-
-.cat2-toolbar__view:last-child {
-  border-radius: 0 12px 12px 0;
-  width: 32px;
-  min-width: 32.41px;
-}
-
-.cat2-toolbar__view--active {
-  box-shadow: inset 0 0 0 1px #ffffff;
-  z-index: 1;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  flex-shrink: 0;
 }
 
 .cat2-toolbar__view:hover {
-  filter: brightness(0.98);
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--cat2-text);
+}
+
+.cat2-toolbar__view--active {
+  background: #fff;
+  color: var(--cat2-accent-orange);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.cat2-toolbar__view--active:hover {
+  background: #fff;
+  color: var(--cat2-accent-orange);
 }
 
 .cat2-toolbar__view:focus-visible {
@@ -60,6 +62,7 @@
   width: 14px;
   height: 12px;
   display: block;
+  transition: opacity 0.15s;
 }
 
 .cat2-toolbar__controls {

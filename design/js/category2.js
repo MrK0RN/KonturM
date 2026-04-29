@@ -669,14 +669,34 @@
       });
     }
 
+    var VIEW_LABEL_TO_MODE = {
+      "Плитка": "tile",
+      "Список": "list",
+      "Компактный список": "compact",
+    };
+    var VIEW_STORAGE_KEY = "cat2_view_mode";
+
+    function applyViewMode(mode) {
+      grid.classList.remove("cat2-grid--list", "cat2-grid--compact");
+      if (mode === "list") grid.classList.add("cat2-grid--list");
+      else if (mode === "compact") grid.classList.add("cat2-grid--compact");
+      document.querySelectorAll(".cat2-toolbar__view").forEach(function (b) {
+        var btnMode = VIEW_LABEL_TO_MODE[b.getAttribute("aria-label")] || "tile";
+        var active = btnMode === mode;
+        b.classList.toggle("cat2-toolbar__view--active", active);
+        b.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+      try { localStorage.setItem(VIEW_STORAGE_KEY, mode); } catch (e) {}
+    }
+
+    var savedMode = "tile";
+    try { savedMode = localStorage.getItem(VIEW_STORAGE_KEY) || "tile"; } catch (e) {}
+    applyViewMode(savedMode);
+
     document.querySelectorAll(".cat2-toolbar__view").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        document.querySelectorAll(".cat2-toolbar__view").forEach(function (b) {
-          b.classList.remove("cat2-toolbar__view--active");
-          b.setAttribute("aria-pressed", "false");
-        });
-        btn.classList.add("cat2-toolbar__view--active");
-        btn.setAttribute("aria-pressed", "true");
+        var mode = VIEW_LABEL_TO_MODE[btn.getAttribute("aria-label")] || "tile";
+        applyViewMode(mode);
       });
     });
 

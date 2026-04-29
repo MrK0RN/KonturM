@@ -1215,6 +1215,15 @@ code {
   gap: 0.5rem;
   flex-wrap: wrap;
 }
+.pl-editor-search-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+}
+.pl-editor-search-input {
+  min-width: 14rem;
+}
 .pl-editor-wrap {
   margin-top: 0.75rem;
   max-height: 520px;
