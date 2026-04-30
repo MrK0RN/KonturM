@@ -96,8 +96,14 @@
       btn.addEventListener("click", function () {
         var cid = btn.getAttribute("data-cart-dec");
         var inp = mount.querySelector('[data-cart-qty="' + cid + '"]');
-        var q = Math.max(1, (parseInt((inp && inp.value) || "1", 10) || 1) - 1);
-        K.patchCartItem(cid, q)
+        var current = parseInt((inp && inp.value) || "1", 10) || 1;
+        if (current <= 1) {
+          K.deleteCartItem(cid)
+            .then(function (c) { refreshAll(c); })
+            .catch(function () {});
+          return;
+        }
+        K.patchCartItem(cid, current - 1)
           .then(function (c) { refreshAll(c); })
           .catch(function () {});
       });
