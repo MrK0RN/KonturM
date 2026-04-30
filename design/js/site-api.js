@@ -262,11 +262,13 @@
       if (q > 1) {
         runPatch(q - 1);
       } else {
-        setBusy(true);
+        // Оптимистично возвращаем дефолтную кнопку сразу, без ожидания API.
+        restoreButton();
         deleteCartItem(itemId)
-          .then(handleCart)
+          .then(function () {})
           .catch(function () {
-            setBusy(false);
+            // Если удаление не удалось, возвращаем актуальное состояние из корзины.
+            syncCartSteppersForContainer(document, onRestored);
           });
       }
     });
