@@ -98,9 +98,12 @@
         var inp = mount.querySelector('[data-cart-qty="' + cid + '"]');
         var current = parseInt((inp && inp.value) || "1", 10) || 1;
         if (current <= 1) {
+          refreshAll(optimisticCartWithoutItem(cid));
           K.deleteCartItem(cid)
             .then(function (c) { refreshAll(c); })
-            .catch(function () {});
+            .catch(function () {
+              K.refreshCartBadge().then(function (c) { refreshAll(c); });
+            });
           return;
         }
         K.patchCartItem(cid, current - 1)
@@ -125,17 +128,21 @@
     mount.querySelectorAll("[data-cart-remove]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var cid = btn.getAttribute("data-cart-remove");
+        refreshAll(optimisticCartWithoutItem(cid));
         K.deleteCartItem(cid)
           .then(function (c) { refreshAll(c); })
-          .catch(function () {});
+          .catch(function () {
+            K.refreshCartBadge().then(function (c) { refreshAll(c); });
+          });
       });
     });
   }
 
   /* ── Global refs ────────────────────────────────────────── */
-  var _mount, _emptyEl, _layoutEl, _sumEl, _qtyEl, _summaryQtyEl;
+  var _mount, _emptyEl, _layoutEl, _sumEl, _qtyEl, _summaryQtyEl, _cartState;
 
   function refreshAll(cart) {
+    _cartState = cart || { items: [], total_quantity: 0, total_amount: 0 };
     render(cart, _mount, _emptyEl, _layoutEl);
     K.updateCartLinkLabel(cart.total_quantity);
     var total = Number(cart.total_amount) || 0;
@@ -143,6 +150,28 @@
     if (_sumEl) _sumEl.textContent = fmtPrice(total);
     if (_qtyEl) _qtyEl.textContent = String(qty);
     if (_summaryQtyEl) _summaryQtyEl.textContent = String(qty);
+  }
+
+  function optimisticCartWithoutItem(itemId) {
+    var base = _cartState || { items: [], total_quantity: 0, total_amount: 0 };
+    var items = Array.isArray(base.items) ? base.items : [];
+    var nextItems = [];
+    var removed = null;
+    items.forEach(function (it) {
+      if (!removed && String(it.id) === String(itemId)) {
+        removed = it;
+        return;
+      }
+      nextItems.push(it);
+    });
+    if (!removed) return base;
+    var removedQty = Number(removed.quantity) || 0;
+    var removedSum = (Number(removed.price) || 0) * removedQty;
+    return {
+      items: nextItems,
+      total_quantity: Math.max(0, (Number(base.total_quantity) || 0) - removedQty),
+      total_amount: Math.max(0, (Number(base.total_amount) || 0) - removedSum),
+    };
   }
 
   /* ── INN validation helper ─────────────────────────────── */
