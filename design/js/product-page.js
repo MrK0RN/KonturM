@@ -4,6 +4,9 @@
   var K = window.KonturM;
   if (!K) return;
 
+  var PLACEHOLDER_IMG =
+    "/design/assets/figma/e7a2477a-3b7f-4aec-ab4f-a7dbf2597787.png";
+
   function qp(name) {
     return new URLSearchParams(window.location.search).get(name) || "";
   }
@@ -155,6 +158,108 @@
     );
   }
 
+  function parseSpecs(raw) {
+    if (!raw) return null;
+    if (typeof raw === "object") return raw;
+    if (typeof raw === "string") {
+      try {
+        return JSON.parse(raw);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  function relatedSpecsHtml(rawSpecs) {
+    var specs = parseSpecs(rawSpecs);
+    if (!specs || typeof specs !== "object") return "";
+    var keys = Object.keys(specs).filter(function (k) {
+      return k !== "has_verification";
+    });
+    keys.sort();
+    return keys
+      .slice(0, 3)
+      .map(function (k) {
+        var v = specs[k];
+        var val = Array.isArray(v) ? v.join(", ") : String(v);
+        return (
+          '<div class="cat2-card__spec-row"><dt>' +
+          esc(k.replace(/_/g, " ")) +
+          "</dt><dd>" +
+          esc(val) +
+          "</dd></div>"
+        );
+      })
+      .join("");
+  }
+
+  function relatedProductCardHtml(product) {
+    var img = K.mediaUrl(product.photo) || PLACEHOLDER_IMG;
+    var href = "/product?slug=" + encodeURIComponent(product.slug || "");
+    var title = product.name || "Товар";
+    return (
+      "<li>" +
+      '<article class="cat2-card pd-related__card">' +
+      '<a class="cat2-card__media" href="' + esc(href) + '">' +
+      '<img src="' + esc(img) + '" width="247" height="247" alt="' + esc(product.photo_alt || title) + '" decoding="async" loading="lazy"/>' +
+      "</a>" +
+      '<div class="cat2-card__body">' +
+      '<h3 class="cat2-card__title"><a href="' + esc(href) + '">' + esc(title) + "</a></h3>" +
+      '<dl class="cat2-card__specs">' + relatedSpecsHtml(product.technical_specs) + "</dl>" +
+      '<div class="cat2-card__row">' +
+      '<p class="cat2-card__price">' + esc(K.fmtPriceRu(product.price)) + "</p>" +
+      '<button type="button" class="cat2-card__btn" data-add-cart="' + esc(String(product.id)) + '" data-related-add-cart="' + esc(String(product.id)) + '" aria-label="Добавить ' + esc(title) + ' в корзину">' +
+      buildCartIcon() +
+      "<span>В корзину</span></button>" +
+      "</div>" +
+      "</div>" +
+      "</article></li>"
+    );
+  }
+
+  function buildAlsoBoughtHtml(products) {
+    if (!Array.isArray(products) || products.length === 0) return "";
+    return (
+      '<section class="pd-related" aria-labelledby="pd-related-title">' +
+      '<div class="pd-related__head">' +
+      '<div><p class="pd-related__eyebrow">Рекомендуем</p>' +
+      '<h2 class="pd-related__title" id="pd-related-title">С этим товаром покупают</h2></div>' +
+      '<p class="pd-related__lead">Подберите совместимые позиции и добавьте их в заказ без перехода в каталог.</p>' +
+      "</div>" +
+      '<ul class="cat2-grid cat2-grid--4 pd-related__grid">' +
+      products.map(relatedProductCardHtml).join("") +
+      "</ul>" +
+      "</section>"
+    );
+  }
+
+  function bindRelatedCartButtons(root, cart) {
+    if (!root || !K.addProductToCart || !K.replaceAddButtonWithCartStepper) return;
+
+    function bindOne(btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-related-add-cart");
+        btn.disabled = true;
+        btn.innerHTML = buildCartIcon() + "<span>Добавляем…</span>";
+        K.addProductToCart(id, 1)
+          .then(function (nextCart) {
+            btn.disabled = false;
+            K.replaceAddButtonWithCartStepper(btn, id, nextCart, bindOne);
+          })
+          .catch(function () {
+            btn.disabled = false;
+            btn.innerHTML = buildCartIcon() + "<span>В корзину</span>";
+          });
+      });
+    }
+
+    root.querySelectorAll("[data-related-add-cart]").forEach(bindOne);
+    if (K.syncCartSteppersForContainer) {
+      K.syncCartSteppersForContainer(root, bindOne, cart);
+    }
+  }
+
   function init() {
     var slug = qp("slug").trim();
     var mount = document.getElementById("product-detail");
@@ -191,11 +296,10 @@
         var phoneMainHref = String(kc.phone_main_href || "tel:+78432023170");
         var phoneMainLabel = String(kc.phone_main_label || "+7 (843) 202-31-70");
 
-        var PLACEHOLDER = "/design/assets/figma/e7a2477a-3b7f-4aec-ab4f-a7dbf2597787.png";
         var photos = Array.isArray(p.photos) && p.photos.length ? p.photos : null;
         var mainImg = (photos && photos[0] ? K.mediaUrl(photos[0].url) : null)
           || K.mediaUrl(p.photo)
-          || PLACEHOLDER;
+          || PLACEHOLDER_IMG;
         var mainAlt = (photos && photos[0] && photos[0].alt) || p.photo_alt || p.name || "";
 
         var ts = p.technical_specs;
@@ -262,13 +366,13 @@
         var descriptionHtml = descPlain
           ? '<div class="pd__description" aria-label="Описание товара">' + esc(descPlain) + "</div>"
           : "";
+        var alsoBoughtHtml = buildAlsoBoughtHtml(p.also_bought_products);
 
         var infoHtml =
           '<div class="pd__info">' +
           metaHtml +
           '<h1 class="pd__name">' + esc(p.name || "") + "</h1>" +
           '<hr class="pd__divider"/>' +
-          descriptionHtml +
           priceHtml +
           actionsHtml +
           contactHtml +
@@ -282,6 +386,8 @@
           galleryHtml +
           infoHtml +
           "</div>" +
+          descriptionHtml +
+          alsoBoughtHtml +
           "</div>";
 
         /* Gallery thumb switching */
@@ -368,6 +474,8 @@
             if (step0 && qtyWrapEl) qtyWrapEl.style.display = "none";
           }
         }
+
+        bindRelatedCartButtons(mount, cart);
       })
       .catch(function () {
         mount.innerHTML = '<p class="catalog-home-loading">Не удалось загрузить товар</p>';

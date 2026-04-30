@@ -159,6 +159,7 @@ label.inline {
 input[type="text"],
 input[type="password"],
 input[type="number"],
+input[type="search"],
 input[type="url"],
 select,
 textarea {
@@ -176,6 +177,84 @@ textarea {
   resize: vertical;
   font-family: ui-monospace, monospace;
   font-size: 0.82rem;
+}
+
+.admin-product-picker-label {
+  margin-top: 0.25rem;
+}
+
+.admin-product-picker {
+  margin-top: 0.35rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.admin-product-picker__search {
+  margin-top: 0;
+}
+
+.admin-product-picker__selected {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.65rem 0;
+}
+
+.admin-product-picker__chip {
+  border: 1px solid rgba(61, 139, 253, 0.45);
+  border-radius: 999px;
+  background: rgba(61, 139, 253, 0.12);
+  color: var(--text);
+  padding: 0.25rem 0.55rem;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.admin-product-picker__list {
+  display: grid;
+  gap: 0.35rem;
+  max-height: 18rem;
+  overflow: auto;
+  padding-right: 0.25rem;
+}
+
+.admin-product-picker__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.admin-product-picker__row:hover {
+  border-color: rgba(61, 139, 253, 0.35);
+  background: rgba(61, 139, 253, 0.08);
+}
+
+.admin-product-picker__row input {
+  margin-top: 0.15rem;
+}
+
+.admin-product-picker__row strong,
+.admin-product-picker__row small {
+  display: block;
+}
+
+.admin-product-picker__row small {
+  margin-top: 0.15rem;
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.admin-product-picker__hint,
+.admin-product-picker__more {
+  margin: 0.6rem 0 0;
 }
 
 .btn {
@@ -714,6 +793,10 @@ textarea.order-items-json {
   margin: auto;
 }
 
+.modal--product .modal-panel {
+  width: min(980px, 100%);
+}
+
 .modal-head {
   display: flex;
   justify-content: space-between;
@@ -730,7 +813,7 @@ textarea.order-items-json {
   overflow-y: auto;
   flex: 1;
   display: grid;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 .modal-foot {
@@ -739,7 +822,100 @@ textarea.order-items-json {
   border-top: 1px solid var(--border);
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.modal-error {
+  flex: 1 1 100%;
+  margin: 0 0 0.25rem;
+}
+
+.form-field {
+  margin: 0;
+}
+
+.form-field-label {
+  display: block;
+  color: var(--muted);
+}
+
+.form-field-hint {
+  display: block;
+  margin-top: 0.3rem;
+  line-height: 1.35;
+}
+
+.form-field--checkbox {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.45rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.form-field--checkbox input {
+  margin-top: 0.1rem;
+}
+
+.form-field--checkbox .form-field-hint {
+  flex-basis: 100%;
+}
+
+.product-form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.form-section {
+  padding: 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.form-section-title {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+details.form-section .form-section-title {
+  cursor: pointer;
+}
+
+.form-section-hint {
+  margin: 0.25rem 0 0.75rem;
+  line-height: 1.4;
+}
+
+.form-section-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 1rem;
+}
+
+.form-field--full {
+  grid-column: 1 / -1;
+}
+
+.form-section textarea {
+  min-height: 7rem;
+}
+
+.form-section--files textarea,
+.form-section--content [data-field="technical_specs"] textarea {
+  font-family: ui-monospace, monospace;
+}
+
+.btn:disabled {
+  cursor: default;
+  opacity: 0.65;
 }
 
 .form-row-2 {
@@ -812,7 +988,8 @@ textarea.order-items-json {
 
 @media (max-width: 640px) {
   .api-builder .grid-2,
-  .form-row-2 {
+  .form-row-2,
+  .form-section-grid {
     grid-template-columns: 1fr;
   }
 }

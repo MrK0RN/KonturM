@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\EventListener;
 
 use App\Entity\Product;
+use Doctrine\DBAL\Connection;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsDoctrineListener;
 use Doctrine\ORM\Event\PostPersistEventArgs;
 use Doctrine\ORM\Event\PostRemoveEventArgs;
@@ -23,6 +24,7 @@ final class ProductPublicCacheInvalidator
 {
     public function __construct(
         private readonly CacheInterface $cache,
+        private readonly Connection $connection,
     ) {
     }
 
@@ -34,6 +36,7 @@ final class ProductPublicCacheInvalidator
         }
 
         $this->deleteProductCacheBySlug($entity->getSlug());
+        $this->deleteProductCachesWhereRecommended((string) $entity->getId());
 
         $uow = $args->getObjectManager()->getUnitOfWork();
         $changeSet = $uow->getEntityChangeSet($entity);
@@ -50,6 +53,7 @@ final class ProductPublicCacheInvalidator
         }
 
         $this->deleteProductCacheBySlug($entity->getSlug());
+        $this->deleteProductCachesWhereRecommended((string) $entity->getId());
     }
 
     public function postRemove(PostRemoveEventArgs $args): void
@@ -60,6 +64,7 @@ final class ProductPublicCacheInvalidator
         }
 
         $this->deleteProductCacheBySlug($entity->getSlug());
+        $this->deleteProductCachesWhereRecommended((string) $entity->getId());
     }
 
     private function deleteProductCacheBySlug(string $slug): void
@@ -69,5 +74,25 @@ final class ProductPublicCacheInvalidator
         }
 
         $this->cache->delete('product_'.$slug);
+    }
+
+    private function deleteProductCachesWhereRecommended(string $productId): void
+    {
+        if ($productId === '') {
+            return;
+        }
+
+        $slugs = $this->connection->fetchFirstColumn(<<<SQL
+SELECT DISTINCT p.slug
+FROM products p
+INNER JOIN categories c ON c.id = p.category_id
+WHERE c.also_bought_product_ids @> CAST(:needle AS jsonb)
+SQL, ['needle' => json_encode([$productId], JSON_THROW_ON_ERROR)]);
+
+        foreach ($slugs as $slug) {
+            if (is_string($slug) && $slug !== '') {
+                $this->deleteProductCacheBySlug($slug);
+            }
+        }
     }
 }

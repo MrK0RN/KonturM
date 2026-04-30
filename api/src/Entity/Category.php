@@ -80,6 +80,11 @@ class Category
     #[SerializedName('aggregate_products')]
     private bool $aggregateProducts = false;
 
+    /** @var list<string>|null Product UUIDs shown in "С этим товаром покупают" for this category. */
+    #[ORM\Column(type: 'jsonb', nullable: true)]
+    #[SerializedName('also_bought_product_ids')]
+    private ?array $alsoBoughtProductIds = null;
+
     /** @var array<string, mixed>|null keys: string[] whitelist/order; labels: array<string,string> for UI */
     #[ORM\Column(type: 'json', nullable: true)]
     #[SerializedName('filter_config')]
@@ -255,6 +260,18 @@ class Category
     public function setAggregateProducts(bool $aggregateProducts): self
     {
         $this->aggregateProducts = $aggregateProducts;
+
+        return $this;
+    }
+
+    public function getAlsoBoughtProductIds(): ?array
+    {
+        return $this->alsoBoughtProductIds;
+    }
+
+    public function setAlsoBoughtProductIds(?array $alsoBoughtProductIds): self
+    {
+        $this->alsoBoughtProductIds = $alsoBoughtProductIds;
 
         return $this;
     }

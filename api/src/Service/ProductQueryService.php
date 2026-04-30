@@ -31,7 +31,8 @@ SELECT
     c.id AS category_id,
     c.name AS category_name,
     c.slug AS category_slug,
-    c.display_mode AS category_display_mode
+    c.display_mode AS category_display_mode,
+    c.also_bought_product_ids AS category_also_bought_product_ids
 FROM products p
 LEFT JOIN categories c ON c.id = p.category_id
 WHERE p.slug = :slug
@@ -60,6 +61,9 @@ SQL;
             $canonicalUrl = sprintf('https://merniki.ru/products/%s', $slug);
 
             $photos = $this->fetchProductPhotos((string) $row['id']);
+            $alsoBoughtProducts = $categoryId
+                ? $this->fetchAlsoBoughtProducts($row['category_also_bought_product_ids'] ?? null, (string) $row['id'])
+                : [];
 
             return [
                 // product fields (match DB column naming from PROMPT where possible)
@@ -93,6 +97,7 @@ SQL;
                     'slug' => $row['category_slug'],
                 ],
                 'breadcrumbs' => $breadcrumbs,
+                'also_bought_products' => $alsoBoughtProducts,
                 'canonical_url' => $canonicalUrl,
                 'seo' => [
                     'title' => $seo['title'],
@@ -283,6 +288,99 @@ SQL;
                 'is_primary' => $primary === true || $primary === 't' || $primary === 1 || $primary === '1',
             ];
         }, $rows);
+    }
+
+    /**
+     * @return list<array{id: string, name: string, slug: string, photo: ?string, photo_alt: ?string, article: ?string, price: ?string, stock_status: string, technical_specs: mixed}>
+     */
+    private function fetchAlsoBoughtProducts(mixed $rawProductIds, string $currentProductId): array
+    {
+        $productIds = array_values(array_filter(
+            $this->normalizeStringList($rawProductIds),
+            static fn (string $id): bool => $id !== $currentProductId,
+        ));
+
+        if ($productIds === []) {
+            return [];
+        }
+
+        $sql = <<<SQL
+SELECT
+    id,
+    name,
+    slug,
+    photo,
+    photo_alt,
+    article,
+    price,
+    stock_status,
+    technical_specs
+FROM products
+WHERE id IN (:productIds)
+SQL;
+
+        $rows = $this->connection->fetchAllAssociative(
+            $sql,
+            ['productIds' => $productIds],
+            ['productIds' => ArrayParameterType::STRING],
+        );
+
+        $byId = [];
+        foreach ($rows as $row) {
+            $byId[(string) $row['id']] = [
+                'id' => (string) $row['id'],
+                'name' => (string) $row['name'],
+                'slug' => (string) $row['slug'],
+                'photo' => $row['photo'],
+                'photo_alt' => $row['photo_alt'],
+                'article' => $row['article'],
+                'price' => $row['price'],
+                'stock_status' => (string) $row['stock_status'],
+                'technical_specs' => $row['technical_specs'],
+            ];
+        }
+
+        $ordered = [];
+        foreach ($productIds as $id) {
+            if (isset($byId[$id])) {
+                $ordered[] = $byId[$id];
+            }
+        }
+
+        return $ordered;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function normalizeStringList(mixed $raw): array
+    {
+        if (is_string($raw)) {
+            $decoded = json_decode($raw, true);
+            $raw = is_array($decoded) ? $decoded : [];
+        }
+
+        if (! is_array($raw)) {
+            return [];
+        }
+
+        $seen = [];
+        $out = [];
+        foreach ($raw as $value) {
+            if (! is_string($value)) {
+                continue;
+            }
+
+            $value = trim($value);
+            if ($value === '' || isset($seen[$value])) {
+                continue;
+            }
+
+            $seen[$value] = true;
+            $out[] = $value;
+        }
+
+        return $out;
     }
 
     private function buildSeoForProductOrService(

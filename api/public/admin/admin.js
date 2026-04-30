@@ -676,6 +676,19 @@ function goSection(id) {
 
 const CRUD_SCHEMA = {
   products: {
+    formClass: "product-form",
+    fieldGroups: [
+      {
+        id: "main",
+        title: "Основное",
+        hint: "Минимум для публикации: категория, название, slug и статус наличия.",
+      },
+      { id: "commerce", title: "Продажи и склад", hint: "Данные для карточки товара и прайс-листа." },
+      { id: "media", title: "Обложка", hint: "Основные фотографии удобнее загружать в разделе «Фотографии» после создания товара." },
+      { id: "content", title: "Описание и характеристики", hint: "Характеристики используются на странице товара и в фильтрах категорий." },
+      { id: "files", title: "Чертежи и документы", hint: "Можно заполнить позже. Формат — JSON-массивы.", collapsible: true },
+      { id: "seo", title: "SEO", hint: "Если оставить пустым, витрина сможет использовать название и описание товара.", collapsible: true },
+    ],
     listColumns: [
       { key: "name", label: "Название" },
       { key: "category_id", label: "Категория" },
@@ -685,32 +698,70 @@ const CRUD_SCHEMA = {
       { key: "stock_status", label: "Склад" },
     ],
     fields: [
-      { key: "category_id", label: "Категория", type: "product_category", required: true },
-      { key: "name", label: "Название", type: "text", required: true },
-      { key: "slug", label: "Slug", type: "text", required: true },
-      { key: "article", label: "Артикул", type: "text" },
-      { key: "photo", label: "Фото URL", type: "text" },
-      { key: "photo_alt", label: "Alt фото", type: "text" },
-      { key: "description", label: "Описание", type: "textarea" },
-      { key: "technical_specs", label: "Тех. характеристики (JSON)", type: "json" },
-      { key: "price", label: "Цена", type: "text" },
+      { key: "category_id", label: "Категория", type: "product_category", required: true, group: "main", full: true },
+      {
+        key: "name",
+        label: "Название",
+        type: "text",
+        required: true,
+        group: "main",
+        placeholder: "Например: Манометр ТМ-510",
+        full: true,
+      },
+      {
+        key: "slug",
+        label: "Slug",
+        type: "text",
+        required: true,
+        group: "main",
+        placeholder: "manometr-tm-510",
+        hint: "Заполняется автоматически из названия, но можно поправить вручную.",
+      },
+      { key: "article", label: "Артикул", type: "text", group: "main", placeholder: "ТМ-510" },
+      { key: "price", label: "Цена", type: "text", group: "commerce", placeholder: "12500.00", inputMode: "decimal" },
       {
         key: "stock_status",
         label: "Статус наличия",
         type: "select",
+        group: "commerce",
         options: [
           { v: "on_order", t: "Под заказ" },
           { v: "in_stock", t: "В наличии" },
         ],
       },
-      { key: "manufacturing_time", label: "Срок изготовления", type: "text" },
-      { key: "gost_number", label: "ГОСТ", type: "text" },
-      { key: "has_verification", label: "Поверка", type: "checkbox" },
-      { key: "drawings", label: "Чертежи (JSON)", type: "json" },
-      { key: "documents", label: "Документы (JSON)", type: "json" },
-      { key: "certificates", label: "Сертификаты (JSON)", type: "json" },
-      { key: "meta_title", label: "Meta title", type: "text" },
-      { key: "meta_description", label: "Meta description", type: "textarea" },
+      {
+        key: "manufacturing_time",
+        label: "Срок изготовления",
+        type: "text",
+        group: "commerce",
+        placeholder: "Например: 10 рабочих дней",
+      },
+      { key: "gost_number", label: "ГОСТ", type: "text", group: "commerce", placeholder: "ГОСТ 2405-88" },
+      { key: "has_verification", label: "Поверка", type: "checkbox", group: "commerce", full: true },
+      { key: "photo", label: "Фото URL", type: "text", group: "media", placeholder: "/uploads/products/...", full: true },
+      {
+        key: "photo_alt",
+        label: "Alt фото",
+        type: "text",
+        group: "media",
+        hint: "По умолчанию повторяет slug, пока поле не изменили вручную.",
+        full: true,
+      },
+      { key: "description", label: "Описание", type: "textarea", group: "content", rows: 5, full: true },
+      {
+        key: "technical_specs",
+        label: "Тех. характеристики (JSON)",
+        type: "json",
+        group: "content",
+        rows: 7,
+        hint: 'Например: { "Диаметр": "100 мм", "Класс точности": "1.5" }',
+        full: true,
+      },
+      { key: "drawings", label: "Чертежи (JSON)", type: "json", group: "files", rows: 4, full: true },
+      { key: "documents", label: "Документы (JSON)", type: "json", group: "files", rows: 4, full: true },
+      { key: "certificates", label: "Сертификаты (JSON)", type: "json", group: "files", rows: 4, full: true },
+      { key: "meta_title", label: "Meta title", type: "text", group: "seo", full: true },
+      { key: "meta_description", label: "Meta description", type: "textarea", group: "seo", rows: 3, full: true },
     ],
   },
   categories: {
@@ -742,6 +793,11 @@ const CRUD_SCHEMA = {
         ],
       },
       { key: "aggregate_products", label: "Агрегировать товары", type: "checkbox" },
+      {
+        key: "also_bought_product_ids",
+        label: "С этим товаром покупают",
+        type: "category_recommendations",
+      },
       {
         key: "filter_config",
         label: 'Фильтры витрины (JSON: keys[], labels{}) — удобнее в разделе «Фильтры категорий»',
@@ -1021,7 +1077,9 @@ async function loadCrudTable(url = null) {
   const thead = document.getElementById("crud-thead");
   const empty = document.getElementById("crud-empty");
   const pager = document.getElementById("crud-pager");
-  document.getElementById("btn-new").classList.toggle("hidden", Boolean(sec.hideNew));
+  const newBtn = document.getElementById("btn-new");
+  newBtn.classList.toggle("hidden", Boolean(sec.hideNew));
+  newBtn.textContent = sec.id === "products" ? "Добавить товар" : "Создать";
 
   let fetchUrl;
   if (sec.id === "categories") {
@@ -1296,14 +1354,58 @@ function flattenCategoriesHierarchicalLabels(items) {
 function buildFormFields(schemaKey, entity, isCreate) {
   const schema = CRUD_SCHEMA[schemaKey];
   const frag = document.createDocumentFragment();
+  const groupBodies = new Map();
+  if (Array.isArray(schema.fieldGroups)) {
+    for (const group of schema.fieldGroups) {
+      const section = document.createElement(group.collapsible ? "details" : "section");
+      section.className = `form-section form-section--${group.id}`;
+      if (group.collapsible && group.open) {
+        section.open = true;
+      }
+
+      if (group.collapsible) {
+        const summary = document.createElement("summary");
+        summary.className = "form-section-title";
+        summary.textContent = group.title;
+        section.appendChild(summary);
+      } else {
+        const title = document.createElement("h3");
+        title.className = "form-section-title";
+        title.textContent = group.title;
+        section.appendChild(title);
+      }
+
+      if (group.hint) {
+        const hint = document.createElement("p");
+        hint.className = "form-section-hint muted small";
+        hint.textContent = group.hint;
+        section.appendChild(hint);
+      }
+
+      const body = document.createElement("div");
+      body.className = "form-section-grid";
+      section.appendChild(body);
+      groupBodies.set(group.id, body);
+      frag.appendChild(section);
+    }
+  }
+
   for (const f of schema.fields) {
     if (f.editOnly && isCreate) continue;
+    const target = f.group && groupBodies.has(f.group) ? groupBodies.get(f.group) : frag;
     const wrap = document.createElement("label");
-    wrap.textContent = f.label;
+    wrap.className = "form-field";
+    wrap.dataset.field = f.key;
+    if (f.full) {
+      wrap.classList.add("form-field--full");
+    }
+    const labelText = document.createElement("span");
+    labelText.className = "form-field-label";
+    labelText.textContent = f.required ? `${f.label} *` : f.label;
     let input;
     if (f.type === "textarea") {
       input = document.createElement("textarea");
-      input.rows = 4;
+      input.rows = f.rows || 4;
       if (entity && entity[f.key] !== undefined && entity[f.key] !== null) {
         input.value = String(entity[f.key]);
       }
@@ -1312,8 +1414,16 @@ function buildFormFields(schemaKey, entity, isCreate) {
       input.type = "checkbox";
       input.name = f.key;
       input.checked = entity ? Boolean(entity[f.key]) : false;
-      wrap.insertBefore(input, wrap.firstChild);
-      frag.appendChild(wrap);
+      wrap.classList.add("form-field--checkbox");
+      wrap.appendChild(input);
+      wrap.appendChild(labelText);
+      if (f.hint) {
+        const hint = document.createElement("span");
+        hint.className = "form-field-hint muted small";
+        hint.textContent = f.hint;
+        wrap.appendChild(hint);
+      }
+      target.appendChild(wrap);
       continue;
     } else if (f.type === "select") {
       input = document.createElement("select");
@@ -1333,6 +1443,27 @@ function buildFormFields(schemaKey, entity, isCreate) {
       loading.value = "";
       loading.textContent = "Загрузка категорий…";
       input.appendChild(loading);
+    } else if (f.type === "category_recommendations") {
+      const selectedIds = normalizeProductIdList(entity?.[f.key]);
+      input = document.createElement("input");
+      input.type = "hidden";
+      input.name = f.key;
+      input.value = JSON.stringify(selectedIds);
+      wrap.classList.add("admin-product-picker-label");
+      const picker = document.createElement("div");
+      picker.className = "admin-product-picker";
+      picker.dataset.productPickerField = f.key;
+      picker.innerHTML = `
+        <input type="search" class="admin-product-picker__search" placeholder="Поиск по названию, артикулу или slug" disabled />
+        <div class="admin-product-picker__selected muted small">Выбранные товары загружаются…</div>
+        <div class="admin-product-picker__list" aria-live="polite">Загрузка товаров…</div>
+        <p class="muted small admin-product-picker__hint">Выберите товары, которые нужно показывать на страницах товаров этой категории. Порядок сохраняется по очередности выбора.</p>
+      `;
+      wrap.appendChild(labelText);
+      wrap.appendChild(input);
+      wrap.appendChild(picker);
+      target.appendChild(wrap);
+      continue;
     } else if (f.type === "number") {
       input = document.createElement("input");
       input.type = "number";
@@ -1355,7 +1486,7 @@ function buildFormFields(schemaKey, entity, isCreate) {
       wrap.appendChild(hint);
     } else if (f.type === "json") {
       input = document.createElement("textarea");
-      input.rows = 5;
+      input.rows = f.rows || 5;
       input.name = f.key;
       input.spellcheck = false;
       const v = entity?.[f.key];
@@ -1367,9 +1498,28 @@ function buildFormFields(schemaKey, entity, isCreate) {
       if (entity && entity[f.key] !== undefined && entity[f.key] !== null) input.value = entity[f.key];
     }
     input.name = f.key;
+    if (f.placeholder) {
+      input.placeholder = f.placeholder;
+    }
+    if (f.inputMode) {
+      input.inputMode = f.inputMode;
+    }
     if (f.required) input.required = true;
+    wrap.appendChild(labelText);
     wrap.appendChild(input);
-    frag.appendChild(wrap);
+    if (f.hint) {
+      const hint = document.createElement("span");
+      hint.className = "form-field-hint muted small";
+      hint.textContent = f.hint;
+      wrap.appendChild(hint);
+    }
+    target.appendChild(wrap);
+  }
+  if (schema.formClass) {
+    const root = document.createElement("div");
+    root.className = schema.formClass;
+    root.appendChild(frag);
+    return root;
   }
   return frag;
 }
@@ -1399,6 +1549,11 @@ function readFormPayload(form, schemaKey, isCreate) {
         throw new Error("Выберите категорию");
       }
       payload[f.key] = val.trim();
+      continue;
+    }
+    if (f.type === "category_recommendations") {
+      const ids = normalizeProductIdList(val);
+      payload[f.key] = ids.length ? ids : null;
       continue;
     }
     if (f.type === "json" || f.type === "order_items") {
@@ -1470,6 +1625,173 @@ async function populateProductCategorySelect(form, entity) {
   }
 }
 
+function normalizeProductIdList(value) {
+  let raw = value;
+  if (typeof raw === "string") {
+    const t = raw.trim();
+    if (!t) {
+      return [];
+    }
+    try {
+      raw = JSON.parse(t);
+    } catch {
+      raw = t.split(/[,\n]/);
+    }
+  }
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+  const seen = new Set();
+  const ids = [];
+  for (const item of raw) {
+    if (typeof item !== "string") {
+      continue;
+    }
+    const id = item.trim();
+    if (!id || seen.has(id)) {
+      continue;
+    }
+    seen.add(id);
+    ids.push(id);
+  }
+  return ids;
+}
+
+async function populateCategoryRecommendationsPicker(form, entity) {
+  const field = "also_bought_product_ids";
+  const hidden = form.elements[field];
+  const root = form.querySelector(`[data-product-picker-field="${field}"]`);
+  if (!(hidden instanceof HTMLInputElement) || !root) {
+    return;
+  }
+
+  const search = root.querySelector(".admin-product-picker__search");
+  const selectedBox = root.querySelector(".admin-product-picker__selected");
+  const list = root.querySelector(".admin-product-picker__list");
+  if (!(search instanceof HTMLInputElement) || !selectedBox || !list) {
+    return;
+  }
+
+  let selectedIds = normalizeProductIdList(entity?.[field]);
+  hidden.value = JSON.stringify(selectedIds);
+
+  try {
+    const products = (await fetchAllHydraMembers("/products?order[name]=asc"))
+      .filter((p) => p && typeof p.id === "string")
+      .sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "ru"));
+    const byId = new Map(products.map((p) => [p.id, p]));
+
+    function syncHidden() {
+      hidden.value = JSON.stringify(selectedIds);
+    }
+
+    function renderSelected() {
+      if (selectedIds.length === 0) {
+        selectedBox.textContent = "Ничего не выбрано";
+        return;
+      }
+      selectedBox.innerHTML = "";
+      for (const id of selectedIds) {
+        const product = byId.get(id);
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "admin-product-picker__chip";
+        chip.dataset.removeProductId = id;
+        chip.textContent = product ? `${product.name || "Товар"} ×` : `${id} ×`;
+        selectedBox.appendChild(chip);
+      }
+    }
+
+    function renderList() {
+      const q = search.value.trim().toLowerCase();
+      const selectedSet = new Set(selectedIds);
+      const filtered = products.filter((p) => {
+        if (!q) {
+          return true;
+        }
+        return [p.name, p.article, p.slug].some((v) => String(v || "").toLowerCase().includes(q));
+      });
+      filtered.sort((a, b) => {
+        const ai = selectedIds.indexOf(a.id);
+        const bi = selectedIds.indexOf(b.id);
+        if (ai !== -1 || bi !== -1) {
+          if (ai === -1) return 1;
+          if (bi === -1) return -1;
+          return ai - bi;
+        }
+        return String(a.name || "").localeCompare(String(b.name || ""), "ru");
+      });
+
+      list.innerHTML = "";
+      const shown = filtered.slice(0, 160);
+      if (shown.length === 0) {
+        list.textContent = "Товары не найдены";
+        return;
+      }
+      for (const p of shown) {
+        const row = document.createElement("label");
+        row.className = "admin-product-picker__row";
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.value = p.id;
+        cb.checked = selectedSet.has(p.id);
+        const text = document.createElement("span");
+        text.innerHTML = `<strong>${escapeHtml(p.name || "Товар")}</strong><small>${escapeHtml([p.article, p.slug].filter(Boolean).join(" · "))}</small>`;
+        row.appendChild(cb);
+        row.appendChild(text);
+        list.appendChild(row);
+      }
+      if (filtered.length > shown.length) {
+        const more = document.createElement("p");
+        more.className = "muted small admin-product-picker__more";
+        more.textContent = `Показано ${shown.length} из ${filtered.length}. Уточните поиск.`;
+        list.appendChild(more);
+      }
+    }
+
+    function render() {
+      renderSelected();
+      renderList();
+      syncHidden();
+    }
+
+    search.disabled = false;
+    search.addEventListener("input", renderList);
+    list.addEventListener("change", (ev) => {
+      const target = ev.target;
+      if (!(target instanceof HTMLInputElement) || target.type !== "checkbox") {
+        return;
+      }
+      const id = target.value;
+      if (target.checked) {
+        if (!selectedIds.includes(id)) {
+          selectedIds.push(id);
+        }
+      } else {
+        selectedIds = selectedIds.filter((x) => x !== id);
+      }
+      render();
+    });
+    selectedBox.addEventListener("click", (ev) => {
+      const target = ev.target;
+      if (!(target instanceof HTMLElement)) {
+        return;
+      }
+      const id = target.dataset.removeProductId;
+      if (!id) {
+        return;
+      }
+      selectedIds = selectedIds.filter((x) => x !== id);
+      render();
+    });
+
+    render();
+  } catch (e) {
+    selectedBox.textContent = "Не удалось загрузить товары";
+    list.textContent = e?.message || String(e);
+  }
+}
+
 async function populateCategoryParentSelect(form, entity) {
   const sel = form.elements.parent_id;
   if (!(sel instanceof HTMLSelectElement)) {
@@ -1521,12 +1843,34 @@ async function populateCategoryParentSelect(form, entity) {
 
 async function openModal(schemaKey, id) {
   const sec = SECTIONS.find((s) => s.id === schemaKey);
+  const schema = CRUD_SCHEMA[schemaKey];
   const isCreate = !id;
   const modal = document.getElementById("modal");
   const form = document.getElementById("modal-form");
   const title = document.getElementById("modal-title");
+  const save = document.getElementById("modal-save");
+  const modalError = document.getElementById("modal-error");
   form.innerHTML = "";
-  title.textContent = isCreate ? "Создание" : "Редактирование";
+  form.className = "modal-body";
+  modal.classList.toggle("modal--product", schemaKey === "products");
+  if (schema?.formClass) {
+    form.classList.add(`${schema.formClass}-modal`);
+  }
+  if (modalError) {
+    modalError.textContent = "";
+    modalError.classList.add("hidden");
+  }
+  if (schemaKey === "products") {
+    title.textContent = isCreate ? "Новый товар" : "Редактирование товара";
+    if (save) {
+      save.textContent = isCreate ? "Создать товар" : "Сохранить товар";
+    }
+  } else {
+    title.textContent = isCreate ? "Создание" : "Редактирование";
+    if (save) {
+      save.textContent = "Сохранить";
+    }
+  }
 
   let entity = null;
   if (!isCreate) {
@@ -1541,6 +1885,7 @@ async function openModal(schemaKey, id) {
   form.appendChild(buildFormFields(schemaKey, entity, isCreate));
   if (schemaKey === "categories") {
     await populateCategoryParentSelect(form, entity);
+    await populateCategoryRecommendationsPicker(form, entity);
   }
   if (schemaKey === "products") {
     await populateProductCategorySelect(form, entity);
@@ -1553,6 +1898,15 @@ async function openModal(schemaKey, id) {
 
   form.onsubmit = async (ev) => {
     ev.preventDefault();
+    if (modalError) {
+      modalError.textContent = "";
+      modalError.classList.add("hidden");
+    }
+    const saveText = save?.textContent || "Сохранить";
+    if (save) {
+      save.disabled = true;
+      save.textContent = "Сохраняем…";
+    }
     try {
       const payload = readFormPayload(form, schemaKey, isCreate);
       if (isCreate) {
@@ -1563,7 +1917,20 @@ async function openModal(schemaKey, id) {
       modal.classList.add("hidden");
       loadCrudTable();
     } catch (e) {
-      notifyApiError(e);
+      if (e && e.sessionEnded) {
+        return;
+      }
+      if (modalError) {
+        modalError.textContent = e?.message || String(e);
+        modalError.classList.remove("hidden");
+      } else {
+        notifyApiError(e);
+      }
+    } finally {
+      if (save) {
+        save.disabled = false;
+        save.textContent = saveText;
+      }
     }
   };
 }
@@ -2882,7 +3249,7 @@ async function fetchAllHydraMembers(resourceBase) {
   let path = `${resourceBase}${resourceBase.includes("?") ? "&" : "?"}itemsPerPage=100`;
   let guard = 0;
   while (path && guard++ < 50) {
-    const data = await apiFetch(path.startsWith("/") ? path : `/${path}`);
+    const data = await apiFetch(path.startsWith("/") ? path : `/${path}`, { headers: API_ACCEPT_JSONLD });
     const { items, next } = unwrapCollection(data);
     all.push(...items);
     if (!next) break;
