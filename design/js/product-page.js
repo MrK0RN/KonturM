@@ -220,14 +220,21 @@
 
   function buildAlsoBoughtHtml(products) {
     if (!Array.isArray(products) || products.length === 0) return "";
+    var hasCarousel = products.length > 4;
     return (
       '<section class="pd-related" aria-labelledby="pd-related-title">' +
       '<div class="pd-related__head">' +
       '<div><p class="pd-related__eyebrow">Рекомендуем</p>' +
       '<h2 class="pd-related__title" id="pd-related-title">С этим товаром покупают</h2></div>' +
       '<p class="pd-related__lead">Подберите совместимые позиции и добавьте их в заказ без перехода в каталог.</p>' +
+      (hasCarousel
+        ? '<div class="pd-related__nav" aria-label="Прокрутка блока рекомендаций">' +
+          '<button type="button" class="pd-related__arrow" data-related-prev aria-label="Предыдущие товары">‹</button>' +
+          '<button type="button" class="pd-related__arrow" data-related-next aria-label="Следующие товары">›</button>' +
+          "</div>"
+        : "") +
       "</div>" +
-      '<ul class="cat2-grid cat2-grid--4 pd-related__grid">' +
+      '<ul class="pd-related__grid' + (hasCarousel ? " is-carousel" : "") + '">' +
       products.map(relatedProductCardHtml).join("") +
       "</ul>" +
       "</section>"
@@ -258,6 +265,38 @@
     if (K.syncCartSteppersForContainer) {
       K.syncCartSteppersForContainer(root, bindOne, cart);
     }
+  }
+
+  function bindRelatedCarousel(root) {
+    if (!root) return;
+    var grid = root.querySelector(".pd-related__grid.is-carousel");
+    if (!grid) return;
+    var prev = root.querySelector("[data-related-prev]");
+    var next = root.querySelector("[data-related-next]");
+    if (!prev || !next) return;
+
+    function stepWidth() {
+      var first = grid.querySelector("li");
+      if (!first) return grid.clientWidth;
+      var cardWidth = first.getBoundingClientRect().width;
+      return Math.max(180, Math.round(cardWidth + 16));
+    }
+
+    function updateButtons() {
+      var max = Math.max(0, grid.scrollWidth - grid.clientWidth - 2);
+      prev.disabled = grid.scrollLeft <= 2;
+      next.disabled = grid.scrollLeft >= max;
+    }
+
+    prev.addEventListener("click", function () {
+      grid.scrollBy({ left: -stepWidth(), behavior: "smooth" });
+    });
+    next.addEventListener("click", function () {
+      grid.scrollBy({ left: stepWidth(), behavior: "smooth" });
+    });
+    grid.addEventListener("scroll", updateButtons, { passive: true });
+    window.addEventListener("resize", updateButtons);
+    updateButtons();
   }
 
   function init() {
@@ -476,6 +515,7 @@
         }
 
         bindRelatedCartButtons(mount, cart);
+        bindRelatedCarousel(mount);
       })
       .catch(function () {
         mount.innerHTML = '<p class="catalog-home-loading">Не удалось загрузить товар</p>';
