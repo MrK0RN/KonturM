@@ -18,7 +18,7 @@ declare(strict_types=1);
                 <div class="ab-why__icon-wrap" aria-hidden="true">
                   <img
                     class="ab-why__icon"
-                    src="<?= $figma('c5ad03cc-d286-4a2f-9f19-75f15ab672ae.png') ?>"
+                    src="<?= $figma('7ec47a50-5047-46b3-8d49-e537a3dfa4d6.svg') ?>"
                     alt=""
                     width="24"
                     height="24"
@@ -39,7 +39,7 @@ declare(strict_types=1);
                 <div class="ab-why__icon-wrap" aria-hidden="true">
                   <img
                     class="ab-why__icon"
-                    src="<?= $figma('dae7c22f-714c-44a9-9440-4fce5ea8df24.png') ?>"
+                    src="<?= $figma('352a6106-6804-4ca7-815f-00a4df905625.svg') ?>"
                     alt=""
                     width="24"
                     height="24"
@@ -60,7 +60,7 @@ declare(strict_types=1);
                 <div class="ab-why__icon-wrap" aria-hidden="true">
                   <img
                     class="ab-why__icon"
-                    src="<?= $figma('5b55e687-e55e-42db-bc03-d0a06106f5bc.png') ?>"
+                    src="<?= $figma('4b6e8158-2656-418f-b284-7d2a57fe24b9.svg') ?>"
                     alt=""
                     width="24"
                     height="24"
@@ -81,7 +81,7 @@ declare(strict_types=1);
                 <div class="ab-why__icon-wrap" aria-hidden="true">
                   <img
                     class="ab-why__icon"
-                    src="<?= $figma('8d543ceb-bf3f-474f-8824-a51163daa3d5.png') ?>"
+                    src="<?= $figma('463d1e84-a380-4538-b97f-e3fb65f2d406.svg') ?>"
                     alt=""
                     width="24"
                     height="24"
@@ -102,7 +102,7 @@ declare(strict_types=1);
                 <div class="ab-why__icon-wrap" aria-hidden="true">
                   <img
                     class="ab-why__icon"
-                    src="<?= $figma('73c20406-2a70-4648-a222-9f02ae6781d5.png') ?>"
+                    src="<?= $figma('f0f68502-aa95-455a-b524-7ffeebad5023.svg') ?>"
                     alt=""
                     width="24"
                     height="24"
@@ -123,7 +123,7 @@ declare(strict_types=1);
                 <div class="ab-why__icon-wrap" aria-hidden="true">
                   <img
                     class="ab-why__icon"
-                    src="<?= $figma('0cccf6db-dc46-43aa-9fce-d44f39609622.png') ?>"
+                    src="<?= $figma('0460d417-a3c4-4f43-97cb-695b907679b1.svg') ?>"
                     alt=""
                     width="24"
                     height="24"
