@@ -248,7 +248,6 @@
       btn.addEventListener("click", function () {
         var id = btn.getAttribute("data-related-add-cart");
         btn.disabled = true;
-        btn.innerHTML = buildCartIcon() + "<span>Добавляем…</span>";
         K.addProductToCart(id, 1)
           .then(function (nextCart) {
             btn.disabled = false;
@@ -256,7 +255,6 @@
           })
           .catch(function () {
             btn.disabled = false;
-            btn.innerHTML = buildCartIcon() + "<span>В корзину</span>";
           });
       });
     }
@@ -482,7 +480,6 @@
             var id = btn.getAttribute("data-pid");
             var qty = qtyInput ? Math.max(1, parseInt(qtyInput.value, 10) || 1) : 1;
             btn.disabled = true;
-            btn.innerHTML = buildCartIcon() + "<span>Добавляем…</span>";
             K.addProductToCart(id, qty)
               .then(function (cart) {
                 btn.disabled = false;
@@ -494,7 +491,6 @@
               })
               .catch(function () {
                 btn.disabled = false;
-                btn.innerHTML = buildCartIcon() + "<span>В корзину</span>";
               });
           });
         }
