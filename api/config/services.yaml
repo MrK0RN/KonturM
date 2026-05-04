@@ -26,3 +26,7 @@ services:
     App\Service\ImageProcessingService:
         arguments:
             $projectDir: '%kernel.project_dir%'
+
+    App\Service\OrderService:
+        bind:
+            $orderManagerNotificationEmail: '%env(ORDER_NOTIFY_MANAGER_EMAIL)%'

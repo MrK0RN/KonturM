@@ -371,7 +371,7 @@
         var priceHtml =
           '<div class="pd__price-block">' +
           '<span class="pd__price">' + esc(price) + "</span>" +
-          '<span class="pd__price-note">без НДС</span>' +
+          '<span class="pd__price-note">с НДС</span>' +
           "</div>";
 
         var actionsHtml =

@@ -6,8 +6,10 @@ namespace App\Service;
 
 use App\Dto\OrderCreateInput;
 use App\Entity\Order;
+use App\Service\Mail\CustomerOrderConfirmationMailBuilder;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Notifier\NotifierInterface;
 use Symfony\Component\Notifier\Notification\Notification;
@@ -19,6 +21,9 @@ final class OrderService
         private readonly EntityManagerInterface $entityManager,
         private readonly MailerInterface $mailer,
         private readonly NotifierInterface $notifier,
+        private readonly CustomerOrderConfirmationMailBuilder $customerOrderMailBuilder,
+        private readonly SiteContactsService $siteContacts,
+        private readonly string $orderManagerNotificationEmail,
     ) {
     }
 
@@ -82,36 +87,89 @@ final class OrderService
 
     private function sendNotifications(Order $order): void
     {
+        $contacts = $this->siteContacts->getContacts();
+        $from = new Address($contacts['email_sales'], 'Контур-М');
+        $replyTo = new Address($contacts['email_sales'], 'Контур-М');
+
         $innLine = $order->getCustomerInn() !== null ? sprintf("\nИНН: %s", $order->getCustomerInn()) : '';
-        $body = sprintf(
-            "Новый заказ: %s\nКлиент: %s\nТелефон: %s\nEmail: %s%s\nСтатус: %s",
+        $companyLine = $order->getCustomerCompany() !== null && trim($order->getCustomerCompany()) !== ''
+            ? sprintf("\nКомпания: %s", $order->getCustomerCompany())
+            : '';
+        $commentLine = $order->getComment() !== null && trim($order->getComment()) !== ''
+            ? sprintf("\nКомментарий: %s", $order->getComment())
+            : '';
+        $itemsBlock = $this->formatOrderItemsForManagerText($order);
+        $managerBody = sprintf(
+            "Новый заказ: %s\nКлиент: %s\nТелефон: %s\nEmail: %s%s%s%s\nСтатус: %s\n\nПозиции:\n%s\nИтого: %s ₽",
             $order->getOrderNumber(),
             $order->getCustomerName(),
             $order->getCustomerPhone(),
             $order->getCustomerEmail(),
+            $companyLine,
             $innLine,
-            $order->getStatus()
+            $commentLine,
+            $order->getStatus(),
+            $itemsBlock,
+            $order->getTotalAmount() ?? '0,00',
         );
 
-        $email = (new Email())
-            ->from('noreply@merniki.local')
-            ->to('manager@merniki.local')
+        $managerEmail = (new Email())
+            ->from($from)
+            ->replyTo($replyTo)
+            ->to($this->orderManagerNotificationEmail)
             ->subject('Новая заявка ' . $order->getOrderNumber())
-            ->text($body);
+            ->text($managerBody);
 
         try {
-            $this->mailer->send($email);
+            $this->mailer->send($managerEmail);
+        } catch (\Throwable) {
+            // Keep order flow resilient in dev environments.
+        }
+
+        $clientMail = $this->customerOrderMailBuilder->build($order, $contacts);
+        $customerEmail = (new Email())
+            ->from($from)
+            ->replyTo($replyTo)
+            ->to($order->getCustomerEmail())
+            ->subject($clientMail['subject'])
+            ->text($clientMail['text'])
+            ->html($clientMail['html']);
+
+        try {
+            $this->mailer->send($customerEmail);
         } catch (\Throwable) {
             // Keep order flow resilient in dev environments.
         }
 
         try {
             $notification = (new Notification('Новая заявка ' . $order->getOrderNumber(), ['chat/telegram']))
-                ->content($body);
+                ->content($managerBody);
             $this->notifier->send($notification, new Recipient($order->getCustomerEmail()));
         } catch (\Throwable) {
             // Keep order flow resilient in dev environments.
         }
+    }
+
+    private function formatOrderItemsForManagerText(Order $order): string
+    {
+        $lines = [];
+        foreach ($order->getItems() as $i => $row) {
+            if (! \is_array($row)) {
+                continue;
+            }
+            $name = isset($row['name']) ? trim((string) $row['name']) : '';
+            if ($name === '') {
+                $name = sprintf('(%s)', $row['type'] ?? 'позиция');
+            }
+            $article = isset($row['article']) ? (string) $row['article'] : '—';
+            $qty = isset($row['quantity']) ? (int) $row['quantity'] : 0;
+            $price = isset($row['price']) && $row['price'] !== null && $row['price'] !== ''
+                ? (string) $row['price']
+                : '—';
+            $lines[] = sprintf('%d. %s | арт. %s | кол-во %d | цена %s', $i + 1, $name, $article, $qty, $price);
+        }
+
+        return $lines === [] ? '—' : implode("\n", $lines);
     }
 
     private function statusText(string $status): string
