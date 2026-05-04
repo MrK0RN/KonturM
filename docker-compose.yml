@@ -4,7 +4,7 @@
 #   • без CADDY_DOMAIN — сертификат Caddy «internal» (localhost), браузер может запросить доверие
 #   • с CADDY_DOMAIN — Let's Encrypt (нужны DNS на сервер и открытые 80/443), см. .env
 # Прямой доступ к PHP без прокси: задайте APP_PORT (например 8000) — см. сервис app
-# Mailpit UI: http://localhost:8025
+# Mailpit UI: http://localhost:8025 (если MAILER_DSN не переопределён)
 
 services:
   caddy:
@@ -39,8 +39,9 @@ services:
       APP_SECRET: ${APP_SECRET:-496f664afff3a3d54cd4176e029a0561}
       DATABASE_URL: "postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-ChangeMe}@database:5432/${POSTGRES_DB:-app}?serverVersion=16&charset=utf8"
       JWT_PASSPHRASE: ${JWT_PASSPHRASE:-59ca8714b04e5adaa0c226a8ebf7f8274f1731d24399b431e20643370c07b0bd}
-      # Не через ${MAILER_DSN}, чтобы api/.env с null://null не ломал Mailpit при `docker compose` из каталога api/
-      MAILER_DSN: smtp://mailer:1025
+      # По умолчанию Mailpit (письма в UI http://localhost:${MAILPIT_UI_PORT:-8025}).
+      # Реальная отправка: задайте в корневом .env MAILER_DSN для Mail.ru и перезапустите контейнер app.
+      MAILER_DSN: ${MAILER_DSN:-smtp://mailer:1025}
       CORS_ALLOW_ORIGIN: ${CORS_ALLOW_ORIGIN:-'^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$'}
       RUN_MIGRATIONS: ${RUN_MIGRATIONS:-1}
     depends_on:

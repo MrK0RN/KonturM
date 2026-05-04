@@ -8,6 +8,7 @@ use App\Dto\OrderCreateInput;
 use App\Entity\Order;
 use App\Service\Mail\CustomerOrderConfirmationMailBuilder;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
@@ -24,6 +25,7 @@ final class OrderService
         private readonly CustomerOrderConfirmationMailBuilder $customerOrderMailBuilder,
         private readonly SiteContactsService $siteContacts,
         private readonly string $orderManagerNotificationEmail,
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -122,8 +124,11 @@ final class OrderService
 
         try {
             $this->mailer->send($managerEmail);
-        } catch (\Throwable) {
-            // Keep order flow resilient in dev environments.
+        } catch (\Throwable $e) {
+            $this->logger->error('Mail to manager failed after order', [
+                'order_number' => $order->getOrderNumber(),
+                'exception' => $e->getMessage(),
+            ]);
         }
 
         $clientMail = $this->customerOrderMailBuilder->build($order, $contacts);
@@ -137,8 +142,12 @@ final class OrderService
 
         try {
             $this->mailer->send($customerEmail);
-        } catch (\Throwable) {
-            // Keep order flow resilient in dev environments.
+        } catch (\Throwable $e) {
+            $this->logger->error('Mail to customer failed after order', [
+                'order_number' => $order->getOrderNumber(),
+                'customer_email' => $order->getCustomerEmail(),
+                'exception' => $e->getMessage(),
+            ]);
         }
 
         try {
